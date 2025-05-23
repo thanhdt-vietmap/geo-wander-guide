@@ -13,25 +13,25 @@ const SearchBar: React.FC<SearchBarProps> = ({ onMenuToggle, isMenuOpen }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <div className="absolute top-4 left-4 right-4 z-10 flex items-center gap-3">
+    <div className="absolute top-6 left-6 z-20 flex items-center gap-4">
       <Button
         variant="outline"
         size="icon"
         onClick={onMenuToggle}
-        className="bg-white shadow-lg hover:bg-gray-50 flex-shrink-0"
+        className="bg-white shadow-md hover:bg-gray-50 flex-shrink-0 w-10 h-10 rounded-lg border-gray-200"
       >
-        {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
       
-      <div className="flex-1 relative">
+      <div className="w-96">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
           <Input
             type="text"
-            placeholder="Tìm kiếm địa điểm hoặc địa chỉ..."
+            placeholder="Tìm kiếm Google Maps"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4 py-3 bg-white shadow-lg border-0 focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
+            className="pl-12 pr-4 py-3 h-12 bg-white shadow-md border-gray-200 focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg text-base"
           />
         </div>
       </div>

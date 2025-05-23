@@ -14,7 +14,7 @@ const Index = () => {
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gray-100">
+    <div className="relative w-full h-screen overflow-hidden bg-gray-50">
       {/* Map Container */}
       <MapView className="absolute inset-0" />
       
@@ -36,7 +36,7 @@ const Index = () => {
       {/* Overlay to close sidebar when clicking outside */}
       {isSidebarOpen && (
         <div 
-          className="absolute inset-0 z-15 bg-black bg-opacity-20"
+          className="absolute inset-0 z-20 bg-black bg-opacity-10"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
