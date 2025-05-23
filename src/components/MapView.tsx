@@ -51,8 +51,7 @@ const MapView: React.FC<MapViewProps> = ({ className = '' }) => {
         positionOptions: {
           enableHighAccuracy: true
         },
-        trackUserLocation: true,
-        showUserHeading: true
+        trackUserLocation: true
       }),
       'top-right'
     );
