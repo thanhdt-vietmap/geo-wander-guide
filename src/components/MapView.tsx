@@ -92,7 +92,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
           routes.current.push('route');
         } else {
           // Update existing source
-          const source = map.current.getSource('route') as mapboxgl.GeoJSONSource;
+          const source = map.current.getSource('route') as vietmapgl.GeoJSONSource;
           if (source && typeof source.setData === 'function') {
             source.setData({
               type: 'Feature',
