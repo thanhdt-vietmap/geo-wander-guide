@@ -1,7 +1,7 @@
 
 import { PlaceDetails } from '@/types';
 
-const API_KEY = '95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c';
+const API_KEY = '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841';
 
 export interface ReverseGeocodingResponse {
   lat: number;
