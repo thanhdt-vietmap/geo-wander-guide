@@ -28,6 +28,7 @@ const Index = () => {
   const [selectedPlace, setSelectedPlace] = useState<PlaceDetails | null>(null);
   const [isPlaceDetailCollapsed, setIsPlaceDetailCollapsed] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
+  const [startingPlace, setStartingPlace] = useState<PlaceDetails | null>(null);
   const mapRef = useRef<MapViewRef>(null);
 
   const handleMenuToggle = () => {
@@ -56,6 +57,8 @@ const Index = () => {
   };
 
   const handleShowDirections = () => {
+    // Set the starting place to the currently selected place
+    setStartingPlace(selectedPlace);
     setShowDirections(true);
     // When showing directions, hide place details
     setSelectedPlace(null);
@@ -68,6 +71,7 @@ const Index = () => {
 
   const handleCloseDirections = () => {
     setShowDirections(false);
+    setStartingPlace(null);
     // Clear any direction-related data
     if (mapRef.current) {
       mapRef.current.removeMarkers();
@@ -102,6 +106,7 @@ const Index = () => {
         <Direction 
           onClose={handleCloseDirections} 
           mapRef={mapRef}
+          startingPlace={startingPlace}
         />
       )}
       

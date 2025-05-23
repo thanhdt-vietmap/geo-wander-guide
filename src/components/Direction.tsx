@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, ChevronUp, ChevronDown, ArrowUpDown, Plus, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -102,11 +101,17 @@ interface RouteResponse {
 interface DirectionProps {
   onClose: () => void;
   mapRef: React.RefObject<any>;
+  startingPlace?: {
+    display: string;
+    lat: number;
+    lng: number;
+    name?: string;
+  } | null;
 }
 
-const Direction: React.FC<DirectionProps> = ({ onClose, mapRef }) => {
+const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace }) => {
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
-    { name: "", lat: 0, lng: 0 },
+    { name: startingPlace?.display || "", lat: startingPlace?.lat || 0, lng: startingPlace?.lng || 0 },
     { name: "", lat: 0, lng: 0 }
   ]);
   const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
@@ -122,6 +127,14 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef }) => {
 
   const API_KEY = '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841';
   const FOCUS_COORDINATES = '21.0285,105.8342'; // Hanoi coordinates
+
+  // Update map when starting place is provided
+  useEffect(() => {
+    if (startingPlace && mapRef.current) {
+      mapRef.current.flyTo(startingPlace.lng, startingPlace.lat);
+      mapRef.current.addMarker(startingPlace.lng, startingPlace.lat, 'start');
+    }
+  }, [startingPlace]);
 
   useEffect(() => {
     // Clear drag state when component unmounts
