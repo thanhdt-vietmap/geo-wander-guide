@@ -22,9 +22,10 @@ interface PlaceDetailsProps {
     city?: string;
   } | null;
   onClose: () => void;
+  onDirectionClick?: () => void;
 }
 
-const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
+const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirectionClick }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   if (!place) return null;
@@ -84,7 +85,12 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
               {/* Action buttons */}
               <div className="flex justify-between px-6 py-4">
                 <div className="flex flex-col items-center">
-                  <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 bg-blue-50 text-blue-600">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full h-12 w-12 bg-blue-50 text-blue-600"
+                    onClick={onDirectionClick}
+                  >
                     <Navigation className="h-6 w-6" />
                   </Button>
                   <span className="text-xs mt-1">Directions</span>
@@ -196,7 +202,12 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
               {/* Action buttons */}
               <div className="flex justify-between px-2 py-4">
                 <div className="flex flex-col items-center">
-                  <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 bg-blue-50 text-blue-600">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full h-12 w-12 bg-blue-50 text-blue-600"
+                    onClick={onDirectionClick}
+                  >
                     <Navigation className="h-6 w-6" />
                   </Button>
                   <span className="text-xs mt-1">Directions</span>

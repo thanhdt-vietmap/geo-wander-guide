@@ -5,6 +5,7 @@ import SearchBar from '@/components/SearchBar';
 import Sidebar from '@/components/Sidebar';
 import MapControls from '@/components/MapControls';
 import PlaceDetails from '@/components/PlaceDetails';
+import Direction from '@/components/Direction';
 
 interface PlaceDetails {
   display: string;
@@ -26,6 +27,7 @@ const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<PlaceDetails | null>(null);
   const [isPlaceDetailCollapsed, setIsPlaceDetailCollapsed] = useState(false);
+  const [showDirections, setShowDirections] = useState(false);
   const mapRef = useRef<MapViewRef>(null);
 
   const handleMenuToggle = () => {
@@ -36,6 +38,8 @@ const Index = () => {
     setSelectedPlace(place);
     // Ensure the place detail is expanded when a place is selected
     setIsPlaceDetailCollapsed(false);
+    // Hide directions if they were showing
+    setShowDirections(false);
     
     // Update map view with the selected place
     if (mapRef.current) {
@@ -48,6 +52,26 @@ const Index = () => {
     setSelectedPlace(null);
     if (mapRef.current) {
       mapRef.current.removeMarkers();
+    }
+  };
+
+  const handleShowDirections = () => {
+    setShowDirections(true);
+    // When showing directions, hide place details
+    setSelectedPlace(null);
+    // Clear any existing markers
+    if (mapRef.current) {
+      mapRef.current.removeMarkers();
+      mapRef.current.removeRoutes();
+    }
+  };
+
+  const handleCloseDirections = () => {
+    setShowDirections(false);
+    // Clear any direction-related data
+    if (mapRef.current) {
+      mapRef.current.removeMarkers();
+      mapRef.current.removeRoutes();
     }
   };
 
@@ -68,7 +92,16 @@ const Index = () => {
       {selectedPlace && (
         <PlaceDetails 
           place={selectedPlace} 
-          onClose={handleClosePlaceDetails} 
+          onClose={handleClosePlaceDetails}
+          onDirectionClick={handleShowDirections}
+        />
+      )}
+
+      {/* Direction Panel */}
+      {showDirections && (
+        <Direction 
+          onClose={handleCloseDirections} 
+          mapRef={mapRef}
         />
       )}
       
