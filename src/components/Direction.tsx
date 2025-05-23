@@ -392,11 +392,11 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef }) => {
   return (
     <div className="fixed top-0 left-0 h-full z-40 transition-all duration-300">
       <div className="flex h-full">
-        <div className="bg-white shadow-lg pt-0 w-[400px] flex flex-col h-full border-r">
+        <div className="bg-white shadow-lg pt-0 w-[500px] flex flex-col h-full border-r">
           
           {/* Background Image */}
           <div 
-            className="w-full h-[250px] bg-cover bg-center relative flex items-center justify-center" 
+            className="w-full h-[150px] bg-cover bg-center relative flex items-center justify-center" 
             style={{ backgroundImage: "url('/lovable-uploads/759ebf50-d075-4366-98b3-99771c255fa9.png')" }}
           >
             <Button 
@@ -408,12 +408,35 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef }) => {
               <X className="h-5 w-5" />
             </Button>
             
-            <div className="text-center text-white">
-              <h2 className="text-2xl font-bold mb-2">Directions</h2>
-              <p>Find the best route to your destination</p>
-            </div>
           </div>
-          
+
+            {/* Travel mode selection */}
+            <div className="mb-4">
+              <h3 className="text-sm font-medium mb-2 mt-[10px] ml-[10px]">Travel mode</h3>
+              <div className="flex gap-2 px-[30px]">
+                {[
+                  { id: 'car', icon: <span>🚗</span>, label: 'Car' },
+                  { id: 'motorcycle', icon: <span>🏍️</span>, label: 'Motorcycle' },
+                  { id: 'bike', icon: <span>🚲</span>, label: 'Bike' },
+                  { id: 'foot', icon: <span>🚶</span>, label: 'Walk' }
+                ].map(mode => (
+                  <Button
+                    key={mode.id}
+                    variant={vehicle === mode.id ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setVehicle(mode.id as any)}
+                  >
+                    <span className="mr-1">{mode.icon}</span>
+                    <span>{mode.label}</span>
+                  </Button>
+                ))
+                
+                }
+
+              </div>
+              
+            </div>
           <div className="px-6 py-4" ref={searchContainerRef}>
             {/* Waypoints inputs */}
             <div className="space-y-3 mb-4">
@@ -514,29 +537,6 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef }) => {
             
             <Separator className="my-4" />
             
-            {/* Travel mode selection */}
-            <div className="mb-4">
-              <h3 className="text-sm font-medium mb-2">Travel mode</h3>
-              <div className="flex gap-2">
-                {[
-                  { id: 'car', icon: <span>🚗</span>, label: 'Car' },
-                  { id: 'motorcycle', icon: <span>🏍️</span>, label: 'Motorcycle' },
-                  { id: 'bike', icon: <span>🚲</span>, label: 'Bike' },
-                  { id: 'foot', icon: <span>🚶</span>, label: 'Walk' }
-                ].map(mode => (
-                  <Button
-                    key={mode.id}
-                    variant={vehicle === mode.id ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setVehicle(mode.id as any)}
-                  >
-                    <span className="mr-1">{mode.icon}</span>
-                    <span>{mode.label}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
             
             {/* Get directions button */}
             <Button
