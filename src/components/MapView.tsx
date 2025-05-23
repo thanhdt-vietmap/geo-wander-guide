@@ -8,9 +8,10 @@ export interface MapViewRef {
   flyTo: (lng: number, lat: number) => void;
   addMarker: (lng: number, lat: number, type?: 'default' | 'start' | 'end' | 'waypoint') => void;
   removeMarkers: () => void;
-  addRoute: (coordinates: [number, number][]) => void;
+  addRoute: (coordinates: [number, number][], routeId?: string, color?: string) => void;
   removeRoutes: () => void;
   fitBounds: (bounds: [[number, number], [number, number]]) => void;
+  highlightRoute: (routeId: string) => void;
 }
 
 interface MapViewProps {
@@ -21,7 +22,10 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<vietmapgl.Map | null>(null);
   const markers = useRef<vietmapgl.Marker[]>([]);
-  const routes = useRef<any[]>([]);
+  const routes = useRef<string[]>([]);
+
+  // Pre-defined colors for multiple routes
+  const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
 
   // Expose map methods to parent components
   useImperativeHandle(ref, () => ({
@@ -59,11 +63,14 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
     },
-    addRoute: (coordinates: [number, number][]) => {
+    addRoute: (coordinates: [number, number][], routeId = 'route', color) => {
       if (map.current) {
+        // Use provided color or get one from the predefined colors
+        const routeColor = color || routeColors[routes.current.length % routeColors.length];
+        
         // Check if the source already exists
-        if (!map.current.getSource('route')) {
-          map.current.addSource('route', {
+        if (!map.current.getSource(routeId)) {
+          map.current.addSource(routeId, {
             type: 'geojson',
             data: {
               type: 'Feature',
@@ -76,23 +83,23 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
           });
 
           map.current.addLayer({
-            id: 'route',
+            id: routeId,
             type: 'line',
-            source: 'route',
+            source: routeId,
             layout: {
               'line-join': 'round',
               'line-cap': 'round'
             },
             paint: {
-              'line-color': '#0071bc',
+              'line-color': routeColor,
               'line-width': 4
             }
           });
 
-          routes.current.push('route');
+          routes.current.push(routeId);
         } else {
           // Update existing source
-          const source = map.current.getSource('route') as vietmapgl.GeoJSONSource;
+          const source = map.current.getSource(routeId) as vietmapgl.GeoJSONSource;
           if (source && typeof source.setData === 'function') {
             source.setData({
               type: 'Feature',
@@ -102,6 +109,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
                 coordinates: coordinates
               }
             });
+            
+            // Update the color if the layer exists
+            if (map.current.getLayer(routeId)) {
+              map.current.setPaintProperty(routeId, 'line-color', routeColor);
+            }
           }
         }
       }
@@ -124,6 +136,23 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
         map.current.fitBounds(bounds, {
           padding: 50
         });
+      }
+    },
+    highlightRoute: (routeId: string) => {
+      if (map.current) {
+        // First set all routes to less opacity
+        routes.current.forEach(id => {
+          if (map.current!.getLayer(id)) {
+            map.current!.setPaintProperty(id, 'line-opacity', 0.5);
+            map.current!.setPaintProperty(id, 'line-width', 3);
+          }
+        });
+        
+        // Then highlight the selected route
+        if (map.current.getLayer(routeId)) {
+          map.current.setPaintProperty(routeId, 'line-opacity', 1);
+          map.current.setPaintProperty(routeId, 'line-width', 5);
+        }
       }
     }
   }));

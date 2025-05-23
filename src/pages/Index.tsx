@@ -84,7 +84,6 @@ const Index = () => {
       {/* Map Container */}
       <MapView ref={mapRef} className="absolute inset-0" />
       
-      
       {/* Search Bar */}
       <SearchBar 
         onMenuToggle={handleMenuToggle} 
@@ -115,7 +114,6 @@ const Index = () => {
       
       {/* Map Controls */}
       <MapControls mapRef={mapRef} />
-      
       
       {/* Overlay to close sidebar when clicking outside */}
       {isSidebarOpen && (

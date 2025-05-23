@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, ChevronUp, ChevronDown, ArrowUpDown, Plus, Navigation } from 'lucide-react';
+import { Search, X, ChevronUp, ChevronDown, ArrowUpDown, Plus, Navigation, Map as MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import SearchSuggestions from './SearchSuggestions';
+import RouteDetails from './RouteDetails';
 
 // Utility function to decode Google's polyline format
 function decodePolyline(polyline: string) {
@@ -81,21 +82,30 @@ interface RouteInstruction {
   last_heading: number | null;
 }
 
+interface RoutePath {
+  distance: number;
+  weight: number;
+  time: number;
+  transfers: number;
+  points_encoded: boolean;
+  bbox: number[];
+  points: string;
+  instructions: RouteInstruction[];
+  snapped_waypoints: string;
+}
+
 interface RouteResponse {
   license: string;
   code: string;
   messages: any;
-  paths: Array<{
-    distance: number;
-    weight: number;
-    time: number;
-    transfers: number;
-    points_encoded: boolean;
-    bbox: number[];
-    points: string;
-    instructions: RouteInstruction[];
-    snapped_waypoints: string;
-  }>;
+  paths: RoutePath[];
+}
+
+interface RouteSummary {
+  id: string;
+  distance: number;
+  time: number;
+  color: string;
 }
 
 interface DirectionProps {
@@ -121,10 +131,18 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
   const [vehicle, setVehicle] = useState<'car' | 'bike' | 'foot' | 'motorcycle'>('car');
   const [routeData, setRouteData] = useState<RouteResponse | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [routeSummaries, setRouteSummaries] = useState<RouteSummary[]>([]);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [showRouteDetails, setShowRouteDetails] = useState(false);
+  const [selectedPath, setSelectedPath] = useState<RoutePath | null>(null);
+  
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const isMobile = window.innerWidth <= 768;
+
+  // Pre-defined colors for multiple routes
+  const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
 
   const API_KEY = '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841';
   const FOCUS_COORDINATES = '21.0285,105.8342'; // Hanoi coordinates
@@ -336,6 +354,42 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
     setDraggedIndex(index);
   };
 
+  const handleSelectRoute = (routeId: string) => {
+    setSelectedRouteId(routeId);
+    
+    // Highlight the selected route on the map
+    if (mapRef.current) {
+      mapRef.current.highlightRoute(routeId);
+    }
+    
+    // Find the route path data by its ID
+    const routeIndex = parseInt(routeId.replace('route-', ''));
+    if (routeData?.paths && routeData.paths[routeIndex]) {
+      const path = routeData.paths[routeIndex];
+      
+      // Fit map to this route's bounds
+      if (path.bbox && path.bbox.length === 4 && mapRef.current) {
+        const [minLng, minLat, maxLng, maxLat] = path.bbox;
+        mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
+      }
+    }
+  };
+
+  const handleShowRouteDetails = () => {
+    if (!selectedRouteId || !routeData) return;
+    
+    const routeIndex = parseInt(selectedRouteId.replace('route-', ''));
+    if (routeData.paths && routeData.paths[routeIndex]) {
+      setSelectedPath(routeData.paths[routeIndex]);
+      setShowRouteDetails(true);
+    }
+  };
+
+  const handleBackFromDetails = () => {
+    setShowRouteDetails(false);
+    setSelectedPath(null);
+  };
+
   const handleGetDirections = async () => {
     // Validate that we have valid coordinates for all waypoints
     const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
@@ -352,7 +406,7 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
     try {
       // Construct the points query params
       const pointParams = validWaypoints.map(wp => `point=${wp.lat},${wp.lng}`).join('&');
-      const url = `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${API_KEY}&${pointParams}&points_encoded=true&vehicle=${vehicle}`;
+      const url = `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${API_KEY}&${pointParams}&points_encoded=true&vehicle=${vehicle}&alternative_route.max_paths=5`;
       
       const response = await fetch(url);
       
@@ -360,35 +414,70 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
         const data: RouteResponse = await response.json();
         setRouteData(data);
         
-        // Draw the route on the map if available
-        if (mapRef.current && data.paths && data.paths.length > 0) {
-          const path = data.paths[0];
-          const decodedPoints = decodePolyline(path.points);
-          
-          // Remove any existing routes
+        // Clear previous route summaries and selected route
+        setRouteSummaries([]);
+        setSelectedRouteId(null);
+        
+        // Remove any existing routes and markers
+        if (mapRef.current) {
           mapRef.current.removeRoutes();
-          
-          // Add route to the map
-          mapRef.current.addRoute(decodedPoints);
-          
-          // Add markers for waypoints
           mapRef.current.removeMarkers();
-          validWaypoints.forEach((wp, index) => {
-            const isStart = index === 0;
-            const isEnd = index === validWaypoints.length - 1;
-            mapRef.current.addMarker(wp.lng, wp.lat, isStart ? 'start' : isEnd ? 'end' : 'waypoint');
+        }
+        
+        // Draw routes on the map and create summaries
+        if (data.paths && data.paths.length > 0) {
+          const newSummaries: RouteSummary[] = [];
+          
+          data.paths.forEach((path, index) => {
+            const routeId = `route-${index}`;
+            const color = routeColors[index % routeColors.length];
+            
+            // Decode and add the route to the map
+            const decodedPoints = decodePolyline(path.points);
+            if (mapRef.current) {
+              mapRef.current.addRoute(decodedPoints, routeId, color);
+            }
+            
+            // Add to summaries
+            newSummaries.push({
+              id: routeId,
+              distance: path.distance,
+              time: path.time,
+              color: color
+            });
           });
           
-          // Fit the map to the route bounds
-          if (path.bbox && path.bbox.length === 4) {
-            const [minLng, minLat, maxLng, maxLat] = path.bbox;
+          // Set route summaries
+          setRouteSummaries(newSummaries);
+          
+          // Auto-select first route
+          if (newSummaries.length > 0) {
+            setSelectedRouteId(newSummaries[0].id);
+            if (mapRef.current) {
+              mapRef.current.highlightRoute(newSummaries[0].id);
+            }
+          }
+          
+          // Add markers for waypoints
+          if (mapRef.current) {
+            validWaypoints.forEach((wp, index) => {
+              const isStart = index === 0;
+              const isEnd = index === validWaypoints.length - 1;
+              mapRef.current.addMarker(wp.lng, wp.lat, isStart ? 'start' : isEnd ? 'end' : 'waypoint');
+            });
+          }
+          
+          // Fit the map to the bounds of the first route
+          const firstPath = data.paths[0];
+          if (firstPath.bbox && firstPath.bbox.length === 4 && mapRef.current) {
+            const [minLng, minLat, maxLng, maxLat] = firstPath.bbox;
             mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
           }
         }
         
         toast({
-          title: "Route found",
-          description: `Distance: ${(data.paths[0].distance / 1000).toFixed(2)} km, Time: ${Math.round(data.paths[0].time / 60000)} mins`,
+          title: `${data.paths.length} route${data.paths.length > 1 ? 's' : ''} found`,
+          description: "Select a route to see details",
         });
       } else {
         console.error('Direction API error:', response.status);
@@ -408,10 +497,15 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
     }
   };
 
+  // If showing route details, render the RouteDetails component
+  if (showRouteDetails && selectedPath) {
+    return <RouteDetails path={selectedPath} onBack={handleBackFromDetails} />;
+  }
+
   return (
-    <div className="fixed top-0 left-0 h-full z-40 transition-all duration-300">
+    <div className="fixed top-0 left-0 h-full z-40 transition-all duration-300 w-[500px] overflow-auto">
       <div className="flex h-full">
-        <div className="bg-white shadow-lg pt-0 w-[500px] flex flex-col h-full border-r">
+        <div className="bg-white shadow-lg pt-0 w-full flex flex-col border-r">
           
           {/* Background Image */}
           <div 
@@ -571,22 +665,50 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
           
           <Separator />
           
-          {/* Route instructions */}
-          {routeData && (
+          {/* Route summaries */}
+          {routeSummaries.length > 0 && (
             <div className="flex-1 overflow-auto px-4 py-2">
-              <h3 className="font-medium mb-2">Route details</h3>
-              {routeData.paths[0]?.instructions.map((instruction, index) => (
-                <div 
-                  key={index} 
-                  className="py-2 px-3 border-l-2 border-blue-500 mb-2 hover:bg-gray-50"
-                >
-                  <p className="text-sm">{instruction.text}</p>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>{(instruction.distance / 1000).toFixed(2)} km</span>
-                    <span>{Math.round(instruction.time / 60000)} mins</span>
+              <h3 className="font-medium mb-3">Available routes</h3>
+              <div className="space-y-2">
+                {routeSummaries.map((route) => (
+                  <div
+                    key={route.id}
+                    className={`p-3 border rounded-md cursor-pointer transition-all ${
+                      selectedRouteId === route.id 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleSelectRoute(route.id)}
+                  >
+                    <div className="flex items-center">
+                      <div 
+                        className="w-3 h-10 rounded-full mr-3" 
+                        style={{ backgroundColor: route.color }}
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{(route.distance / 1000).toFixed(2)} km</span>
+                          <span className="text-gray-600">{Math.round(route.time / 60000)} mins</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {selectedRouteId === route.id && (
+                      <div className="mt-3 flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                          onClick={handleShowRouteDetails}
+                        >
+                          <MapIcon className="h-4 w-4" />
+                          View details
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
