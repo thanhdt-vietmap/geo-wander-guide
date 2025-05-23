@@ -42,9 +42,11 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   // Format coordinates for display
   const formatCoord = (coord: number) => coord.toFixed(6);
 
+  if (!isOpen) return null;
+
   return (
-    <ContextMenu open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <ContextMenuTrigger />
+    <ContextMenu>
+      <ContextMenuTrigger className="fixed" style={{ top: 0, left: 0, width: '100vw', height: '100vh' }} />
       <ContextMenuContent className="w-56">
         <div className="px-2 py-1.5 text-sm font-semibold">Location</div>
         <ContextMenuSeparator />
