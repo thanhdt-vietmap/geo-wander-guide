@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation, BookmarkIcon, Share2, Edit, MapPin, Building, Tag, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +26,23 @@ interface PlaceDetailsProps {
 
 const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if we're on mobile
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   if (!place) return null;
 
@@ -36,16 +53,13 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
     setIsCollapsed(!isCollapsed);
   };
 
-  // Determine if we're on mobile using a simple media query check
-  const isMobile = window.innerWidth <= 768; // 768px is a common breakpoint for mobile
-
   return (
     <>
-      {/* Desktop sidebar-style drawer - only show on desktop */}
+      {/* Desktop sidebar-style panel - only show on desktop */}
       {!isMobile && (
-        <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
-          <div className="flex h-full">
-            <div className="bg-white shadow-lg w-[400px] flex flex-col h-full border-r">
+        <div className="fixed top-[86px] left-6 z-10">
+          <div className={`transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-96 opacity-100'}`}>
+            <div className="bg-white shadow-lg rounded-lg border border-gray-200">
               {/* Header */}
               <div className="p-6 pb-2">
                 <h2 className="text-xl font-semibold text-gray-900">{place.name}</h2>
@@ -104,7 +118,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
               <Separator />
 
               {/* Additional actions */}
-              <div className="flex-1 overflow-auto">
+              <div className="max-h-[400px] overflow-auto">
                 <div className="px-6 py-2">
                   <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
                     <Tag className="h-5 w-5 text-gray-500" />
@@ -129,7 +143,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
 
                 <Separator className="my-2" />
                 
-                <div className="px-6 py-2">
+                <div className="px-6 py-2 pb-4">
                   <h3 className="text-base font-medium mb-4">At this place</h3>
                   {/* We would add content here if there was any business info to show */}
                   <p className="text-sm text-gray-500">No additional information available</p>
@@ -143,12 +157,12 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
       {/* Toggle button - only show on desktop */}
       {!isMobile && (
         <div 
-          className={`fixed top-1/2 transform -translate-y-1/2 z-40 transition-all duration-300 ${isCollapsed ? 'left-0' : 'left-[400px]'}`}
+          className={`fixed top-[140px] z-20 transition-all duration-300 ${isCollapsed ? 'left-6' : 'left-[402px]'}`}
         >
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-12 bg-white border border-gray-200 rounded-r-full rounded-l-none shadow-md"
+            className="h-10 bg-white border border-gray-200 rounded-full shadow-md"
             onClick={toggleCollapse}
           >
             {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
