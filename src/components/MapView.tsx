@@ -8,7 +8,7 @@ export interface MapViewRef {
   flyTo: (lng: number, lat: number) => void;
   addMarker: (lng: number, lat: number, type?: 'default' | 'start' | 'end' | 'waypoint') => void;
   removeMarkers: () => void;
-  addRoute: (coordinates: [number, number][], routeId?: string, color?: string) => void;
+  addRoute: (coordinates: [number, number][]) => void;
   removeRoutes: () => void;
   fitBounds: (bounds: [[number, number], [number, number]]) => void;
 }
@@ -21,16 +21,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<vietmapgl.Map | null>(null);
   const markers = useRef<vietmapgl.Marker[]>([]);
-  const routes = useRef<string[]>([]);
-
-  // Default route colors
-  const routeColors = [
-    '#0071bc',  // Blue
-    '#e55e5e',  // Red
-    '#3bb2d0',  // Cyan
-    '#8a8acb',  // Purple
-    '#f7b731',  // Yellow
-  ];
+  const routes = useRef<any[]>([]);
 
   // Expose map methods to parent components
   useImperativeHandle(ref, () => ({
@@ -68,16 +59,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
     },
-    addRoute: (coordinates: [number, number][], routeId = 'route', color?: string) => {
+    addRoute: (coordinates: [number, number][]) => {
       if (map.current) {
-        // Use the provided color or get a color from the array based on route index
-        const routeColor = color || routeColors[routes.current.length % routeColors.length];
-        const sourceId = routeId;
-        const layerId = routeId;
-        
         // Check if the source already exists
-        if (!map.current.getSource(sourceId)) {
-          map.current.addSource(sourceId, {
+        if (!map.current.getSource('route')) {
+          map.current.addSource('route', {
             type: 'geojson',
             data: {
               type: 'Feature',
@@ -90,23 +76,23 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
           });
 
           map.current.addLayer({
-            id: layerId,
+            id: 'route',
             type: 'line',
-            source: sourceId,
+            source: 'route',
             layout: {
               'line-join': 'round',
               'line-cap': 'round'
             },
             paint: {
-              'line-color': routeColor,
+              'line-color': '#0071bc',
               'line-width': 4
             }
           });
 
-          routes.current.push(layerId);
+          routes.current.push('route');
         } else {
           // Update existing source
-          const source = map.current.getSource(sourceId) as vietmapgl.GeoJSONSource;
+          const source = map.current.getSource('route') as vietmapgl.GeoJSONSource;
           if (source && typeof source.setData === 'function') {
             source.setData({
               type: 'Feature',
@@ -116,11 +102,6 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
                 coordinates: coordinates
               }
             });
-          }
-
-          // Update line color if it exists
-          if (map.current.getLayer(layerId)) {
-            map.current.setPaintProperty(layerId, 'line-color', routeColor);
           }
         }
       }

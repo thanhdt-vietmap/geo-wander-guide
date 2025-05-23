@@ -3,7 +3,6 @@ import { Search, X, ChevronUp, ChevronDown, ArrowUpDown, Plus, Navigation } from
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import SearchSuggestions from './SearchSuggestions';
 
@@ -82,23 +81,21 @@ interface RouteInstruction {
   last_heading: number | null;
 }
 
-interface RoutePath {
-  distance: number;
-  weight: number;
-  time: number;
-  transfers: number;
-  points_encoded: boolean;
-  bbox: number[];
-  points: string;
-  instructions: RouteInstruction[];
-  snapped_waypoints: string;
-}
-
 interface RouteResponse {
   license: string;
   code: string;
   messages: any;
-  paths: RoutePath[];
+  paths: Array<{
+    distance: number;
+    weight: number;
+    time: number;
+    transfers: number;
+    points_encoded: boolean;
+    bbox: number[];
+    points: string;
+    instructions: RouteInstruction[];
+    snapped_waypoints: string;
+  }>;
 }
 
 interface DirectionProps {
@@ -112,15 +109,6 @@ interface DirectionProps {
   } | null;
 }
 
-// Route colors that match the ones in MapView
-const ROUTE_COLORS = [
-  '#0071bc', // Blue
-  '#e55e5e', // Red
-  '#3bb2d0', // Cyan
-  '#8a8acb', // Purple
-  '#f7b731', // Yellow
-];
-
 const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace }) => {
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
     { name: startingPlace?.display || "", lat: startingPlace?.lat || 0, lng: startingPlace?.lng || 0 },
@@ -133,7 +121,6 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
   const [vehicle, setVehicle] = useState<'car' | 'bike' | 'foot' | 'motorcycle'>('car');
   const [routeData, setRouteData] = useState<RouteResponse | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState("0");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
@@ -365,28 +352,24 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
     try {
       // Construct the points query params
       const pointParams = validWaypoints.map(wp => `point=${wp.lat},${wp.lng}`).join('&');
-      // Request alternative routes
-      const url = `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${API_KEY}&${pointParams}&points_encoded=true&vehicle=${vehicle}&algorithm=alternative_route&ch.disable=true`;
+      const url = `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${API_KEY}&${pointParams}&points_encoded=true&vehicle=${vehicle}`;
       
       const response = await fetch(url);
       
       if (response.ok) {
         const data: RouteResponse = await response.json();
         setRouteData(data);
-        setActiveTab("0"); // Reset to first tab when loading new routes
         
-        // Draw the routes on the map if available
+        // Draw the route on the map if available
         if (mapRef.current && data.paths && data.paths.length > 0) {
+          const path = data.paths[0];
+          const decodedPoints = decodePolyline(path.points);
+          
           // Remove any existing routes
           mapRef.current.removeRoutes();
           
-          // Add each route to the map with different colors
-          data.paths.forEach((path, index) => {
-            const decodedPoints = decodePolyline(path.points);
-            const routeId = `route-${index}`;
-            const color = ROUTE_COLORS[index % ROUTE_COLORS.length];
-            mapRef.current.addRoute(decodedPoints, routeId, color);
-          });
+          // Add route to the map
+          mapRef.current.addRoute(decodedPoints);
           
           // Add markers for waypoints
           mapRef.current.removeMarkers();
@@ -397,22 +380,16 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
           });
           
           // Fit the map to the route bounds
-          const firstPath = data.paths[0];
-          if (firstPath.bbox && firstPath.bbox.length === 4) {
-            const [minLng, minLat, maxLng, maxLat] = firstPath.bbox;
+          if (path.bbox && path.bbox.length === 4) {
+            const [minLng, minLat, maxLng, maxLat] = path.bbox;
             mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
           }
-          
-          // Show route summary
-          const routesText = data.paths.length > 1 
-            ? `${data.paths.length} routes found` 
-            : `1 route found`;
-            
-          toast({
-            title: routesText,
-            description: `Fastest: ${(data.paths[0].distance / 1000).toFixed(2)} km, ${Math.round(data.paths[0].time / 60000)} mins`,
-          });
         }
+        
+        toast({
+          title: "Route found",
+          description: `Distance: ${(data.paths[0].distance / 1000).toFixed(2)} km, Time: ${Math.round(data.paths[0].time / 60000)} mins`,
+        });
       } else {
         console.error('Direction API error:', response.status);
         toast({
@@ -431,21 +408,10 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
     }
   };
 
-  // Format time from seconds to hours and minutes
-  const formatTime = (timeInMs: number): string => {
-    const minutes = Math.floor(timeInMs / 60000);
-    if (minutes < 60) {
-      return `${minutes} mins`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const remainingMins = minutes % 60;
-    return `${hours} hr ${remainingMins > 0 ? `${remainingMins} min` : ''}`;
-  };
-
   return (
     <div className="fixed top-0 left-0 h-full z-40 transition-all duration-300">
       <div className="flex h-full">
-        <div className="bg-white shadow-lg pt-0 w-[500px] flex flex-col h-full border-r overflow-y-auto">
+        <div className="bg-white shadow-lg pt-0 w-[500px] flex flex-col h-full border-r">
           
           {/* Background Image */}
           <div 
@@ -463,30 +429,33 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
             
           </div>
 
-          {/* Travel mode selection */}
-          <div className="mb-4">
-            <h3 className="text-sm font-medium mb-2 mt-[10px] ml-[10px]">Travel mode</h3>
-            <div className="flex gap-2 px-[30px]">
-              {[
-                { id: 'car', icon: <span>🚗</span>, label: 'Car' },
-                { id: 'motorcycle', icon: <span>🏍️</span>, label: 'Motorcycle' },
-                { id: 'bike', icon: <span>🚲</span>, label: 'Bike' },
-                { id: 'foot', icon: <span>🚶</span>, label: 'Walk' }
-              ].map(mode => (
-                <Button
-                  key={mode.id}
-                  variant={vehicle === mode.id ? 'default' : 'outline'}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setVehicle(mode.id as any)}
-                >
-                  <span className="mr-1">{mode.icon}</span>
-                  <span>{mode.label}</span>
-                </Button>
-              ))}
+            {/* Travel mode selection */}
+            <div className="mb-4">
+              <h3 className="text-sm font-medium mb-2 mt-[10px] ml-[10px]">Travel mode</h3>
+              <div className="flex gap-2 px-[30px]">
+                {[
+                  { id: 'car', icon: <span>🚗</span>, label: 'Car' },
+                  { id: 'motorcycle', icon: <span>🏍️</span>, label: 'Motorcycle' },
+                  { id: 'bike', icon: <span>🚲</span>, label: 'Bike' },
+                  { id: 'foot', icon: <span>🚶</span>, label: 'Walk' }
+                ].map(mode => (
+                  <Button
+                    key={mode.id}
+                    variant={vehicle === mode.id ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setVehicle(mode.id as any)}
+                  >
+                    <span className="mr-1">{mode.icon}</span>
+                    <span>{mode.label}</span>
+                  </Button>
+                ))
+                
+                }
+
+              </div>
+              
             </div>
-          </div>
-          
           <div className="px-6 py-4 relative" ref={searchContainerRef}>
             {/* Waypoints inputs */}
             <div className="space-y-3 mb-4">
@@ -588,6 +557,7 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
             
             <Separator className="my-4" />
             
+            
             {/* Get directions button */}
             <Button
               className="w-full mb-4"
@@ -599,69 +569,24 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
             </Button>
           </div>
           
-          {/* Route instructions with tabs */}
-          {routeData && routeData.paths.length > 0 && (
-            <div className="px-4 py-2">
-              <Tabs 
-                value={activeTab} 
-                onValueChange={setActiveTab}
-                className="w-full"
-              >
-                <TabsList className="w-full mb-4">
-                  {routeData.paths.map((path, index) => (
-                    <TabsTrigger 
-                      key={index} 
-                      value={index.toString()} 
-                      color={ROUTE_COLORS[index % ROUTE_COLORS.length]}
-                      className="flex-1"
-                    >
-                      {index === 0 ? 'Fastest' : `Route ${index + 1}`}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                
-                {routeData.paths.map((path, pathIndex) => (
-                  <TabsContent 
-                    key={pathIndex} 
-                    value={pathIndex.toString()}
-                  >
-                    <div className="bg-gray-50 p-3 rounded-md mb-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="font-medium">
-                            {pathIndex === 0 ? 'Fastest Route' : `Alternative ${pathIndex}`}
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            {formatTime(path.time)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">
-                            {(path.distance / 1000).toFixed(2)} km
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <h3 className="font-medium mb-2">Route instructions</h3>
-                    <div className="space-y-2">
-                      {path.instructions.map((instruction, index) => (
-                        <div 
-                          key={index} 
-                          className="py-2 px-3 border-l-2 mb-2 hover:bg-gray-50"
-                          style={{ borderColor: ROUTE_COLORS[pathIndex % ROUTE_COLORS.length] }}
-                        >
-                          <p className="text-sm">{instruction.text}</p>
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>{(instruction.distance / 1000).toFixed(2)} km</span>
-                            <span>{Math.round(instruction.time / 60000)} mins</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
+          <Separator />
+          
+          {/* Route instructions */}
+          {routeData && (
+            <div className="flex-1 overflow-auto px-4 py-2">
+              <h3 className="font-medium mb-2">Route details</h3>
+              {routeData.paths[0]?.instructions.map((instruction, index) => (
+                <div 
+                  key={index} 
+                  className="py-2 px-3 border-l-2 border-blue-500 mb-2 hover:bg-gray-50"
+                >
+                  <p className="text-sm">{instruction.text}</p>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>{(instruction.distance / 1000).toFixed(2)} km</span>
+                    <span>{Math.round(instruction.time / 60000)} mins</span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
