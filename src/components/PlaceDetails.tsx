@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Directions, Save, Share } from 'lucide-react';
+import { Navigation, BookmarkIcon, Share2 } from 'lucide-react';
 
 interface PlaceDetailsProps {
   place: {
@@ -41,21 +41,21 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
           <div className="flex items-center gap-4">
             <div className="flex flex-col items-center">
               <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
-                <Directions className="h-6 w-6 text-blue-600" />
+                <Navigation className="h-6 w-6 text-blue-600" />
               </Button>
               <span className="text-xs mt-1">Directions</span>
             </div>
             
             <div className="flex flex-col items-center">
               <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
-                <Save className="h-6 w-6 text-gray-600" />
+                <BookmarkIcon className="h-6 w-6 text-gray-600" />
               </Button>
               <span className="text-xs mt-1">Save</span>
             </div>
             
             <div className="flex flex-col items-center">
               <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
-                <Share className="h-6 w-6 text-gray-600" />
+                <Share2 className="h-6 w-6 text-gray-600" />
               </Button>
               <span className="text-xs mt-1">Share</span>
             </div>
