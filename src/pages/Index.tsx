@@ -1,12 +1,45 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from 'react';
+import MapView from '@/components/MapView';
+import SearchBar from '@/components/SearchBar';
+import Sidebar from '@/components/Sidebar';
+import MapControls from '@/components/MapControls';
+import BottomPanel from '@/components/BottomPanel';
 
 const Index = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const handleMenuToggle = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="relative w-full h-screen overflow-hidden bg-gray-100">
+      {/* Map Container */}
+      <MapView className="absolute inset-0" />
+      
+      {/* Search Bar */}
+      <SearchBar 
+        onMenuToggle={handleMenuToggle} 
+        isMenuOpen={isSidebarOpen}
+      />
+      
+      {/* Sidebar */}
+      <Sidebar isOpen={isSidebarOpen} />
+      
+      {/* Map Controls */}
+      <MapControls />
+      
+      {/* Bottom Panel */}
+      <BottomPanel />
+      
+      {/* Overlay to close sidebar when clicking outside */}
+      {isSidebarOpen && (
+        <div 
+          className="absolute inset-0 z-15 bg-black bg-opacity-20"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };
