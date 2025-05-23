@@ -3,6 +3,7 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface RouteInstruction {
   distance: number;
@@ -27,7 +28,7 @@ interface RouteDetailsProps {
 
 const RouteDetails: React.FC<RouteDetailsProps> = ({ path, onBack }) => {
   return (
-    <div className="fixed top-0 left-0 h-full z-40 transition-all duration-300 w-[500px] bg-white shadow-lg">
+    <div className="fixed top-0 left-0 h-full z-40 transition-all duration-300 w-[500px] bg-white shadow-lg flex flex-col">
       {/* Header */}
       <div 
         className="w-full h-[150px] bg-cover bg-center relative flex items-center justify-center" 
@@ -54,9 +55,11 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({ path, onBack }) => {
         </div>
         
         <Separator className="my-4" />
-        
-        {/* Instructions */}
-        <div className="space-y-4 pb-20">
+      </div>
+      
+      {/* Instructions - Now with ScrollArea */}
+      <ScrollArea className="flex-1 px-6 pb-6">
+        <div className="space-y-4 pr-4">
           {path.instructions.map((instruction, index) => (
             <div 
               key={index} 
@@ -76,7 +79,7 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({ path, onBack }) => {
             </div>
           ))}
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 };
