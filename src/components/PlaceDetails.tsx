@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Navigation, BookmarkIcon, Share2, Edit, MapPin, Building, Tag, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Navigation, BookmarkIcon, Share2, Edit, MapPin, Building, Tag, Clock, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator";
 import {
@@ -45,7 +45,23 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
       {!isMobile && (
         <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
           <div className="flex h-full">
-            <div className="bg-white shadow-lg pt-[70px]  w-[500px] flex flex-col h-full border-r">
+            <div className="bg-white shadow-lg pt-0 w-[500px] flex flex-col h-full border-r">
+              
+              {/* Background Image */}
+              <div 
+                className="w-full h-[250px] bg-cover bg-center relative" 
+                style={{ backgroundImage: "url('/lovable-uploads/759ebf50-d075-4366-98b3-99771c255fa9.png')" }}
+              >
+                {/* Close button */}
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={onClose} 
+                  className="absolute top-6 right-6 bg-white rounded-full h-10 w-10 shadow-md"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
               
               {/* Address and interactions */}
               <div className="px-6 py-4">
@@ -64,11 +80,6 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
               </div>
 
               <Separator />
-              {/* Header */}
-              {/* <div className="p-6 pb-2">
-                <h2 className="text-xl font-semibold text-gray-900">{place.name}</h2>
-                <p className="text-sm text-gray-600 mt-1">{fullAddress}</p>
-              </div> */}
 
               {/* Action buttons */}
               <div className="flex justify-between px-6 py-4">
@@ -102,7 +113,6 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
               </div>
 
               <Separator />
-
 
               {/* Additional actions */}
               <div className="flex-1 overflow-auto">
@@ -161,6 +171,22 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
       {isMobile && (
         <Drawer open={!!place} onOpenChange={(open) => !open && onClose()}>
           <DrawerContent className="h-[85vh]">
+            {/* Background Image */}
+            <div 
+              className="w-full h-[250px] bg-cover bg-center relative" 
+              style={{ backgroundImage: "url('/lovable-uploads/759ebf50-d075-4366-98b3-99771c255fa9.png')" }}
+            >
+              {/* Close button */}
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={onClose} 
+                className="absolute top-6 right-6 bg-white rounded-full h-10 w-10 shadow-md"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
             <DrawerHeader className="p-4 border-b">
               <DrawerTitle>{place.name}</DrawerTitle>
               <p className="text-sm text-gray-500">{fullAddress}</p>

@@ -25,6 +25,7 @@ interface PlaceDetails {
 const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<PlaceDetails | null>(null);
+  const [isPlaceDetailCollapsed, setIsPlaceDetailCollapsed] = useState(false);
   const mapRef = useRef<MapViewRef>(null);
 
   const handleMenuToggle = () => {
@@ -33,6 +34,8 @@ const Index = () => {
 
   const handlePlaceSelect = (place: PlaceDetails) => {
     setSelectedPlace(place);
+    // Ensure the place detail is expanded when a place is selected
+    setIsPlaceDetailCollapsed(false);
     
     // Update map view with the selected place
     if (mapRef.current) {
