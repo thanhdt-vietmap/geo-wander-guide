@@ -121,6 +121,7 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
   const [vehicle, setVehicle] = useState<'car' | 'bike' | 'foot' | 'motorcycle'>('car');
   const [routeData, setRouteData] = useState<RouteResponse | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const isMobile = window.innerWidth <= 768;
@@ -135,6 +136,11 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
       mapRef.current.addMarker(startingPlace.lng, startingPlace.lat, 'start');
     }
   }, [startingPlace]);
+
+  // Initialize inputRefs array when waypoints change
+  useEffect(() => {
+    inputRefs.current = inputRefs.current.slice(0, waypoints.length);
+  }, [waypoints.length]);
 
   useEffect(() => {
     // Clear drag state when component unmounts
@@ -450,7 +456,7 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
               </div>
               
             </div>
-          <div className="px-6 py-4" ref={searchContainerRef}>
+          <div className="px-6 py-4 relative" ref={searchContainerRef}>
             {/* Waypoints inputs */}
             <div className="space-y-3 mb-4">
               {waypoints.map((waypoint, index) => (
@@ -495,6 +501,7 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
                       onChange={(e) => handleInputChange(e, index)}
                       onFocus={() => setActiveInputIndex(index)}
                       className="pl-10 pr-8"
+                      ref={el => inputRefs.current[index] = el}
                     />
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     
@@ -522,20 +529,20 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
                       <ArrowUpDown className="h-4 w-4" />
                     </Button>
                   )}
+
+                  {/* Render suggestions for the active input directly below it */}
+                  {showSuggestions && activeInputIndex === index && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-50">
+                      <SearchSuggestions
+                        suggestions={suggestions}
+                        onSelect={handleSuggestionSelect}
+                        isVisible={true}
+                        isLoading={isSearchLoading}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
-              
-              {/* Search suggestions */}
-              {showSuggestions && activeInputIndex !== null && (
-                <div className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-                  <SearchSuggestions
-                    suggestions={suggestions}
-                    onSelect={handleSuggestionSelect}
-                    isVisible={showSuggestions}
-                    isLoading={isSearchLoading}
-                  />
-                </div>
-              )}
             </div>
             
             {/* Add waypoint button */}
