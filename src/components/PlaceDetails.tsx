@@ -45,12 +45,30 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
       {!isMobile && (
         <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
           <div className="flex h-full">
-            <div className="bg-white shadow-lg w-[400px] flex flex-col h-full border-r">
+            <div className="bg-white shadow-lg pt-[70px]  w-[500px] flex flex-col h-full border-r">
+              
+              {/* Address and interactions */}
+              <div className="px-6 py-4">
+                <div className="flex items-start gap-4 py-3">
+                  <MapPin className="h-5 w-5 text-gray-500 flex-shrink-0 mt-1" />
+                  <div>
+                    <p className="font-medium text-gray-900">{place.display}</p>
+                    <p className="text-sm text-gray-600 mt-1">{fullAddress}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
+                  <Edit className="h-4 w-4" />
+                  <button className="hover:underline">Suggest an edit on {place.name}</button>
+                </div>
+              </div>
+
+              <Separator />
               {/* Header */}
-              <div className="p-6 pb-2">
+              {/* <div className="p-6 pb-2">
                 <h2 className="text-xl font-semibold text-gray-900">{place.name}</h2>
                 <p className="text-sm text-gray-600 mt-1">{fullAddress}</p>
-              </div>
+              </div> */}
 
               {/* Action buttons */}
               <div className="flex justify-between px-6 py-4">
@@ -85,23 +103,6 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
 
               <Separator />
 
-              {/* Address and interactions */}
-              <div className="px-6 py-4">
-                <div className="flex items-start gap-4 py-3">
-                  <MapPin className="h-5 w-5 text-gray-500 flex-shrink-0 mt-1" />
-                  <div>
-                    <p className="font-medium text-gray-900">{place.display}</p>
-                    <p className="text-sm text-gray-600">{place.city}, Vietnam</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
-                  <Edit className="h-4 w-4" />
-                  <button className="hover:underline">Suggest an edit on {place.name}</button>
-                </div>
-              </div>
-
-              <Separator />
 
               {/* Additional actions */}
               <div className="flex-1 overflow-auto">
@@ -143,7 +144,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
       {/* Toggle button - only show on desktop */}
       {!isMobile && (
         <div 
-          className={`fixed top-1/2 transform -translate-y-1/2 z-40 transition-all duration-300 ${isCollapsed ? 'left-0' : 'left-[400px]'}`}
+          className={`fixed top-1/2 transform -translate-y-1/2 z-40 transition-all duration-300 ${isCollapsed ? 'left-0' : 'left-[500px]'}`}
         >
           <Button 
             variant="ghost" 
