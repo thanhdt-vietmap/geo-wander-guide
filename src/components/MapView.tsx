@@ -16,9 +16,10 @@ export interface MapViewRef {
 
 interface MapViewProps {
   className?: string;
+  onContextMenu?: (e: { lngLat: [number, number] }) => void;
 }
 
-const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) => {
+const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContextMenu }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<vietmapgl.Map | null>(null);
   const markers = useRef<vietmapgl.Marker[]>([]);
@@ -26,6 +27,9 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
+
+  // Track if the user is dragging to prevent context menu on drag end
+  const isDragging = useRef(false);
 
   // Expose map methods to parent components
   useImperativeHandle(ref, () => ({
@@ -168,11 +172,35 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) =
       zoom: 10
     });
 
+    // Add event listeners for right-click
+    if (onContextMenu) {
+      map.current.on('mousedown', (e) => {
+        if (e.originalEvent.button === 2) { // Right mouse button
+          isDragging.current = false;
+        }
+      });
+
+      map.current.on('mousemove', () => {
+        isDragging.current = true;
+      });
+
+      map.current.on('contextmenu', (e) => {
+        // Only trigger if not dragging
+        if (!isDragging.current) {
+          e.preventDefault();
+          onContextMenu({
+            lngLat: [e.lngLat.lng, e.lngLat.lat]
+          });
+        }
+        isDragging.current = false;
+      });
+    }
+
     // Cleanup
     return () => {
       map.current?.remove();
     };
-  }, []);
+  }, [onContextMenu]);
 
   return (
     <div ref={mapContainer} className={`w-full h-full ${className}`} />

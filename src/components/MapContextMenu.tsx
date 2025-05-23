@@ -1,0 +1,67 @@
+
+import React from 'react';
+import { Copy, MapPin } from 'lucide-react';
+import { 
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator
+} from '@/components/ui/context-menu';
+import { toast } from 'sonner';
+
+interface MapContextMenuProps {
+  x: number;
+  y: number;
+  lng: number;
+  lat: number;
+  isOpen: boolean;
+  onClose: () => void;
+  onGetLocation: (lng: number, lat: number) => void;
+}
+
+const MapContextMenu: React.FC<MapContextMenuProps> = ({
+  lng,
+  lat,
+  isOpen,
+  onClose,
+  onGetLocation
+}) => {
+  const copyCoordinates = () => {
+    const coordString = `${lng.toFixed(6)}, ${lat.toFixed(6)}`;
+    navigator.clipboard.writeText(coordString);
+    toast.success('Coordinates copied to clipboard');
+    onClose();
+  };
+
+  const getLocationInfo = () => {
+    onGetLocation(lng, lat);
+    onClose();
+  };
+
+  // Format coordinates for display
+  const formatCoord = (coord: number) => coord.toFixed(6);
+
+  return (
+    <ContextMenu open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <ContextMenuTrigger />
+      <ContextMenuContent className="w-56">
+        <div className="px-2 py-1.5 text-sm font-semibold">Location</div>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={copyCoordinates} className="cursor-pointer">
+          <Copy className="mr-2 h-4 w-4" />
+          <span>
+            {formatCoord(lng)}, {formatCoord(lat)}
+          </span>
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={getLocationInfo} className="cursor-pointer">
+          <MapPin className="mr-2 h-4 w-4" />
+          <span>Get location details</span>
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+};
+
+export default MapContextMenu;

@@ -6,36 +6,33 @@ import Sidebar from '@/components/Sidebar';
 import MapControls from '@/components/MapControls';
 import PlaceDetails from '@/components/PlaceDetails';
 import Direction from '@/components/Direction';
-
-interface PlaceDetails {
-  display: string;
-  name: string;
-  hs_num: string;
-  street: string;
-  address: string;
-  city_id: number;
-  city: string;
-  district_id: number;
-  district: string;
-  ward_id: number;
-  ward: string;
-  lat: number;
-  lng: number;
-}
+import MapContextMenu from '@/components/MapContextMenu';
+import { PlaceDetails as PlaceDetailsType } from '@/types';
+import { getReverseGeocoding } from '@/services/mapService';
+import { toast } from 'sonner';
 
 const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedPlace, setSelectedPlace] = useState<PlaceDetails | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceDetailsType | null>(null);
   const [isPlaceDetailCollapsed, setIsPlaceDetailCollapsed] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
-  const [startingPlace, setStartingPlace] = useState<PlaceDetails | null>(null);
+  const [startingPlace, setStartingPlace] = useState<PlaceDetailsType | null>(null);
   const mapRef = useRef<MapViewRef>(null);
+  
+  // State for context menu
+  const [contextMenu, setContextMenu] = useState<{
+    isOpen: boolean;
+    x: number;
+    y: number;
+    lng: number;
+    lat: number;
+  } | null>(null);
 
   const handleMenuToggle = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handlePlaceSelect = (place: PlaceDetails) => {
+  const handlePlaceSelect = (place: PlaceDetailsType) => {
     setSelectedPlace(place);
     // Ensure the place detail is expanded when a place is selected
     setIsPlaceDetailCollapsed(false);
@@ -79,10 +76,43 @@ const Index = () => {
     }
   };
 
+  // Handle right-click on map
+  const handleMapContextMenu = (e: { lngLat: [number, number] }) => {
+    setContextMenu({
+      isOpen: true,
+      x: 0,
+      y: 0,
+      lng: e.lngLat[0],
+      lat: e.lngLat[1],
+    });
+  };
+
+  // Close context menu
+  const handleCloseContextMenu = () => {
+    if (contextMenu) {
+      setContextMenu({ ...contextMenu, isOpen: false });
+    }
+  };
+
+  // Get location details from coordinates
+  const handleGetLocation = async (lng: number, lat: number) => {
+    try {
+      const placeDetails = await getReverseGeocoding(lng, lat);
+      handlePlaceSelect(placeDetails);
+    } catch (error) {
+      toast.error('Failed to get location details');
+      console.error(error);
+    }
+  };
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gray-50">
       {/* Map Container */}
-      <MapView ref={mapRef} className="absolute inset-0" />
+      <MapView 
+        ref={mapRef} 
+        className="absolute inset-0" 
+        onContextMenu={handleMapContextMenu}
+      />
       
       {/* Search Bar */}
       <SearchBar 
@@ -114,6 +144,19 @@ const Index = () => {
       
       {/* Map Controls */}
       <MapControls mapRef={mapRef} />
+      
+      {/* Context Menu */}
+      {contextMenu && (
+        <MapContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          lng={contextMenu.lng}
+          lat={contextMenu.lat}
+          isOpen={contextMenu.isOpen}
+          onClose={handleCloseContextMenu}
+          onGetLocation={handleGetLocation}
+        />
+      )}
       
       {/* Overlay to close sidebar when clicking outside */}
       {isSidebarOpen && (
