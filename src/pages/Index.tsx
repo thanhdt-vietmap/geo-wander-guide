@@ -4,7 +4,6 @@ import MapView from '@/components/MapView';
 import SearchBar from '@/components/SearchBar';
 import Sidebar from '@/components/Sidebar';
 import MapControls from '@/components/MapControls';
-import BottomPanel from '@/components/BottomPanel';
 
 const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -29,9 +28,6 @@ const Index = () => {
       
       {/* Map Controls */}
       <MapControls />
-      
-      {/* Bottom Panel */}
-      <BottomPanel />
       
       {/* Overlay to close sidebar when clicking outside */}
       {isSidebarOpen && (

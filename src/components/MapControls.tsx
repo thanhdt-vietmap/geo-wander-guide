@@ -25,7 +25,7 @@ const MapControls: React.FC = () => {
   };
 
   return (
-    <div className="absolute bottom-6 right-6 z-10 flex flex-col gap-3">
+    <div className="absolute bottom-12 right-6 z-10 flex flex-col gap-3">
       {/* Layer and Navigation Controls */}
       <div className="flex flex-col gap-2">
         <Button

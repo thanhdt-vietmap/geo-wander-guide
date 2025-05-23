@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
+import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
 
 interface MapViewProps {
   className?: string;
@@ -9,52 +9,32 @@ interface MapViewProps {
 
 const MapView: React.FC<MapViewProps> = ({ className = '' }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
+  const map = useRef<vietmapgl.Map | null>(null);
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
     // Initialize map
-    map.current = new maplibregl.Map({
+    map.current = new vietmapgl.Map({
       container: mapContainer.current,
-      style: {
-        version: 8,
-        sources: {
-          'osm-tiles': {
-            type: 'raster',
-            tiles: [
-              'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-            ],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors'
-          }
-        },
-        layers: [
-          {
-            id: 'osm-tiles',
-            type: 'raster',
-            source: 'osm-tiles'
-          }
-        ]
-      },
+      style: "https://maps.vietmap.vn/mt/tm/style.json?apikey=95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c",
       center: [105.8342, 21.0285], // Hanoi, Vietnam
-      zoom: 10,
-      attributionControl: false
+      zoom: 10
     });
 
     // Add navigation controls
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+    // map.current.addControl(new vietmapgl.NavigationControl(), 'top-right');
 
     // Add geolocate control
-    map.current.addControl(
-      new maplibregl.GeolocateControl({
-        positionOptions: {
-          enableHighAccuracy: true
-        },
-        trackUserLocation: true
-      }),
-      'top-right'
-    );
+    // map.current.addControl(
+    //   new vietmapgl.GeolocateControl({
+    //     positionOptions: {
+    //       enableHighAccuracy: true
+    //     },
+    //     trackUserLocation: true
+    //   }),
+    //   'top-right'
+    // );
 
     // Cleanup
     return () => {
