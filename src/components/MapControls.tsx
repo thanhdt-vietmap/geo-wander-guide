@@ -2,14 +2,25 @@
 import React from 'react';
 import { Layers, ZoomIn, ZoomOut, Navigation, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { MapViewRef } from './MapView';
 
-const MapControls: React.FC = () => {
+interface MapControlsProps {
+  mapRef?: React.RefObject<MapViewRef>;
+}
+
+const MapControls: React.FC<MapControlsProps> = ({ mapRef }) => {
   const handleZoomIn = () => {
-    console.log('Zoom in clicked');
+    const map = mapRef?.current?.map;
+    if (map) {
+      map.zoomIn();
+    }
   };
 
   const handleZoomOut = () => {
-    console.log('Zoom out clicked');
+    const map = mapRef?.current?.map;
+    if (map) {
+      map.zoomOut();
+    }
   };
 
   const handleLayerToggle = () => {
@@ -21,7 +32,10 @@ const MapControls: React.FC = () => {
   };
 
   const handleCompass = () => {
-    console.log('Compass clicked');
+    const map = mapRef?.current?.map;
+    if (map) {
+      map.resetNorth();
+    }
   };
 
   return (

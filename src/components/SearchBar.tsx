@@ -4,6 +4,7 @@ import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import SearchSuggestions from './SearchSuggestions';
+import { toast } from '@/hooks/use-toast';
 
 interface SearchResult {
   ref_id: string;
@@ -22,16 +23,38 @@ interface SearchResult {
   entry_points: any[];
 }
 
+interface PlaceDetails {
+  display: string;
+  name: string;
+  hs_num: string;
+  street: string;
+  address: string;
+  city_id: number;
+  city: string;
+  district_id: number;
+  district: string;
+  ward_id: number;
+  ward: string;
+  lat: number;
+  lng: number;
+}
+
 interface SearchBarProps {
   onMenuToggle: () => void;
   isMenuOpen: boolean;
+  onPlaceSelect?: (place: PlaceDetails) => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onMenuToggle, isMenuOpen }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ 
+  onMenuToggle, 
+  isMenuOpen, 
+  onPlaceSelect 
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [isPlaceLoading, setIsPlaceLoading] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +68,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onMenuToggle, isMenuOpen }) => {
       return;
     }
 
-    setIsLoading(true);
+    setIsSearchLoading(true);
     try {
       const response = await fetch(
         `https://maps.vietmap.vn/api/autocomplete/v3?apikey=${API_KEY}&text=${encodeURIComponent(query)}&focus=${FOCUS_COORDINATES}`
@@ -58,12 +81,57 @@ const SearchBar: React.FC<SearchBarProps> = ({ onMenuToggle, isMenuOpen }) => {
       } else {
         console.error('Search API error:', response.status);
         setSuggestions([]);
+        toast({
+          title: "Search failed",
+          description: "Could not fetch search results",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Search error:', error);
       setSuggestions([]);
+      toast({
+        title: "Search error",
+        description: "An error occurred during search",
+        variant: "destructive"
+      });
     } finally {
-      setIsLoading(false);
+      setIsSearchLoading(false);
+    }
+  };
+
+  const fetchPlaceDetails = async (refId: string) => {
+    setIsPlaceLoading(true);
+    try {
+      const response = await fetch(
+        `https://maps.vietmap.vn/api/place/v3?apikey=${API_KEY}&refid=${encodeURIComponent(refId)}`
+      );
+      
+      if (response.ok) {
+        const data: PlaceDetails = await response.json();
+        if (onPlaceSelect) {
+          onPlaceSelect(data);
+        }
+        return data;
+      } else {
+        console.error('Place API error:', response.status);
+        toast({
+          title: "Failed to load place details",
+          description: "Could not fetch place details",
+          variant: "destructive"
+        });
+        return null;
+      }
+    } catch (error) {
+      console.error('Place error:', error);
+      toast({
+        title: "Error loading place",
+        description: "An error occurred while loading place details",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setIsPlaceLoading(false);
     }
   };
 
@@ -82,11 +150,19 @@ const SearchBar: React.FC<SearchBarProps> = ({ onMenuToggle, isMenuOpen }) => {
     }, 300);
   };
 
-  const handleSuggestionSelect = (suggestion: SearchResult) => {
+  const handleSuggestionSelect = async (suggestion: SearchResult) => {
     setSearchQuery(suggestion.display);
     setShowSuggestions(false);
-    console.log('Selected place:', suggestion);
-    // TODO: Update map to show selected location
+    
+    // Fetch place details
+    const placeDetails = await fetchPlaceDetails(suggestion.ref_id);
+    console.log('Selected place details:', placeDetails);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSuggestions([]);
+    setShowSuggestions(false);
   };
 
   const handleInputFocus = () => {
@@ -138,9 +214,18 @@ const SearchBar: React.FC<SearchBarProps> = ({ onMenuToggle, isMenuOpen }) => {
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={handleInputFocus}
-            className="pl-12 pr-4 py-3 h-12 bg-white shadow-md border-gray-200 focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg text-base"
+            className="pl-12 pr-12 py-3 h-12 bg-white shadow-md border-gray-200 focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg text-base"
           />
-          {isLoading && (
+          {searchQuery && (
+            <button 
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              onClick={clearSearch}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+          
+          {isSearchLoading && !isPlaceLoading && (
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
               <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
             </div>
@@ -151,6 +236,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onMenuToggle, isMenuOpen }) => {
           suggestions={suggestions}
           onSelect={handleSuggestionSelect}
           isVisible={showSuggestions}
+          isLoading={isPlaceLoading}
         />
       </div>
     </div>

@@ -1,15 +1,55 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
+
+export interface MapViewRef {
+  map: vietmapgl.Map | null;
+  flyTo: (lng: number, lat: number) => void;
+  addMarker: (lng: number, lat: number) => void;
+  removeMarkers: () => void;
+}
 
 interface MapViewProps {
   className?: string;
 }
 
-const MapView: React.FC<MapViewProps> = ({ className = '' }) => {
+const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '' }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<vietmapgl.Map | null>(null);
+  const markers = useRef<vietmapgl.Marker[]>([]);
+
+  // Expose map methods to parent components
+  useImperativeHandle(ref, () => ({
+    map: map.current,
+    flyTo: (lng: number, lat: number) => {
+      if (map.current) {
+        map.current.flyTo({
+          center: [lng, lat],
+          zoom: 16,
+          essential: true
+        });
+      }
+    },
+    addMarker: (lng: number, lat: number) => {
+      if (map.current) {
+        // Remove existing markers first
+        markers.current.forEach(marker => marker.remove());
+        markers.current = [];
+        
+        // Create new marker
+        const marker = new vietmapgl.Marker({ color: '#FF0000' })
+          .setLngLat([lng, lat])
+          .addTo(map.current);
+        
+        markers.current.push(marker);
+      }
+    },
+    removeMarkers: () => {
+      markers.current.forEach(marker => marker.remove());
+      markers.current = [];
+    }
+  }));
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -22,20 +62,6 @@ const MapView: React.FC<MapViewProps> = ({ className = '' }) => {
       zoom: 10
     });
 
-    // Add navigation controls
-    // map.current.addControl(new vietmapgl.NavigationControl(), 'top-right');
-
-    // Add geolocate control
-    // map.current.addControl(
-    //   new vietmapgl.GeolocateControl({
-    //     positionOptions: {
-    //       enableHighAccuracy: true
-    //     },
-    //     trackUserLocation: true
-    //   }),
-    //   'top-right'
-    // );
-
     // Cleanup
     return () => {
       map.current?.remove();
@@ -45,6 +71,8 @@ const MapView: React.FC<MapViewProps> = ({ className = '' }) => {
   return (
     <div ref={mapContainer} className={`w-full h-full ${className}`} />
   );
-};
+});
+
+MapView.displayName = 'MapView';
 
 export default MapView;

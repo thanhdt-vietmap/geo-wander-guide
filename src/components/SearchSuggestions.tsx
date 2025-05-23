@@ -23,14 +23,37 @@ interface SearchSuggestionsProps {
   suggestions: SearchResult[];
   onSelect: (suggestion: SearchResult) => void;
   isVisible: boolean;
+  isLoading?: boolean;
 }
 
 const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({ 
   suggestions, 
   onSelect, 
-  isVisible 
+  isVisible,
+  isLoading = false
 }) => {
-  if (!isVisible || suggestions.length === 0) return null;
+  if (!isVisible) return null;
+
+  if (isLoading) {
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-50">
+        <div className="flex items-center justify-center py-4">
+          <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
+          <span className="text-sm text-gray-500">Loading suggestions...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (suggestions.length === 0) {
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-50">
+        <div className="py-3 text-center text-sm text-gray-500">
+          No results found
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
