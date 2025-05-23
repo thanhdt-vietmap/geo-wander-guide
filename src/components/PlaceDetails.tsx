@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation, BookmarkIcon, Share2, Edit, MapPin, Building, Tag, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +25,20 @@ interface PlaceDetailsProps {
 
 const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if device is mobile on first render
+    setIsMobile(window.innerWidth <= 768);
+    
+    // Add resize listener to update responsiveness
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!place) return null;
 
@@ -36,16 +49,13 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose }) => {
     setIsCollapsed(!isCollapsed);
   };
 
-  // Determine if we're on mobile using a simple media query check
-  const isMobile = window.innerWidth <= 768; // 768px is a common breakpoint for mobile
-
   return (
     <>
       {/* Desktop sidebar-style drawer - only show on desktop */}
       {!isMobile && (
-        <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
+        <div className={`fixed top-20 left-6 h-[calc(100vh-6.5rem)] z-30 transition-all duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
           <div className="flex h-full">
-            <div className="bg-white shadow-lg w-[400px] flex flex-col h-full border-r">
+            <div className="bg-white shadow-lg w-[400px] flex flex-col h-full border-r rounded-lg">
               {/* Header */}
               <div className="p-6 pb-2">
                 <h2 className="text-xl font-semibold text-gray-900">{place.name}</h2>
