@@ -222,6 +222,8 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     },
     updateWaypointCoordinates: async (index: number, lng: number, lat: number) => {
       try {
+        console.log(`Updating waypoint ${index} to coordinates: ${lng}, ${lat}`);
+        
         // Get location details from coordinates using reverse geocoding
         const response = await fetch(
           `https://maps.vietmap.vn/api/reverse/v3?apikey=${API_KEY}&lng=${lng}&lat=${lat}`
@@ -229,14 +231,28 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         
         if (response.ok) {
           const data = await response.json();
+          console.log('Reverse geocoding response:', data);
+          
           if (data.length > 0) {
             // Update the waypoint with new coordinates and name
-            setWaypoints(prev => prev.map((wp, i) => 
-              i === index 
-                ? { ...wp, name: data[0].display, lat: lat, lng: lng, ref_id: data[0].ref_id }
-                : wp
-            ));
+            setWaypoints(prev => {
+              const newWaypoints = prev.map((wp, i) => 
+                i === index 
+                  ? { ...wp, name: data[0].display, lat: lat, lng: lng, ref_id: data[0].ref_id }
+                  : wp
+              );
+              console.log('Updated waypoints:', newWaypoints);
+              return newWaypoints;
+            });
           }
+        } else {
+          console.error('Reverse geocoding failed:', response.status);
+          // Update coordinates even if reverse geocoding fails
+          setWaypoints(prev => prev.map((wp, i) => 
+            i === index 
+              ? { ...wp, lat: lat, lng: lng }
+              : wp
+          ));
         }
       } catch (error) {
         console.error('Error getting location details:', error);
@@ -248,7 +264,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         ));
       }
     }
-  }), [waypoints]);
+  }), [waypoints, API_KEY]);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];

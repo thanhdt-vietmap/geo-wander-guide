@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import MapView, { MapViewRef } from '@/components/MapView';
 import SearchBar from '@/components/SearchBar';
 import Sidebar from '@/components/Sidebar';
@@ -89,8 +89,9 @@ const Index = () => {
     setShowDirections(false);
     setStartingPlace(null);
     directionActiveInputRef.current = null;
-    // Clear any direction-related data
+    // Clear marker drag callback when closing directions
     if (mapRef.current) {
+      mapRef.current.setMarkerDragCallback(null);
       mapRef.current.removeMarkers();
       mapRef.current.removeRoutes();
     }
@@ -271,6 +272,21 @@ const Index = () => {
       setCurrentMapLayer(layerType);
     }
   };
+
+  // Setup marker drag callback when Direction component is active
+  useEffect(() => {
+    if (showDirections && directionRef.current && mapRef.current) {
+      // Set the callback to update waypoint coordinates in Direction component
+      mapRef.current.setMarkerDragCallback((index: number, lng: number, lat: number) => {
+        if (directionRef.current && directionRef.current.updateWaypointCoordinates) {
+          directionRef.current.updateWaypointCoordinates(index, lng, lat);
+        }
+      });
+    } else if (mapRef.current) {
+      // Clear the callback when Direction is not active
+      mapRef.current.setMarkerDragCallback(null);
+    }
+  }, [showDirections]);
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gray-50">
