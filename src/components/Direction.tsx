@@ -565,18 +565,33 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     }
     
     try {
-      const params: Record<string, string> = {
+      const params: Record<string, string | string[]> = {
         'api-version': '1.1',
         points_encoded: 'true',
         vehicle: vehicle,
         'alternative_route.max_paths': '5'
       };
 
-      validWaypoints.forEach((wp, index) => {
-        params[`point`] = `${wp.lat},${wp.lng}`;
+      // Add each waypoint as a separate point parameter
+      const pointParams: string[] = [];
+      validWaypoints.forEach((wp) => {
+        pointParams.push(`${wp.lat},${wp.lng}`);
       });
       
-      const data: RouteResponse = await apiClient.get('/route', params);
+      // Convert to the format expected by the API client
+      const apiParams: Record<string, string> = {
+        'api-version': '1.1',
+        points_encoded: 'true',
+        vehicle: vehicle,
+        'alternative_route.max_paths': '5'
+      };
+
+      // Add points as indexed parameters
+      validWaypoints.forEach((wp, index) => {
+        apiParams[`point.${index}`] = `${wp.lat},${wp.lng}`;
+      });
+      
+      const data: RouteResponse = await apiClient.get('/route', apiParams);
       setRouteData(data);
       
       setRouteSummaries([]);
@@ -648,6 +663,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       toast({
         title: "Error getting directions",
         description: "An error occurred while calculating the route",
+        variant: "destructive"
       });
     }
   };
