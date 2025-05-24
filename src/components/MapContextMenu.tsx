@@ -46,27 +46,35 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   if (!isOpen) return null;
 
   return (
-    <ContextMenu open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <ContextMenuTrigger 
-        className="fixed" 
-        style={{ top: 0, left: 0, width: '100vw', height: '100vh' }} 
-      />
-      <ContextMenuContent className="w-56">
-        <div className="px-2 py-1.5 text-sm font-semibold">Location</div>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={copyCoordinates} className="cursor-pointer">
-          <Copy className="mr-2 h-4 w-4" />
-          <span>
-            {formatCoord(lng)}, {formatCoord(lat)}
-          </span>
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={getLocationInfo} className="cursor-pointer">
-          <MapPin className="mr-2 h-4 w-4" />
-          <span>Get location details</span>
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+    <div className="fixed inset-0 z-50" onClick={onClose}>
+      <ContextMenu>
+        <ContextMenuTrigger 
+          className="fixed" 
+          style={{ 
+            top: 0, 
+            left: 0, 
+            width: '100vw', 
+            height: '100vh',
+            pointerEvents: 'none' // Allow clicks to pass through to the overlay
+          }} 
+        />
+        <ContextMenuContent className="w-56">
+          <div className="px-2 py-1.5 text-sm font-semibold">Location</div>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={copyCoordinates} className="cursor-pointer">
+            <Copy className="mr-2 h-4 w-4" />
+            <span>
+              {formatCoord(lng)}, {formatCoord(lat)}
+            </span>
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={getLocationInfo} className="cursor-pointer">
+            <MapPin className="mr-2 h-4 w-4" />
+            <span>Get location details</span>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    </div>
   );
 };
 
