@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import MapView, { MapViewRef } from '@/components/MapView';
 import SearchBar from '@/components/SearchBar';
@@ -96,7 +95,7 @@ const Index = () => {
     return true; // Continue handling map clicks
   };
 
-  // Handle right-click on map
+  // Handle right-click on map - updated to prevent default browser context menu
   const handleMapContextMenu = (e: { lngLat: [number, number] }) => {
     setContextMenu({
       isOpen: true,
@@ -107,7 +106,7 @@ const Index = () => {
     });
   };
 
-  // Handle click on map
+  // Handle click on map - updated to properly handle Direction component
   const handleMapClick = async (e: { lngLat: [number, number] }) => {
     try {
       // Close any open context menu
@@ -124,7 +123,6 @@ const Index = () => {
         }
         
         // Let the Direction component know about this click
-        // The actual input filling is handled in the Direction component
         return;
       }
       
@@ -229,7 +227,7 @@ const Index = () => {
       <MapControls mapRef={mapRef} />
       
       {/* Context Menu */}
-      {contextMenu && (
+      {contextMenu && contextMenu.isOpen && (
         <MapContextMenu
           x={contextMenu.x}
           y={contextMenu.y}

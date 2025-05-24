@@ -29,8 +29,9 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
 }) => {
   const copyCoordinates = () => {
     const coordString = `${lng.toFixed(6)}, ${lat.toFixed(6)}`;
-    navigator.clipboard.writeText(coordString);
-    toast.success('Coordinates copied to clipboard');
+    navigator.clipboard.writeText(coordString)
+      .then(() => toast.success('Coordinates copied to clipboard'))
+      .catch(() => toast.error('Failed to copy coordinates'));
     onClose();
   };
 
@@ -45,8 +46,11 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   if (!isOpen) return null;
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger className="fixed" style={{ top: 0, left: 0, width: '100vw', height: '100vh' }} />
+    <ContextMenu defaultOpen={true} onOpenChange={(open) => !open && onClose()}>
+      <ContextMenuTrigger 
+        className="fixed" 
+        style={{ top: 0, left: 0, width: '100vw', height: '100vh' }} 
+      />
       <ContextMenuContent className="w-56">
         <div className="px-2 py-1.5 text-sm font-semibold">Location</div>
         <ContextMenuSeparator />

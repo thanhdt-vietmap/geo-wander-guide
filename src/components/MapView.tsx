@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
@@ -174,65 +175,77 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContex
       zoom: 10
     });
 
-    // Add event listeners for right-click
-    if (onContextMenu) {
-      map.current.on('mousedown', (e) => {
-        if (e.originalEvent.button === 2) { // Right mouse button
-          isDragging.current = false;
-        } else if (e.originalEvent.button === 0 && onClick) { // Left mouse button
-          clickStartPos.current = [e.point.x, e.point.y];
-          isDragging.current = false;
-        }
-      });
+    // Add event listeners for map interactions with proper event prevention
+    const handleMouseDown = (e: any) => {
+      if (e.originalEvent.button === 2) { // Right mouse button
+        isDragging.current = false;
+      } else if (e.originalEvent.button === 0 && onClick) { // Left mouse button
+        clickStartPos.current = [e.point.x, e.point.y];
+        isDragging.current = false;
+      }
+    };
 
-      map.current.on('mousemove', () => {
-        isDragging.current = true;
-      });
+    const handleMouseMove = () => {
+      isDragging.current = true;
+    };
 
-      map.current.on('contextmenu', (e) => {
-        // Only trigger if not dragging
-        if (!isDragging.current) {
-          e.preventDefault();
-          onContextMenu({
+    const handleContextMenu = (e: any) => {
+      // Prevent default browser context menu
+      e.preventDefault();
+      
+      // Only trigger if not dragging
+      if (!isDragging.current && onContextMenu) {
+        onContextMenu({
+          lngLat: [e.lngLat.lng, e.lngLat.lat]
+        });
+      }
+      isDragging.current = false;
+    };
+
+    const handleMouseUp = (e: any) => {
+      if (e.originalEvent.button === 0 && !isDragging.current && clickStartPos.current && onClick) {
+        // Check if it's a click without drag
+        const currentPos = [e.point.x, e.point.y];
+        const startPos = clickStartPos.current;
+        
+        // Calculate the distance moved during the click
+        const dx = currentPos[0] - startPos[0];
+        const dy = currentPos[1] - startPos[1];
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // If the distance is small, consider it a click without drag
+        if (distance < 5) {  // 5 pixels threshold
+          onClick({
             lngLat: [e.lngLat.lng, e.lngLat.lat]
           });
         }
-        isDragging.current = false;
-      });
-    }
-    
-    // Add event listener for left-click
-    if (onClick) {
-      map.current.on('mouseup', (e) => {
-        if (e.originalEvent.button === 0 && !isDragging.current && clickStartPos.current) {
-          // Check if it's a click without drag
-          const currentPos = [e.point.x, e.point.y];
-          const startPos = clickStartPos.current;
-          
-          // Calculate the distance moved during the click
-          const dx = currentPos[0] - startPos[0];
-          const dy = currentPos[1] - startPos[1];
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          // If the distance is small, consider it a click without drag
-          if (distance < 5) {  // 5 pixels threshold
-            onClick({
-              lngLat: [e.lngLat.lng, e.lngLat.lat]
-            });
-          }
-        }
-        
-        clickStartPos.current = null;
-        isDragging.current = false;
-      });
+      }
+      
+      clickStartPos.current = null;
+      isDragging.current = false;
+    };
+
+    // Register the event listeners
+    if (map.current) {
+      map.current.on('mousedown', handleMouseDown);
+      map.current.on('mousemove', handleMouseMove);
+      map.current.on('contextmenu', handleContextMenu);
+      map.current.on('mouseup', handleMouseUp);
     }
 
-    // Cleanup
+    // Cleanup function to remove event listeners when component unmounts
     return () => {
       if (clickTimeout.current) {
         window.clearTimeout(clickTimeout.current);
       }
-      map.current?.remove();
+      
+      if (map.current) {
+        map.current.off('mousedown', handleMouseDown);
+        map.current.off('mousemove', handleMouseMove);
+        map.current.off('contextmenu', handleContextMenu);
+        map.current.off('mouseup', handleMouseUp);
+        map.current.remove();
+      }
     };
   }, [onContextMenu, onClick]);
 
