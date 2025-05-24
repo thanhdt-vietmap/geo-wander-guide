@@ -124,6 +124,7 @@ export interface DirectionRef {
   setEndPoint: (place: any) => void;
   addWaypoint: (place: any) => void;
   hasValidInputs: () => boolean;
+  updateWaypointCoordinates: (index: number, lng: number, lat: number) => void;
 }
 
 const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, startingPlace, onMapClick }, ref) => {
@@ -218,6 +219,34 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     hasValidInputs: () => {
       const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
       return validWaypoints.length >= 2;
+    },
+    updateWaypointCoordinates: async (index: number, lng: number, lat: number) => {
+      try {
+        // Get location details from coordinates using reverse geocoding
+        const response = await fetch(
+          `https://maps.vietmap.vn/api/reverse/v3?apikey=${API_KEY}&lng=${lng}&lat=${lat}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.length > 0) {
+            // Update the waypoint with new coordinates and name
+            setWaypoints(prev => prev.map((wp, i) => 
+              i === index 
+                ? { ...wp, name: data[0].display, lat: lat, lng: lng, ref_id: data[0].ref_id }
+                : wp
+            ));
+          }
+        }
+      } catch (error) {
+        console.error('Error getting location details:', error);
+        // Update coordinates even if reverse geocoding fails
+        setWaypoints(prev => prev.map((wp, i) => 
+          i === index 
+            ? { ...wp, lat: lat, lng: lng }
+            : wp
+        ));
+      }
     }
   }), [waypoints]);
 
@@ -542,12 +571,18 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             }
           }
           
-          // Add markers for waypoints
+          // Add draggable markers for waypoints
           if (mapRef.current) {
             validWaypoints.forEach((wp, index) => {
               const isStart = index === 0;
               const isEnd = index === validWaypoints.length - 1;
-              mapRef.current.addMarker(wp.lng, wp.lat, isStart ? 'start' : isEnd ? 'end' : 'waypoint');
+              mapRef.current.addMarker(
+                wp.lng, 
+                wp.lat, 
+                isStart ? 'start' : isEnd ? 'end' : 'waypoint',
+                true, // Make markers draggable
+                index // Pass the index for tracking
+              );
             });
           }
           

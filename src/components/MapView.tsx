@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
-import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
+import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
 import { mapUtils } from '@/utils/utils';
 import { MapLayerType } from './MapLayerSelector';
@@ -7,7 +7,7 @@ import { MapLayerType } from './MapLayerSelector';
 export interface MapViewRef {
   map: vietmapgl.Map | null;
   flyTo: (lng: number, lat: number) => void;
-  addMarker: (lng: number, lat: number, type?: 'default' | 'start' | 'end' | 'waypoint') => void;
+  addMarker: (lng: number, lat: number, type?: 'default' | 'start' | 'end' | 'waypoint', draggable?: boolean, index?: number) => void;
   removeMarkers: () => void;
   addRoute: (coordinates: [number, number][], routeId?: string, color?: string) => void;
   removeRoutes: () => void;
@@ -18,6 +18,7 @@ export interface MapViewRef {
   resetNorth: () => void;
   toggle3D: () => void;
   getCurrentLocation: () => Promise<GeolocationPosition | null>;
+  setMarkerDragCallback: (callback: ((index: number, lng: number, lat: number) => void) | null) => void;
 }
 
 interface MapViewProps {
@@ -37,12 +38,13 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
 }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<vietmapgl.Map | null>(null);
-  const markers = useRef<vietmapgl.Marker[]>([]);
+  const markers = useRef<{ marker: vietmapgl.Marker; index?: number }[]>([]);
   const routes = useRef<string[]>([]);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [currentMapStyle, setCurrentMapStyle] = useState<MapLayerType>(initialMapStyle);
   const [is3DMode, setIs3DMode] = useState(false);
   const locationMarker = useRef<vietmapgl.Marker | null>(null);
+  const markerDragCallback = useRef<((index: number, lng: number, lat: number) => void) | null>(null);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
@@ -136,7 +138,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         });
       }
     },
-    addMarker: (lng: number, lat: number, type = 'default') => {
+    addMarker: (lng: number, lat: number, type = 'default', draggable = false, index) => {
       if (map.current) {
         // Create marker with different colors based on type
         const colors = {
@@ -148,16 +150,27 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
 
         // Create new marker
         const marker = new vietmapgl.Marker({ 
-          color: colors[type]
+          color: colors[type],
+          draggable: draggable
         })
           .setLngLat([lng, lat])
           .addTo(map.current);
         
-        markers.current.push(marker);
+        // Add drag event listener if draggable
+        if (draggable && typeof index === 'number') {
+          marker.on('dragend', () => {
+            const lngLat = marker.getLngLat();
+            if (markerDragCallback.current) {
+              markerDragCallback.current(index, lngLat.lng, lngLat.lat);
+            }
+          });
+        }
+        
+        markers.current.push({ marker, index });
       }
     },
     removeMarkers: () => {
-      markers.current.forEach(marker => marker.remove());
+      markers.current.forEach(({ marker }) => marker.remove());
       markers.current = [];
     },
     addRoute: (coordinates: [number, number][], routeId = 'route', color) => {
@@ -333,6 +346,9 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
           resolve(null);
         }
       });
+    },
+    setMarkerDragCallback: (callback: ((index: number, lng: number, lat: number) => void) | null) => {
+      markerDragCallback.current = callback;
     }
   }), [currentMapStyle, onMapStyleChange, is3DMode]);
 
