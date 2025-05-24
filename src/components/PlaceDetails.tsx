@@ -27,6 +27,14 @@ interface PlaceDetailsProps {
 
 const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirectionClick }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [animating, setAnimating] = useState(false);
+
+  // Add animation effect when component mounts
+  useEffect(() => {
+    setAnimating(true);
+    const timer = setTimeout(() => setAnimating(false), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!place) return null;
 
@@ -44,7 +52,12 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
     <>
       {/* Desktop sidebar-style drawer - only show on desktop */}
       {!isMobile && (
-        <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}`}>
+        <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-100 ${
+          isCollapsed 
+            ? '-translate-x-full' 
+            : 'translate-x-0'} ${
+          animating ? 'animate-in fade-in slide-in-from-left duration-100' : ''
+        }`}>
           <div className="flex h-full">
             <div className="bg-white shadow-lg pt-0 w-[500px] flex flex-col h-full border-r">
               
@@ -160,7 +173,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
       {/* Toggle button - only show on desktop */}
       {!isMobile && (
         <div 
-          className={`fixed top-1/2 transform -translate-y-1/2 z-40 transition-all duration-300 ${isCollapsed ? 'left-0' : 'left-[500px]'}`}
+          className={`fixed top-1/2 transform -translate-y-1/2 z-40 transition-all duration-100 ${isCollapsed ? 'left-0' : 'left-[500px]'}`}
         >
           <Button 
             variant="ghost" 
@@ -176,7 +189,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
       {/* Mobile drawer - only show on mobile */}
       {isMobile && (
         <Drawer open={!!place} onOpenChange={(open) => !open && onClose()}>
-          <DrawerContent className="h-[85vh]">
+          <DrawerContent className="h-[85vh] animate-in slide-in-from-bottom duration-100">
             {/* Background Image */}
             <div 
               className="w-full h-[250px] bg-cover bg-center relative" 

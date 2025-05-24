@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Copy, MapPin } from 'lucide-react';
 import { 
   ContextMenu,
@@ -27,6 +27,16 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   onClose,
   onGetLocation
 }) => {
+  const [animating, setAnimating] = useState(true);
+  
+  useEffect(() => {
+    if (isOpen) {
+      setAnimating(true);
+      const timer = setTimeout(() => setAnimating(false), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   const copyCoordinates = () => {
     const coordString = `${lng.toFixed(6)}, ${lat.toFixed(6)}`;
     navigator.clipboard.writeText(coordString)
@@ -46,7 +56,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50" onClick={onClose}>
+    <div className={`fixed inset-0 z-50 ${animating ? 'animate-in fade-in duration-100' : ''}`} onClick={onClose}>
       <ContextMenu>
         <ContextMenuTrigger 
           className="fixed" 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlaceDetails } from '@/types';
@@ -12,9 +12,18 @@ interface LocationInfoCardProps {
 }
 
 const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onDirectionClick }) => {
+  const [animating, setAnimating] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimating(false), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-md">
-      <Card className="shadow-lg border-t-4 border-t-primary">
+      <Card className={`shadow-lg border-t-4 border-t-primary ${
+        animating ? 'animate-in fade-in slide-in-from-bottom duration-100' : ''
+      }`}>
         <CardContent className="p-4 relative">
           <button 
             onClick={onClose}

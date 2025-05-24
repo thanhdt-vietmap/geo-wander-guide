@@ -121,6 +121,7 @@ interface DirectionProps {
 }
 
 const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace, onMapClick }) => {
+  const [animating, setAnimating] = useState(true);
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
     { name: startingPlace?.display || "", lat: startingPlace?.lat || 0, lng: startingPlace?.lng || 0 },
     { name: "", lat: 0, lng: 0 }
@@ -141,6 +142,12 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace, o
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const isMobile = window.innerWidth <= 768;
+
+  // Add animation effect
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimating(false), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // New method to fill an input with location data
   const fillInputWithLocation = (location: { display: string; lat: number; lng: number; ref_id?: string }) => {
@@ -552,7 +559,9 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace, o
   }
 
   return (
-    <div className="fixed top-0 left-0 h-full z-40 transition-all duration-300 w-[500px] overflow-auto">
+    <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-100 w-[500px] overflow-auto ${
+      animating ? 'animate-in fade-in slide-in-from-left duration-100' : ''
+    }`}>
       <div className="flex h-full">
         <div className="bg-white shadow-lg pt-0 w-full flex flex-col border-r">
           
