@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,6 +20,33 @@ const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
   onLayerSelect,
   currentLayer
 }) => {
+  const selectorRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const vectorLayers = [
@@ -68,7 +95,10 @@ const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
   );
 
   return (
-    <div className="absolute bottom-12 right-20 z-10 w-48 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 animate-in fade-in duration-100">
+    <div 
+      ref={selectorRef}
+      className="absolute bottom-12 right-20 z-10 w-48 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 animate-in fade-in duration-100"
+    >
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <h3 className="text-sm font-medium">Map Layers</h3>
         <Button
