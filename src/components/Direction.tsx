@@ -290,7 +290,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         }
       }
     }
-  }), [waypoints, autoUpdateRoute, routeData, handleGetDirections]);
+  }), [waypoints, autoUpdateRoute, routeData]);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
