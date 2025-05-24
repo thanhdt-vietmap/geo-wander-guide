@@ -93,22 +93,10 @@ const WaypointInput = ({
           value={waypoint.name}
           onChange={(e) => onInputChange(e, index)}
           onFocus={() => onInputFocus(index)}
-          className={`pl-10 ${showInlineSwap ? 'pr-16' : 'pr-8'}`}
+          className={`pl-10 ${canRemove ? 'pr-8' : 'pr-3'}`}
           ref={inputRef}
         />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        
-        {/* Inline swap button for exactly 2 waypoints */}
-        {showInlineSwap && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-8 top-1/2 transform -translate-y-1/2 h-6 w-6"
-            onClick={onSwapWaypoints}
-          >
-            <ArrowUpDown className="h-4 w-4" />
-          </Button>
-        )}
         
         {/* Remove button for waypoints */}
         {canRemove && (
@@ -122,6 +110,18 @@ const WaypointInput = ({
           </Button>
         )}
       </div>
+
+      {/* Swap button in the same row for exactly 2 waypoints */}
+      {showInlineSwap && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 flex-shrink-0"
+          onClick={onSwapWaypoints}
+        >
+          <ArrowUpDown className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };
