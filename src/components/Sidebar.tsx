@@ -6,9 +6,10 @@ import { Separator } from '@/components/ui/separator';
 
 interface SidebarProps {
   isOpen: boolean;
+  onClose?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const mainMenuItems = [
     { icon: Home, label: 'Trang chủ', url: 'https://maps.vietmap.vn/web', color: 'text-blue-600' },
     { icon: BookOpen, label: 'Tài liệu tích hợp', url: 'https://maps.vietmap.vn/docs/', color: 'text-green-600' },
@@ -21,6 +22,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
     { icon: LogIn, label: 'Đăng nhập', url: 'https://maps.vietmap.vn/console/' },
     { icon: Info, label: 'Trợ giúp & phản hồi', url: 'https://maps.vietmap.vn/web#contact-section' },
   ];
+
+  const handleItemClick = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -35,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               className="w-full justify-start gap-4 py-3 px-3 hover:bg-gray-50 text-left h-auto"
               asChild
             >
-              <a href={item.url} target="_blank" rel="noopener noreferrer">
+              <a href={item.url} target="_blank" rel="noopener noreferrer" onClick={handleItemClick}>
                 <item.icon className={`h-5 w-5 ${item.color} flex-shrink-0`} />
                 <span className="text-gray-800 text-sm">{item.label}</span>
               </a>
@@ -53,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
               className="w-full justify-start gap-4 py-3 px-3 hover:bg-gray-50 text-left h-auto"
               asChild
             >
-              <a href={item.url} target="_blank" rel="noopener noreferrer">
+              <a href={item.url} target="_blank" rel="noopener noreferrer" onClick={handleItemClick}>
                 <item.icon className="h-5 w-5 text-gray-500 flex-shrink-0" />
                 <span className="text-gray-800 text-sm">{item.label}</span>
               </a>

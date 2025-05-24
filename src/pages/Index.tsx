@@ -36,6 +36,10 @@ const Index = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleSidebarClose = () => {
+    setIsSidebarOpen(false);
+  };
+
   const handlePlaceSelect = (place: PlaceDetailsType) => {
     setSelectedPlace(place);
     // Ensure the place detail is expanded when a place is selected
@@ -250,7 +254,7 @@ const Index = () => {
       )}
       
       {/* Sidebar */}
-      <Sidebar isOpen={isSidebarOpen} />
+      <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarClose} />
       
       {/* Map Controls */}
       <MapControls 
