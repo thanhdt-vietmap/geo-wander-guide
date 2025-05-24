@@ -23,7 +23,7 @@ const Index = () => {
   // Redux state
   const { isSidebarOpen, showDirections } = useAppSelector((state) => state.ui);
   const { selectedPlace, locationInfo, startingPlace } = useAppSelector((state) => state.location);
-  const { currentMapLayer, contextMenu } = useAppSelector((state) => state.map);
+  const { currentLayer, contextMenu } = useAppSelector((state) => state.map);
   
   // Refs
   const mapRef = useRef<MapViewRef>(null);
@@ -144,7 +144,7 @@ const Index = () => {
         className="absolute inset-0 mapContainer" 
         onContextMenu={handleMapContextMenu}
         onClick={onMapClick}
-        initialMapStyle={currentMapLayer}
+        initialMapStyle={currentLayer}
         onMapStyleChange={handleMapStyleChange}
       />
       
@@ -185,7 +185,7 @@ const Index = () => {
       <MapControls 
         mapRef={mapRef} 
         onLayerChange={handleMapLayerChange}
-        currentLayer={currentMapLayer}
+        currentLayer={currentLayer}
       />
       
       {contextMenu && contextMenu.isOpen && (

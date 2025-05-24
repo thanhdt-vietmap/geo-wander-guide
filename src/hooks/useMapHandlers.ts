@@ -9,7 +9,8 @@ import { setLocationInfo, setSelectedPlace } from '@/store/slices/locationSlice'
 export const useMapHandlers = () => {
   const dispatch = useAppDispatch();
   const { contextMenu } = useAppSelector((state) => state.map);
-  const { showDirections, selectedPlace } = useAppSelector((state) => state.ui);
+  const { showDirections } = useAppSelector((state) => state.ui);
+  const { selectedPlace } = useAppSelector((state) => state.location);
 
   const handleMapContextMenu = useCallback((e: { lngLat: [number, number] }) => {
     console.log('Context menu triggered at:', e.lngLat);
