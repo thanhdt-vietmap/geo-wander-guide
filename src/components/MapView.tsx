@@ -108,10 +108,16 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         return mapUtils.getVietMapLightRasterTileLayer();
       case 'dark':
         return mapUtils.getVietMapDarkRasterTileLayer();
+      case 'raster':
+        return mapUtils.getVietMapRasterTileLayer();
       case 'hybrid':
         return mapUtils.getVietMapHybridRasterTileLayer();
       case 'satellite':
         return mapUtils.getVietMapSatelliteTileLayer();
+      case 'vector-light':
+        return mapUtils.getVietMapLightVectorTile();
+      case 'vector-dark':
+        return mapUtils.getVietMapVectorDarkTile();
       case 'vector':
       default:
         return mapUtils.getVietMapVectorTile();

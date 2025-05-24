@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
-export type MapLayerType = 'vector' | 'light' | 'dark' | 'hybrid' | 'satellite';
+export type MapLayerType = 'vector' | 'light' | 'dark' | 'hybrid' | 'satellite' | 'raster' | 'vector-dark' | 'vector-light';
 
 interface MapLayerSelectorProps {
   isOpen: boolean;
@@ -24,9 +24,12 @@ const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
 
   const vectorLayers = [
     { id: 'vector', name: 'Vector' },
+    { id: 'vector-light', name: 'Vector Light' },
+    { id: 'vector-dark', name: 'Vector Dark' },
   ] as const;
 
   const rasterLayers = [
+    { id: 'raster', name: 'Raster' },
     { id: 'light', name: 'Light' },
     { id: 'dark', name: 'Dark' },
   ] as const;
