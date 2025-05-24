@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import SearchSuggestions from './SearchSuggestions';
 import RouteDetails from './RouteDetails';
 import { SecureApiClient } from '@/services/secureApiClient';
+import { getReverseGeocoding } from '@/services/mapService';
 import { ENV } from '@/config/environment';
 
 // Utility function to decode Google's polyline format
@@ -160,6 +161,59 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     const timer = setTimeout(() => setAnimating(false), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Function to detect if input is lat,lng format
+  const detectLatLngFormat = (query: string): { lat: number; lng: number } | null => {
+    // Remove extra spaces and check for comma separated numbers
+    const trimmed = query.trim();
+    const regex = /^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/;
+    const match = trimmed.match(regex);
+    
+    if (match) {
+      const lat = parseFloat(match[1]);
+      const lng = parseFloat(match[2]);
+      
+      // Basic validation for reasonable lat/lng ranges
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+    
+    return null;
+  };
+
+  const searchByCoordinates = async (lat: number, lng: number, index: number) => {
+    setIsSearchLoading(true);
+    try {
+      const placeDetails = await getReverseGeocoding(lng, lat);
+      
+      // Update the waypoint at the specified index
+      setWaypoints(prev => prev.map((wp, i) => 
+        i === index 
+          ? { ...wp, name: placeDetails.display, lat: placeDetails.lat, lng: placeDetails.lng, ref_id: placeDetails.ref_id }
+          : wp
+      ));
+
+      // Center map on this point if it's the first selection
+      if (mapRef.current && index === 0) {
+        mapRef.current.flyTo(placeDetails.lng, placeDetails.lat);
+      }
+      
+      setShowSuggestions(false);
+      setActiveInputIndex(null);
+      
+      console.log('Reverse geocoding result for waypoint', index, ':', placeDetails);
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+      toast({
+        title: "Lỗi tìm kiếm tọa độ",
+        description: "Không thể tìm thấy thông tin vị trí cho tọa độ này",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearchLoading(false);
+    }
+  };
 
   // New method to fill an input with location data
   const fillInputWithLocation = (location: { display: string; lat: number; lng: number; ref_id?: string }) => {
@@ -319,6 +373,13 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     if (!query.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
+      return;
+    }
+
+    // Check if input is in lat,lng format
+    const coordinates = detectLatLngFormat(query);
+    if (coordinates && activeInputIndex !== null) {
+      await searchByCoordinates(coordinates.lat, coordinates.lng, activeInputIndex);
       return;
     }
 
@@ -712,7 +773,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
                   
                   <div className="flex-1 relative">
                     <Input
-                      placeholder={index === 0 ? "Choose starting point" : index === waypoints.length - 1 ? "Choose destination" : "Add stop"}
+                      placeholder={index === 0 ? "Điểm bắt đầu hoặc tọa độ (vd: 21.0285, 105.8342)" : index === waypoints.length - 1 ? "Điểm đến hoặc tọa độ (vd: 21.0285, 105.8342)" : "Điểm dừng hoặc tọa độ (vd: 21.0285, 105.8342)"}
                       value={waypoint.name}
                       onChange={(e) => handleInputChange(e, index)}
                       onFocus={() => handleInputFocus(index)}
