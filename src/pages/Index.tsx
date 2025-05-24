@@ -10,6 +10,7 @@ import LocationInfoCard from '@/components/LocationInfoCard';
 import { PlaceDetails as PlaceDetailsType } from '@/types';
 import { getReverseGeocoding } from '@/services/mapService';
 import { toast } from 'sonner';
+import { MapLayerType } from '@/components/MapLayerSelector';
 
 const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -20,6 +21,7 @@ const Index = () => {
   const [locationInfo, setLocationInfo] = useState<PlaceDetailsType | null>(null);
   const mapRef = useRef<MapViewRef>(null);
   const directionActiveInputRef = useRef<number | null>(null);
+  const [currentMapLayer, setCurrentMapLayer] = useState<MapLayerType>('vector');
   
   // State for context menu
   const [contextMenu, setContextMenu] = useState<{
@@ -192,6 +194,14 @@ const Index = () => {
     }
   };
 
+  // Handle map layer change
+  const handleMapLayerChange = (layerType: MapLayerType) => {
+    if (mapRef.current) {
+      mapRef.current.setMapStyle(layerType);
+      setCurrentMapLayer(layerType);
+    }
+  };
+
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gray-50">
       {/* Map Container */}
@@ -200,6 +210,8 @@ const Index = () => {
         className="absolute inset-0 mapContainer" 
         onContextMenu={handleMapContextMenu}
         onClick={handleMapClick}
+        initialMapStyle={currentMapLayer}
+        onMapStyleChange={setCurrentMapLayer}
       />
       
       {/* Search Bar */}
@@ -241,7 +253,11 @@ const Index = () => {
       <Sidebar isOpen={isSidebarOpen} />
       
       {/* Map Controls */}
-      <MapControls mapRef={mapRef} />
+      <MapControls 
+        mapRef={mapRef} 
+        onLayerChange={handleMapLayerChange}
+        currentLayer={currentMapLayer}
+      />
       
       {/* Context Menu */}
       {contextMenu && contextMenu.isOpen && (

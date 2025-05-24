@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, us
 import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
 import { mapUtils } from '@/utils/utils';
-
+import { MapLayerType } from './MapLayerSelector';
 
 export interface MapViewRef {
   map: vietmapgl.Map | null;
@@ -13,20 +13,30 @@ export interface MapViewRef {
   removeRoutes: () => void;
   fitBounds: (bounds: [[number, number], [number, number]]) => void;
   highlightRoute: (routeId: string) => void;
+  setMapStyle: (styleType: MapLayerType) => void;
 }
 
 interface MapViewProps {
   className?: string;
   onContextMenu?: (e: { lngLat: [number, number] }) => void;
   onClick?: (e: { lngLat: [number, number] }) => void;
+  initialMapStyle?: MapLayerType;
+  onMapStyleChange?: (styleType: MapLayerType) => void;
 }
 
-const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContextMenu, onClick }, ref) => {
+const MapView = forwardRef<MapViewRef, MapViewProps>(({ 
+  className = '', 
+  onContextMenu, 
+  onClick,
+  initialMapStyle = 'vector',
+  onMapStyleChange
+}, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<vietmapgl.Map | null>(null);
   const markers = useRef<vietmapgl.Marker[]>([]);
   const routes = useRef<string[]>([]);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [currentMapStyle, setCurrentMapStyle] = useState<MapLayerType>(initialMapStyle);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
@@ -84,6 +94,23 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContex
     clickStartPos.current = null;
     isDragging.current = false;
   }, [onClick]);
+
+  // Get the appropriate map style based on the layer type
+  const getMapStyle = (layerType: MapLayerType) => {
+    switch (layerType) {
+      case 'light':
+        return mapUtils.getVietMapLightRasterTileLayer();
+      case 'dark':
+        return mapUtils.getVietMapDarkRasterTileLayer();
+      case 'hybrid':
+        return mapUtils.getVietMapHybridRasterTileLayer();
+      case 'satellite':
+        return mapUtils.getVietMapSatelliteTileLayer();
+      case 'vector':
+      default:
+        return mapUtils.getVietMapVectorTile();
+    }
+  };
 
   // Expose map methods to parent components
   useImperativeHandle(ref, () => ({
@@ -212,16 +239,35 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContex
           map.current.setPaintProperty(routeId, 'line-width', 5);
         }
       }
+    },
+    setMapStyle: (styleType: MapLayerType) => {
+      if (map.current) {
+        const newStyle = getMapStyle(styleType);
+        
+        if (typeof newStyle === 'string') {
+          map.current.setStyle(newStyle);
+        } else {
+          map.current.setStyle(newStyle);
+        }
+        
+        setCurrentMapStyle(styleType);
+        if (onMapStyleChange) {
+          onMapStyleChange(styleType);
+        }
+      }
     }
-  }), []);
+  }), [currentMapStyle, onMapStyleChange]);
 
   // Initialize map once
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
-    // Initialize map
+    
+    // Initialize map with selected style
+    const initialStyle = getMapStyle(initialMapStyle);
+    
     map.current = new vietmapgl.Map({
       container: mapContainer.current,
-      style: mapUtils.getVietMapVectorTile(),
+      style: typeof initialStyle === 'string' ? initialStyle : initialStyle,
       center: [105.8342, 21.0285], // Hanoi, Vietnam
       zoom: 10
     });

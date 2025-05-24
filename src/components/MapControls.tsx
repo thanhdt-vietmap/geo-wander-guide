@@ -1,14 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Layers, ZoomIn, ZoomOut, Navigation, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { MapViewRef } from './MapView';
+import MapLayerSelector, { MapLayerType } from './MapLayerSelector';
 
 interface MapControlsProps {
   mapRef?: React.RefObject<MapViewRef>;
+  onLayerChange?: (layerType: MapLayerType) => void;
+  currentLayer?: MapLayerType;
 }
 
-const MapControls: React.FC<MapControlsProps> = ({ mapRef }) => {
+const MapControls: React.FC<MapControlsProps> = ({ 
+  mapRef,
+  onLayerChange,
+  currentLayer = 'vector'
+}) => {
+  const [isLayerSelectorOpen, setIsLayerSelectorOpen] = useState(false);
+  
   const handleZoomIn = () => {
     const map = mapRef?.current?.map;
     if (map) {
@@ -24,7 +33,14 @@ const MapControls: React.FC<MapControlsProps> = ({ mapRef }) => {
   };
 
   const handleLayerToggle = () => {
-    console.log('Layer toggle clicked');
+    setIsLayerSelectorOpen(prev => !prev);
+  };
+
+  const handleLayerSelect = (layerType: MapLayerType) => {
+    if (onLayerChange) {
+      onLayerChange(layerType);
+    }
+    setIsLayerSelectorOpen(false);
   };
 
   const handleNavigation = () => {
@@ -40,6 +56,14 @@ const MapControls: React.FC<MapControlsProps> = ({ mapRef }) => {
 
   return (
     <div className="absolute bottom-12 right-6 z-10 flex flex-col gap-3">
+      {/* Layer Selector */}
+      <MapLayerSelector 
+        isOpen={isLayerSelectorOpen}
+        onClose={() => setIsLayerSelectorOpen(false)}
+        onLayerSelect={handleLayerSelect}
+        currentLayer={currentLayer}
+      />
+      
       {/* Layer and Navigation Controls */}
       <div className="flex flex-col gap-2">
         <Button
