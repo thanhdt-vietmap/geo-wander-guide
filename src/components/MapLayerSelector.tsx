@@ -2,6 +2,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 export type MapLayerType = 'vector' | 'light' | 'dark' | 'hybrid' | 'satellite';
@@ -21,13 +22,47 @@ const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const layers = [
+  const vectorLayers = [
     { id: 'vector', name: 'Vector' },
+  ] as const;
+
+  const rasterLayers = [
     { id: 'light', name: 'Light' },
     { id: 'dark', name: 'Dark' },
-    { id: 'hybrid', name: 'Hybrid' },
-    { id: 'satellite', name: 'Satellite' },
   ] as const;
+
+  const satelliteLayers = [
+    { id: 'satellite', name: 'Satellite' },
+    { id: 'hybrid', name: 'Hybrid' },
+  ] as const;
+
+  const LayerSection = ({ 
+    title, 
+    layers 
+  }: { 
+    title: string; 
+    layers: readonly { id: MapLayerType; name: string }[] 
+  }) => (
+    <div className="py-1">
+      <div className="px-3 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
+        {title}
+      </div>
+      {layers.map(layer => (
+        <button
+          key={layer.id}
+          onClick={() => onLayerSelect(layer.id)}
+          className={cn(
+            "w-full text-left px-3 py-2 text-sm rounded-md transition-colors mx-1",
+            currentLayer === layer.id 
+              ? "bg-primary text-primary-foreground" 
+              : "hover:bg-gray-100"
+          )}
+        >
+          {layer.name}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="absolute bottom-12 right-20 z-10 w-48 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 animate-in fade-in duration-100">
@@ -42,21 +77,17 @@ const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <div className="p-1">
-        {layers.map(layer => (
-          <button
-            key={layer.id}
-            onClick={() => onLayerSelect(layer.id)}
-            className={cn(
-              "w-full text-left px-3 py-2 text-sm rounded-md transition-colors",
-              currentLayer === layer.id 
-                ? "bg-primary text-primary-foreground" 
-                : "hover:bg-gray-100"
-            )}
-          >
-            {layer.name}
-          </button>
-        ))}
+      
+      <div className="py-1">
+        <LayerSection title="Vector" layers={vectorLayers} />
+        
+        <Separator className="my-1" />
+        
+        <LayerSection title="Raster" layers={rasterLayers} />
+        
+        <Separator className="my-1" />
+        
+        <LayerSection title="Satellite" layers={satelliteLayers} />
       </div>
     </div>
   );
