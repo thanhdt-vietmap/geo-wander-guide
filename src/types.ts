@@ -13,4 +13,5 @@ export interface PlaceDetails {
   ward: string;
   lat: number;
   lng: number;
+  ref_id?: string;
 }
