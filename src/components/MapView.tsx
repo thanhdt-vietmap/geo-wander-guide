@@ -1,6 +1,5 @@
-
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
-import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
+import * as vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
 import { mapUtils } from '@/utils/utils';
 import { MapLayerType } from './MapLayerSelector';
