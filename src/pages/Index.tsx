@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import MapView, { MapViewRef } from '@/components/MapView';
 import SearchBar from '@/components/SearchBar';
@@ -66,11 +65,10 @@ const Index = () => {
 
   const handleShowDirections = () => {
     // Set the starting place to the currently selected place
-    setStartingPlace(selectedPlace);
+    setStartingPlace(selectedPlace || locationInfo);
     setShowDirections(true);
-    // When showing directions, hide place details
+    // When showing directions, hide place details and location info
     setSelectedPlace(null);
-    // Close location info card if it's open
     setLocationInfo(null);
     // Clear any existing markers
     if (mapRef.current) {
@@ -184,6 +182,7 @@ const Index = () => {
         <LocationInfoCard 
           place={locationInfo}
           onClose={handleCloseLocationInfo}
+          onDirectionClick={handleShowDirections}
         />
       )}
 
