@@ -147,6 +147,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [showRouteDetails, setShowRouteDetails] = useState(false);
   const [selectedPath, setSelectedPath] = useState<RoutePath | null>(null);
+  const [autoUpdateRoute, setAutoUpdateRoute] = useState(false);
   
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -247,6 +248,14 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
               console.log('Updated waypoints:', newWaypoints);
               return newWaypoints;
             });
+            
+            // Auto-update route if we have enough valid waypoints and routes are already calculated
+            if (autoUpdateRoute && routeData) {
+              // Small delay to ensure waypoint state is updated
+              setTimeout(() => {
+                handleGetDirections();
+              }, 100);
+            }
           }
         } else {
           console.error('Reverse geocoding failed:', response.status);
@@ -267,7 +276,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         ));
       }
     }
-  }), [waypoints]);
+  }), [waypoints, autoUpdateRoute, routeData]);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
@@ -608,6 +617,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             const [minLng, minLat, maxLng, maxLat] = firstPath.bbox;
             mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
           }
+          
+          // Enable auto-update after first successful route calculation
+          setAutoUpdateRoute(true);
         }
         
         toast({
