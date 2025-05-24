@@ -1,11 +1,13 @@
 
 import React, { useRef, useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setSidebarOpen, setPlaceDetailCollapsed, setShowDirections } from '@/store/slices/uiSlice';
-import { setSelectedPlace, setLocationInfo, setStartingPlace } from '@/store/slices/locationSlice';
+import { setSidebarOpen, setPlaceDetailCollapsed } from '@/store/slices/uiSlice';
+import { setLocationInfo } from '@/store/slices/locationSlice';
 import { setCurrentLayer, setMapRef } from '@/store/slices/mapSlice';
 import { useMapHandlers } from '@/hooks/useMapHandlers';
 import { useLocationOperations } from '@/hooks/useLocationOperations';
+import { useDirectionOperations } from '@/hooks/useDirectionOperations';
+import { usePlaceOperations } from '@/hooks/usePlaceOperations';
 import { useUrlPlaceLoader } from '@/hooks/useUrlPlaceLoader';
 import MapView, { MapViewRef } from '@/components/MapView';
 import SearchBar from '@/components/SearchBar';
@@ -34,6 +36,8 @@ const Index = () => {
   // Custom hooks
   const { handleMapContextMenu, handleMapClick, handleCloseContextMenu } = useMapHandlers();
   const { handleGetLocation, handleSetAsStart, handleSetAsEnd, handleAddWaypoint } = useLocationOperations();
+  const { handleShowDirections, handleCloseDirections, handleDirectionMapClick } = useDirectionOperations();
+  const { handlePlaceSelect, handleClosePlaceDetails, handleCloseLocationInfo } = usePlaceOperations();
 
   // URL place loader
   useUrlPlaceLoader(mapRef);
@@ -47,59 +51,29 @@ const Index = () => {
     dispatch(setSidebarOpen(false));
   };
 
-  const handlePlaceSelect = (place: PlaceDetailsType) => {
-    dispatch(setSelectedPlace(place));
-    dispatch(setPlaceDetailCollapsed(false));
-    dispatch(setShowDirections(false));
-    dispatch(setLocationInfo(null));
-    
-    if (mapRef.current) {
-      mapRef.current.flyTo(place.lng, place.lat);
-      mapRef.current.addMarker(place.lng, place.lat);
-    }
+  const handlePlaceSelectWrapper = (place: PlaceDetailsType) => {
+    handlePlaceSelect(place, mapRef);
   };
 
-  const handleClosePlaceDetails = () => {
-    dispatch(setSelectedPlace(null));
-    if (mapRef.current) {
-      mapRef.current.removeMarkers();
-    }
+  const handleClosePlaceDetailsWrapper = () => {
+    handleClosePlaceDetails(mapRef);
   };
 
-  const handleCloseLocationInfo = () => {
-    dispatch(setLocationInfo(null));
-    if (mapRef.current) {
-      mapRef.current.removeMarkers();
-    }
+  const handleCloseLocationInfoWrapper = () => {
+    handleCloseLocationInfo(mapRef);
   };
 
-  const handleShowDirections = () => {
-    dispatch(setStartingPlace(selectedPlace || locationInfo));
-    dispatch(setShowDirections(true));
-    dispatch(setSelectedPlace(null));
-    dispatch(setLocationInfo(null));
-    
-    if (mapRef.current) {
-      mapRef.current.removeMarkers();
-      mapRef.current.removeRoutes();
-    }
+  const handleShowDirectionsWrapper = () => {
+    handleShowDirections();
   };
 
-  const handleCloseDirections = () => {
-    dispatch(setShowDirections(false));
-    dispatch(setStartingPlace(null));
-    directionActiveInputRef.current = null;
-    
-    if (mapRef.current) {
-      mapRef.current.setMarkerDragCallback(null);
-      mapRef.current.removeMarkers();
-      mapRef.current.removeRoutes();
-    }
+  const handleCloseDirectionsWrapper = () => {
+    handleCloseDirections(mapRef);
   };
 
-  const handleDirectionMapClick = (activeInputIndex: number | null) => {
+  const handleDirectionMapClickWrapper = (activeInputIndex: number | null) => {
     directionActiveInputRef.current = activeInputIndex;
-    return true;
+    return handleDirectionMapClick(activeInputIndex);
   };
 
   const handleMapLayerChange = (layerType: MapLayerType) => {
@@ -155,32 +129,32 @@ const Index = () => {
       <SearchBar 
         onMenuToggle={handleMenuToggle} 
         isMenuOpen={isSidebarOpen}
-        onPlaceSelect={handlePlaceSelect}
+        onPlaceSelect={handlePlaceSelectWrapper}
       />
       
       {selectedPlace && !locationInfo && (
         <PlaceDetails 
           place={selectedPlace} 
-          onClose={handleClosePlaceDetails}
-          onDirectionClick={handleShowDirections}
+          onClose={handleClosePlaceDetailsWrapper}
+          onDirectionClick={handleShowDirectionsWrapper}
         />
       )}
 
       {locationInfo && !selectedPlace && (
         <LocationInfoCard 
           place={locationInfo}
-          onClose={handleCloseLocationInfo}
-          onDirectionClick={handleShowDirections}
+          onClose={handleCloseLocationInfoWrapper}
+          onDirectionClick={handleShowDirectionsWrapper}
         />
       )}
 
       {showDirections && (
         <Direction 
           ref={directionRef}
-          onClose={handleCloseDirections} 
+          onClose={handleCloseDirectionsWrapper} 
           mapRef={mapRef}
           startingPlace={startingPlace}
-          onMapClick={handleDirectionMapClick}
+          onMapClick={handleDirectionMapClickWrapper}
         />
       )}
       

@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { Search, X, ChevronUp, ChevronDown, ArrowUpDown, Plus, Navigation, Map as MapIcon } from 'lucide-react';
+import { ArrowUpDown, Plus, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import SearchSuggestions from './SearchSuggestions';
 import RouteDetails from './RouteDetails';
+import DirectionHeader from './direction/DirectionHeader';
+import VehicleSelector from './direction/VehicleSelector';
+import WaypointInput from './direction/WaypointInput';
+import RouteList from './direction/RouteList';
 import { SecureApiClient } from '@/services/secureApiClient';
 import { getReverseGeocoding } from '@/services/mapService';
 import { ENV } from '@/config/environment';
@@ -154,7 +157,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
-  const isMobile = window.innerWidth <= 768;
 
   // Add animation effect
   useEffect(() => {
@@ -164,7 +166,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   // Function to detect if input is lat,lng format
   const detectLatLngFormat = (query: string): { lat: number; lng: number } | null => {
-    // Remove extra spaces and check for comma separated numbers
     const trimmed = query.trim();
     const regex = /^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/;
     const match = trimmed.match(regex);
@@ -173,7 +174,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       const lat = parseFloat(match[1]);
       const lng = parseFloat(match[2]);
       
-      // Basic validation for reasonable lat/lng ranges
       if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
         return { lat, lng };
       }
@@ -187,14 +187,12 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     try {
       const placeDetails = await getReverseGeocoding(lng, lat);
       
-      // Update the waypoint at the specified index
       setWaypoints(prev => prev.map((wp, i) => 
         i === index 
           ? { ...wp, name: placeDetails.display, lat: placeDetails.lat, lng: placeDetails.lng, ref_id: placeDetails.ref_id }
           : wp
       ));
 
-      // Center map on this point if it's the first selection
       if (mapRef.current && index === 0) {
         mapRef.current.flyTo(placeDetails.lng, placeDetails.lat);
       }
@@ -376,7 +374,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       return;
     }
 
-    // Check if input is in lat,lng format
     const coordinates = detectLatLngFormat(query);
     if (coordinates && activeInputIndex !== null) {
       await searchByCoordinates(coordinates.lat, coordinates.lng, activeInputIndex);
@@ -411,14 +408,12 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         refid: refId
       });
       
-      // Update the waypoint at the specified index
       setWaypoints(prev => prev.map((wp, i) => 
         i === index 
           ? { ...wp, name: data.display, lat: data.lat, lng: data.lng, ref_id: refId }
           : wp
       ));
 
-      // Center map on this point if it's the first selection
       if (mapRef.current && index === 0) {
         mapRef.current.flyTo(data.lng, data.lat);
       }
@@ -444,12 +439,10 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
     setActiveInputIndex(index);
 
-    // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    // Debounce search
     searchTimeoutRef.current = setTimeout(() => {
       searchPlaces(value);
     }, 300);
@@ -461,12 +454,10 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const handleSuggestionSelect = async (suggestion: SearchResult) => {
     if (activeInputIndex !== null) {
-      // Update the input field with the selected suggestion
       setWaypoints(prev => prev.map((wp, i) => 
         i === activeInputIndex ? { ...wp, name: suggestion.display } : wp
       ));
       
-      // Fetch and store the details
       await fetchPlaceDetails(suggestion.ref_id, activeInputIndex);
     }
     
@@ -479,7 +470,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   };
 
   const handleRemoveWaypoint = (index: number) => {
-    if (waypoints.length <= 2) return; // Keep at least start and end points
+    if (waypoints.length <= 2) return;
     setWaypoints(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -517,7 +508,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index) return;
 
-    // Reorder waypoints
     setWaypoints(prev => {
       const newWaypoints = [...prev];
       const draggedWaypoint = newWaypoints[draggedIndex];
@@ -532,17 +522,14 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const handleSelectRoute = (routeId: string) => {
     setSelectedRouteId(routeId);
     
-    // Highlight the selected route on the map
     if (mapRef.current) {
       mapRef.current.highlightRoute(routeId);
     }
     
-    // Find the route path data by its ID
     const routeIndex = parseInt(routeId.replace('route-', ''));
     if (routeData?.paths && routeData.paths[routeIndex]) {
       const path = routeData.paths[routeIndex];
       
-      // Fit map to this route's bounds
       if (path.bbox && path.bbox.length === 4 && mapRef.current) {
         const [minLng, minLat, maxLng, maxLat] = path.bbox;
         mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
@@ -566,7 +553,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   };
 
   const handleGetDirections = async () => {
-    // Validate that we have valid coordinates for all waypoints
     const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
     
     if (validWaypoints.length < 2) {
@@ -579,7 +565,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     }
     
     try {
-      // Construct the points query params
       const params: Record<string, string> = {
         'api-version': '1.1',
         points_encoded: 'true',
@@ -587,7 +572,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         'alternative_route.max_paths': '5'
       };
 
-      // Add points as separate parameters
       validWaypoints.forEach((wp, index) => {
         params[`point`] = `${wp.lat},${wp.lng}`;
       });
@@ -595,17 +579,14 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       const data: RouteResponse = await apiClient.get('/route', params);
       setRouteData(data);
       
-      // Clear previous route summaries and selected route
       setRouteSummaries([]);
       setSelectedRouteId(null);
       
-      // Remove any existing routes and markers
       if (mapRef.current) {
         mapRef.current.removeRoutes();
         mapRef.current.removeMarkers();
       }
       
-      // Draw routes on the map and create summaries
       if (data.paths && data.paths.length > 0) {
         const newSummaries: RouteSummary[] = [];
         
@@ -613,13 +594,11 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
           const routeId = `route-${index}`;
           const color = routeColors[index % routeColors.length];
           
-          // Decode and add the route to the map
           const decodedPoints = decodePolyline(path.points);
           if (mapRef.current) {
             mapRef.current.addRoute(decodedPoints, routeId, color);
           }
           
-          // Add to summaries
           newSummaries.push({
             id: routeId,
             distance: path.distance,
@@ -628,10 +607,8 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
           });
         });
         
-        // Set route summaries
         setRouteSummaries(newSummaries);
         
-        // Auto-select first route
         if (newSummaries.length > 0) {
           setSelectedRouteId(newSummaries[0].id);
           if (mapRef.current) {
@@ -639,7 +616,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
           }
         }
         
-        // Add draggable markers for waypoints
         if (mapRef.current) {
           validWaypoints.forEach((wp, index) => {
             const isStart = index === 0;
@@ -648,20 +624,18 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
               wp.lng, 
               wp.lat, 
               isStart ? 'start' : isEnd ? 'end' : 'waypoint',
-              true, // Make markers draggable
-              index // Pass the index for tracking
+              true,
+              index
             );
           });
         }
         
-        // Fit the map to the bounds of the first route
         const firstPath = data.paths[0];
         if (firstPath.bbox && firstPath.bbox.length === 4 && mapRef.current) {
           const [minLng, minLat, maxLng, maxLat] = firstPath.bbox;
           mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
         }
         
-        // Enable auto-update after first successful route calculation
         setAutoUpdateRoute(true);
       }
       
@@ -689,122 +663,43 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     }`}>
       <div className="flex h-full">
         <div className="bg-white shadow-lg pt-0 w-full flex flex-col border-r">
+          <DirectionHeader onClose={onClose} />
           
-          {/* Background Image */}
-          <div 
-            className="w-full h-[150px] bg-cover bg-center relative flex items-center justify-center" 
-            style={{ backgroundImage: "url('/lovable-uploads/759ebf50-d075-4366-98b3-99771c255fa9.png')" }}
-          >
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={onClose} 
-              className="absolute top-6 right-6 bg-white rounded-full h-10 w-10 shadow-md"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-            
-          </div>
-
-            {/* Travel mode selection */}
-            <div className="mb-4">
-              <h3 className="text-sm font-medium mb-2 mt-[10px] ml-[10px]">Travel mode</h3>
-              <div className="flex gap-2 px-[30px]">
-                {[
-                  { id: 'car', icon: <span>🚗</span>, label: 'Car' },
-                  { id: 'motorcycle', icon: <span>🏍️</span>, label: 'Motorcycle' },
-                  { id: 'bike', icon: <span>🚲</span>, label: 'Bike' },
-                  { id: 'foot', icon: <span>🚶</span>, label: 'Walk' }
-                ].map(mode => (
-                  <Button
-                    key={mode.id}
-                    variant={vehicle === mode.id ? 'default' : 'outline'}
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => setVehicle(mode.id as any)}
-                  >
-                    <span className="mr-1">{mode.icon}</span>
-                    <span>{mode.label}</span>
-                  </Button>
-                ))
-                
-                }
-
-              </div>
-              
-            </div>
+          <VehicleSelector vehicle={vehicle} onVehicleChange={setVehicle} />
+          
           <div className="px-6 py-4 relative" ref={searchContainerRef}>
             {/* Waypoints inputs */}
             <div className="space-y-3 mb-4">
               {waypoints.map((waypoint, index) => (
-                <div 
-                  key={index} 
-                  className={`relative flex items-center gap-2 ${
-                    draggedIndex === index ? 'opacity-50 bg-gray-100' : ''
-                  }`}
-                  draggable={waypoints.length > 2}
-                  onDragStart={() => handleDragStart(index)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                >
-                  {/* Reorder buttons for >2 waypoints */}
-                  {waypoints.length > 2 && (
-                    <div className="flex flex-col">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 p-0"
-                        onClick={() => handleMoveWaypoint(index, 'up')}
-                        disabled={index === 0}
-                      >
-                        <ChevronUp className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 p-0"
-                        onClick={() => handleMoveWaypoint(index, 'down')}
-                        disabled={index === waypoints.length - 1}
-                      >
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                  
-                  <div className="flex-1 relative">
-                    <Input
-                      placeholder={index === 0 ? "Điểm bắt đầu hoặc tọa độ (vd: 21.0285, 105.8342)" : index === waypoints.length - 1 ? "Điểm đến hoặc tọa độ (vd: 21.0285, 105.8342)" : "Điểm dừng hoặc tọa độ (vd: 21.0285, 105.8342)"}
-                      value={waypoint.name}
-                      onChange={(e) => handleInputChange(e, index)}
-                      onFocus={() => handleInputFocus(index)}
-                      className="pl-10 pr-8"
-                      ref={el => inputRefs.current[index] = el}
-                    />
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    
-                    {/* Remove button for waypoints (not for first/last when only 2) */}
-                    {(waypoints.length > 2 || (waypoints.length > 2 && (index !== 0 && index !== waypoints.length - 1))) && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6"
-                        onClick={() => handleRemoveWaypoint(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                <div key={index}>
+                  <WaypointInput
+                    waypoint={waypoint}
+                    index={index}
+                    totalWaypoints={waypoints.length}
+                    draggedIndex={draggedIndex}
+                    activeInputIndex={activeInputIndex}
+                    onInputChange={handleInputChange}
+                    onInputFocus={handleInputFocus}
+                    onMoveWaypoint={handleMoveWaypoint}
+                    onRemoveWaypoint={handleRemoveWaypoint}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={handleDragOver}
+                    inputRef={el => inputRefs.current[index] = el}
+                  />
                   
                   {/* Swap button for exactly 2 waypoints */}
                   {waypoints.length === 2 && index === 0 && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={handleSwapWaypoints}
-                    >
-                      <ArrowUpDown className="h-4 w-4" />
-                    </Button>
+                    <div className="flex justify-end mt-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={handleSwapWaypoints}
+                      >
+                        <ArrowUpDown className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
 
                   {/* Render suggestions for the active input directly below it */}
@@ -834,7 +729,6 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             
             <Separator className="my-4" />
             
-            
             {/* Get directions button */}
             <Button
               className="w-full mb-4"
@@ -848,52 +742,12 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
           
           <Separator />
           
-          {/* Route summaries */}
-          {routeSummaries.length > 0 && (
-            <div className="flex-1 overflow-auto px-4 py-2">
-              <h3 className="font-medium mb-3">Available routes</h3>
-              <div className="space-y-2">
-                {routeSummaries.map((route) => (
-                  <div
-                    key={route.id}
-                    className={`p-3 border rounded-md cursor-pointer transition-all ${
-                      selectedRouteId === route.id 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-gray-200 hover:bg-gray-50'
-                    }`}
-                    onClick={() => handleSelectRoute(route.id)}
-                  >
-                    <div className="flex items-center">
-                      <div 
-                        className="w-3 h-10 rounded-full mr-3" 
-                        style={{ backgroundColor: route.color }}
-                      />
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <span className="font-medium">{(route.distance / 1000).toFixed(2)} km</span>
-                          <span className="text-gray-600">{Math.round(route.time / 60000)} mins</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {selectedRouteId === route.id && (
-                      <div className="mt-3 flex justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1"
-                          onClick={handleShowRouteDetails}
-                        >
-                          <MapIcon className="h-4 w-4" />
-                          View details
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <RouteList
+            routeSummaries={routeSummaries}
+            selectedRouteId={selectedRouteId}
+            onSelectRoute={handleSelectRoute}
+            onShowRouteDetails={handleShowRouteDetails}
+          />
         </div>
       </div>
     </div>
