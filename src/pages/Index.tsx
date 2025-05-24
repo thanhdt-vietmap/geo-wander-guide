@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import MapView, { MapViewRef } from '@/components/MapView';
 import SearchBar from '@/components/SearchBar';
 import Sidebar from '@/components/Sidebar';
@@ -95,22 +95,39 @@ const Index = () => {
     return true; // Continue handling map clicks
   };
 
-  // Handle right-click on map - updated to prevent default browser context menu
-  const handleMapContextMenu = (e: { lngLat: [number, number] }) => {
+  // Handle right-click on map - use useCallback to prevent re-renders
+  const handleMapContextMenu = useCallback((e: { lngLat: [number, number] }) => {
+    console.log('Context menu triggered at:', e.lngLat); // Debug log
+    
+    // Use a more reliable way to get mouse position
+    let x = 100;
+    let y = 100;
+    
+    // Try to get mouse position from the last mouse event
+    if (window.event) {
+      const mouseEvent = window.event as MouseEvent;
+      x = mouseEvent.clientX;
+      y = mouseEvent.clientY;
+    }
+    
+    console.log('Setting context menu at position:', { x, y }); // Debug positioning
+    
     setContextMenu({
       isOpen: true,
-      x: 0,
-      y: 0,
+      x: x,
+      y: y,
       lng: e.lngLat[0],
       lat: e.lngLat[1],
     });
-  };
+  }, []);
 
-  // Handle click on map - updated to properly handle Direction component
-  const handleMapClick = async (e: { lngLat: [number, number] }) => {
+  // Handle click on map - use useCallback to prevent re-renders
+  const handleMapClick = useCallback(async (e: { lngLat: [number, number] }) => {
     try {
       // Close any open context menu
-      if (contextMenu) setContextMenu({ ...contextMenu, isOpen: false });
+      if (contextMenu?.isOpen) {
+        setContextMenu(prev => prev ? { ...prev, isOpen: false } : null);
+      }
       
       // Check if Direction component is open
       if (showDirections) {
@@ -144,7 +161,7 @@ const Index = () => {
       toast.error('Failed to get location details');
       console.error(error);
     }
-  };
+  }, [contextMenu?.isOpen, showDirections, selectedPlace]);
 
   // Close context menu
   const handleCloseContextMenu = () => {
@@ -180,7 +197,7 @@ const Index = () => {
       {/* Map Container */}
       <MapView 
         ref={mapRef} 
-        className="absolute inset-0" 
+        className="absolute inset-0 mapContainer" 
         onContextMenu={handleMapContextMenu}
         onClick={handleMapClick}
       />
