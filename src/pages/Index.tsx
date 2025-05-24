@@ -22,6 +22,7 @@ const Index = () => {
   const mapRef = useRef<MapViewRef>(null);
   const directionActiveInputRef = useRef<number | null>(null);
   const [currentMapLayer, setCurrentMapLayer] = useState<MapLayerType>('vector');
+  const directionRef = useRef<any>(null);
   
   // State for context menu
   const [contextMenu, setContextMenu] = useState<{
@@ -198,6 +199,71 @@ const Index = () => {
     }
   };
 
+  // Set location as starting point
+  const handleSetAsStart = async (lng: number, lat: number) => {
+    try {
+      const placeDetails = await getReverseGeocoding(lng, lat);
+      setStartingPlace(placeDetails);
+      setShowDirections(true);
+      setSelectedPlace(null);
+      setLocationInfo(null);
+      
+      if (mapRef.current) {
+        mapRef.current.removeMarkers();
+        mapRef.current.removeRoutes();
+      }
+    } catch (error) {
+      toast.error('Failed to set starting point');
+      console.error(error);
+    }
+  };
+
+  // Set location as end point
+  const handleSetAsEnd = async (lng: number, lat: number) => {
+    try {
+      const placeDetails = await getReverseGeocoding(lng, lat);
+      
+      if (!showDirections) {
+        // If directions are not open, open them with empty start and this as end
+        setStartingPlace(null);
+        setShowDirections(true);
+        setSelectedPlace(null);
+        setLocationInfo(null);
+      }
+      
+      // Set as end point in Direction component
+      if (directionRef.current && directionRef.current.setEndPoint) {
+        directionRef.current.setEndPoint(placeDetails);
+      }
+      
+      if (mapRef.current) {
+        mapRef.current.removeMarkers();
+        mapRef.current.removeRoutes();
+      }
+    } catch (error) {
+      toast.error('Failed to set end point');
+      console.error(error);
+    }
+  };
+
+  // Add waypoint
+  const handleAddWaypoint = async (lng: number, lat: number) => {
+    try {
+      const placeDetails = await getReverseGeocoding(lng, lat);
+      
+      // Add waypoint to Direction component
+      if (directionRef.current && directionRef.current.addWaypoint) {
+        directionRef.current.addWaypoint(placeDetails);
+      }
+    } catch (error) {
+      toast.error('Failed to add waypoint');
+      console.error(error);
+    }
+  };
+
+  // Check if we can add waypoint (Direction is open and inputs have values)
+  const canAddWaypoint = showDirections && directionRef.current?.hasValidInputs?.();
+
   // Handle map layer change
   const handleMapLayerChange = (layerType: MapLayerType) => {
     if (mapRef.current) {
@@ -246,6 +312,7 @@ const Index = () => {
       {/* Direction Panel */}
       {showDirections && (
         <Direction 
+          ref={directionRef}
           onClose={handleCloseDirections} 
           mapRef={mapRef}
           startingPlace={startingPlace}
@@ -273,6 +340,11 @@ const Index = () => {
           isOpen={contextMenu.isOpen}
           onClose={handleCloseContextMenu}
           onGetLocation={handleGetLocation}
+          onSetAsStart={handleSetAsStart}
+          onSetAsEnd={handleSetAsEnd}
+          onAddWaypoint={handleAddWaypoint}
+          showDirectionOptions={true}
+          canAddWaypoint={canAddWaypoint}
         />
       )}
       

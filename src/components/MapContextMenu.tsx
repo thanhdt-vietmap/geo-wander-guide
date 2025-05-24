@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Copy, MapPin, X } from 'lucide-react';
+import { Copy, MapPin, X, Navigation, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MapContextMenuProps {
@@ -10,6 +11,11 @@ interface MapContextMenuProps {
   isOpen: boolean;
   onClose: () => void;
   onGetLocation: (lng: number, lat: number) => void;
+  onSetAsStart?: (lng: number, lat: number) => void;
+  onSetAsEnd?: (lng: number, lat: number) => void;
+  onAddWaypoint?: (lng: number, lat: number) => void;
+  showDirectionOptions?: boolean;
+  canAddWaypoint?: boolean;
 }
 
 const MapContextMenu: React.FC<MapContextMenuProps> = ({
@@ -19,7 +25,12 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   lat,
   isOpen,
   onClose,
-  onGetLocation
+  onGetLocation,
+  onSetAsStart,
+  onSetAsEnd,
+  onAddWaypoint,
+  showDirectionOptions = false,
+  canAddWaypoint = false
 }) => {
   const [animating, setAnimating] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -71,6 +82,27 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
     onClose();
   };
 
+  const setAsStart = () => {
+    if (onSetAsStart) {
+      onSetAsStart(lng, lat);
+    }
+    onClose();
+  };
+
+  const setAsEnd = () => {
+    if (onSetAsEnd) {
+      onSetAsEnd(lng, lat);
+    }
+    onClose();
+  };
+
+  const addWaypoint = () => {
+    if (onAddWaypoint) {
+      onAddWaypoint(lng, lat);
+    }
+    onClose();
+  };
+
   // Format coordinates for display
   const formatCoord = (coord: number) => coord.toFixed(6);
 
@@ -78,7 +110,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
 
   // Adjust position to keep menu within viewport
   const adjustedX = Math.min(x, window.innerWidth - 240); // 240px is approximate menu width
-  const adjustedY = Math.min(y, window.innerHeight - 150); // 150px is approximate menu height
+  const adjustedY = Math.min(y, window.innerHeight - 250); // Increased height for new options
 
   console.log('Rendering context menu at adjusted position:', { adjustedX, adjustedY, originalX: x, originalY: y });
 
@@ -136,6 +168,43 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
           <MapPin className="mr-2 h-4 w-4" />
           <span>Get location details</span>
         </button>
+        
+        {/* Direction Options */}
+        {showDirectionOptions && (
+          <>
+            {/* Separator */}
+            <div className="my-1 h-px bg-gray-200" />
+            
+            {/* Set as Starting Point */}
+            <button
+              onClick={setAsStart}
+              className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+            >
+              <Navigation className="mr-2 h-4 w-4 text-green-600" />
+              <span>Chọn làm điểm bắt đầu</span>
+            </button>
+            
+            {/* Set as End Point */}
+            <button
+              onClick={setAsEnd}
+              className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+            >
+              <Navigation className="mr-2 h-4 w-4 text-red-600 rotate-180" />
+              <span>Chọn làm điểm kết thúc</span>
+            </button>
+            
+            {/* Add Waypoint (only if Direction is open and inputs have values) */}
+            {canAddWaypoint && (
+              <button
+                onClick={addWaypoint}
+                className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+              >
+                <Plus className="mr-2 h-4 w-4 text-blue-600" />
+                <span>Thêm điểm đến</span>
+              </button>
+            )}
+          </>
+        )}
         
         {/* Separator */}
         <div className="my-1 h-px bg-gray-200" />
