@@ -27,18 +27,6 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose }) =
             
             <div className="grid grid-cols-2 gap-2 mt-3">
               <div className="text-xs">
-                <span className="block text-muted-foreground">Ward</span>
-                <span className="font-medium">{place.ward}</span>
-              </div>
-              <div className="text-xs">
-                <span className="block text-muted-foreground">District</span>
-                <span className="font-medium">{place.district}</span>
-              </div>
-              <div className="text-xs">
-                <span className="block text-muted-foreground">City</span>
-                <span className="font-medium">{place.city}</span>
-              </div>
-              <div className="text-xs">
                 <span className="block text-muted-foreground">Coordinates</span>
                 <span className="font-medium">{place.lat.toFixed(6)}, {place.lng.toFixed(6)}</span>
               </div>

@@ -100,7 +100,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContex
               'line-color': routeColor,
               'line-width': 4
             }
-          });
+          },"boundary_province");
 
           routes.current.push(routeId);
         } else {
