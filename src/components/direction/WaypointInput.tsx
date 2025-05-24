@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, X, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -24,6 +24,7 @@ interface WaypointInputProps {
   onDragStart: (index: number) => void;
   onDragEnd: () => void;
   onDragOver: (e: React.DragEvent, index: number) => void;
+  onSwapWaypoints?: () => void;
   inputRef: (el: HTMLInputElement | null) => void;
 }
 
@@ -40,6 +41,7 @@ const WaypointInput = ({
   onDragStart,
   onDragEnd,
   onDragOver,
+  onSwapWaypoints,
   inputRef
 }: WaypointInputProps) => {
   const getPlaceholder = () => {
@@ -49,6 +51,7 @@ const WaypointInput = ({
   };
 
   const canRemove = totalWaypoints > 2;
+  const showInlineSwap = totalWaypoints === 2 && index === 0 && onSwapWaypoints;
 
   return (
     <div 
@@ -90,10 +93,22 @@ const WaypointInput = ({
           value={waypoint.name}
           onChange={(e) => onInputChange(e, index)}
           onFocus={() => onInputFocus(index)}
-          className="pl-10 pr-8"
+          className={`pl-10 ${showInlineSwap ? 'pr-16' : 'pr-8'}`}
           ref={inputRef}
         />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        
+        {/* Inline swap button for exactly 2 waypoints */}
+        {showInlineSwap && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-8 top-1/2 transform -translate-y-1/2 h-6 w-6"
+            onClick={onSwapWaypoints}
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        )}
         
         {/* Remove button for waypoints */}
         {canRemove && (

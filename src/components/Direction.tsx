@@ -565,34 +565,19 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     }
     
     try {
-      const params: Record<string, string | string[]> = {
+      const params: Record<string, string> = {
         'api-version': '1.1',
         points_encoded: 'true',
         vehicle: vehicle,
         'alternative_route.max_paths': '5'
       };
 
-      // Add each waypoint as a separate point parameter
-      const pointParams: string[] = [];
-      validWaypoints.forEach((wp) => {
-        pointParams.push(`${wp.lat},${wp.lng}`);
+      // Add each waypoint as a separate indexed point parameter
+      validWaypoints.forEach((wp, index) => {
+        params[`point.${index}`] = `${wp.lat},${wp.lng}`;
       });
-      
-      // Convert to the format expected by the API client
-      const apiParams: Record<string, string> = {
-        'api-version': '1.1',
-        points_encoded: 'true',
-        vehicle: vehicle
-      };
 
-      // Add points as indexed parameters
-      // validWaypoints.forEach((wp, index) => {
-      //   apiParams[`point.${index}`] = `${wp.lat},${wp.lng}`;
-      // });
-
-      // Map list point to point parameters
-      const pointParamStrings = validWaypoints.map((wp, index) => `point=${wp.lat},${wp.lng}`).join('&');
-      const data: RouteResponse = await apiClient.get(`/route?${pointParamStrings}`, apiParams);
+      const data: RouteResponse = await apiClient.get('/route', params);
       setRouteData(data);
       
       setRouteSummaries([]);
@@ -702,22 +687,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     onDragOver={handleDragOver}
+                    onSwapWaypoints={waypoints.length === 2 ? handleSwapWaypoints : undefined}
                     inputRef={el => inputRefs.current[index] = el}
                   />
-                  
-                  {/* Swap button for exactly 2 waypoints */}
-                  {waypoints.length === 2 && index === 0 && (
-                    <div className="flex justify-end mt-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={handleSwapWaypoints}
-                      >
-                        <ArrowUpDown className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
 
                   {/* Render suggestions for the active input directly below it */}
                   {showSuggestions && activeInputIndex === index && (
