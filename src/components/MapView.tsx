@@ -14,6 +14,10 @@ export interface MapViewRef {
   fitBounds: (bounds: [[number, number], [number, number]]) => void;
   highlightRoute: (routeId: string) => void;
   setMapStyle: (styleType: MapLayerType) => void;
+  rotateMap: (degrees: number) => void;
+  resetNorth: () => void;
+  toggle3D: () => void;
+  getCurrentLocation: () => Promise<GeolocationPosition | null>;
 }
 
 interface MapViewProps {
@@ -37,6 +41,8 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   const routes = useRef<string[]>([]);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [currentMapStyle, setCurrentMapStyle] = useState<MapLayerType>(initialMapStyle);
+  const [is3DMode, setIs3DMode] = useState(false);
+  const locationMarker = useRef<vietmapgl.Marker | null>(null);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
@@ -255,8 +261,74 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
           onMapStyleChange(styleType);
         }
       }
+    },
+    rotateMap: (degrees: number) => {
+      if (map.current) {
+        map.current.rotateTo(degrees, { duration: 300 });
+      }
+    },
+    resetNorth: () => {
+      if (map.current) {
+        map.current.resetNorth({ duration: 300 });
+      }
+    },
+    toggle3D: () => {
+      if (map.current) {
+        const newPitch = is3DMode ? 0 : 60;
+        map.current.easeTo({
+          pitch: newPitch,
+          duration: 300
+        });
+        setIs3DMode(!is3DMode);
+      }
+    },
+    getCurrentLocation: async () => {
+      return new Promise<GeolocationPosition | null>((resolve) => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { longitude, latitude } = position.coords;
+              
+              // Fly to user location
+              if (map.current) {
+                map.current.flyTo({
+                  center: [longitude, latitude],
+                  zoom: 16,
+                  essential: true
+                });
+                
+                // Remove previous location marker if exists
+                if (locationMarker.current) {
+                  locationMarker.current.remove();
+                }
+                
+                // Create a pulsing dot for the location
+                locationMarker.current = new vietmapgl.Marker({
+                  color: '#4285F4',
+                })
+                  .setLngLat([longitude, latitude])
+                  .addTo(map.current);
+              }
+              
+              resolve(position);
+            },
+            (error) => {
+              console.error('Error getting location:', error);
+              resolve(null);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 5000,
+              maximumAge: 0
+            }
+          );
+        } else {
+          console.error('Geolocation is not supported by this browser.');
+          resolve(null);
+        }
+      });
     }
-  }), [currentMapStyle, onMapStyleChange]);
+  }), [currentMapStyle, onMapStyleChange, is3DMode]);
 
   // Initialize map once
   useEffect(() => {

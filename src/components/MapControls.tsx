@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Layers, ZoomIn, ZoomOut, Navigation, RotateCcw } from 'lucide-react';
+import { Layers, ZoomIn, ZoomOut, Navigation, RotateCcw, Compass, MapPin, Rotate3d } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import type { MapViewRef } from './MapView';
 import MapLayerSelector, { MapLayerType } from './MapLayerSelector';
 
@@ -17,6 +18,8 @@ const MapControls: React.FC<MapControlsProps> = ({
   currentLayer = 'vector'
 }) => {
   const [isLayerSelectorOpen, setIsLayerSelectorOpen] = useState(false);
+  const [is3DMode, setIs3DMode] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   
   const handleZoomIn = () => {
     const map = mapRef?.current?.map;
@@ -43,14 +46,41 @@ const MapControls: React.FC<MapControlsProps> = ({
     setIsLayerSelectorOpen(false);
   };
 
-  const handleNavigation = () => {
-    console.log('Navigation clicked');
+  const handleRotate = () => {
+    if (mapRef?.current) {
+      // Rotate the map 45 degrees clockwise
+      const currentBearing = mapRef.current.map?.getBearing() || 0;
+      mapRef.current.rotateMap((currentBearing + 45) % 360);
+    }
   };
 
   const handleCompass = () => {
-    const map = mapRef?.current?.map;
-    if (map) {
-      map.resetNorth();
+    if (mapRef?.current) {
+      mapRef.current.resetNorth();
+    }
+  };
+
+  const handle3DToggle = () => {
+    if (mapRef?.current) {
+      mapRef.current.toggle3D();
+      setIs3DMode(prev => !prev);
+    }
+  };
+
+  const handleGetLocation = async () => {
+    if (mapRef?.current) {
+      setIsGettingLocation(true);
+      try {
+        const position = await mapRef.current.getCurrentLocation();
+        if (!position) {
+          toast.error('Could not get your location. Please check your browser permissions.');
+        }
+      } catch (error) {
+        toast.error('Error getting location. Please try again.');
+        console.error('Location error:', error);
+      } finally {
+        setIsGettingLocation(false);
+      }
     }
   };
 
@@ -64,28 +94,56 @@ const MapControls: React.FC<MapControlsProps> = ({
         currentLayer={currentLayer}
       />
       
-      {/* Layer and Navigation Controls */}
+      {/* Main Controls Group */}
       <div className="flex flex-col gap-2">
+        {/* Location Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleGetLocation}
+          disabled={isGettingLocation}
+          className="bg-white shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200"
+          title="Get current location"
+        >
+          <MapPin className={`h-4 w-4 ${isGettingLocation ? 'animate-pulse' : ''}`} />
+        </Button>
+        
+        {/* 3D Toggle Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handle3DToggle}
+          className={`${
+            is3DMode ? 'bg-blue-100' : 'bg-white'
+          } shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200`}
+          title="Toggle 3D view"
+        >
+          <Rotate3d className="h-4 w-4" />
+        </Button>
+        
+        {/* Layer Toggle Button */}
         <Button
           variant="outline"
           size="icon"
           onClick={handleLayerToggle}
           className="bg-white shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200"
-          title="Layers"
+          title="Map layers"
         >
           <Layers className="h-4 w-4" />
         </Button>
         
+        {/* Rotate Button */}
         <Button
           variant="outline"
           size="icon"
-          onClick={handleNavigation}
+          onClick={handleRotate}
           className="bg-white shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200"
-          title="Tilt"
+          title="Rotate map"
         >
-          <Navigation className="h-4 w-4" />
+          <Compass className="h-4 w-4" />
         </Button>
 
+        {/* Reset North Button */}
         <Button
           variant="outline"
           size="icon"
