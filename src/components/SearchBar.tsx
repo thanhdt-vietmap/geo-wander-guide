@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { SecureApiClient } from '@/services/secureApiClient';
 import { getReverseGeocoding } from '@/services/mapService';
 import { ENV } from '@/config/environment';
+import { useUrlPlaceLoader } from '@/hooks/useUrlPlaceLoader';
 
 interface SearchResult {
   ref_id: string;
@@ -63,8 +63,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const API_KEY = '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841';
-  const FOCUS_COORDINATES = '21.0285,105.8342'; // Hanoi coordinates
+  // Handle URL place loading
+  const handleUrlPlaceLoad = (place: PlaceDetails) => {
+    setSearchQuery(place.display);
+    setShowSuggestions(false);
+    if (onPlaceSelect) {
+      onPlaceSelect(place);
+    }
+  };
+
+  useUrlPlaceLoader(null, handleUrlPlaceLoad);
 
   // Function to detect if input is lat,lng format
   const detectLatLngFormat = (query: string): { lat: number; lng: number } | null => {

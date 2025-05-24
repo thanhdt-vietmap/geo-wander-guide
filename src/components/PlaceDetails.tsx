@@ -9,6 +9,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { toast } from '@/hooks/use-toast';
 
 interface PlaceDetailsProps {
   place: {
@@ -20,6 +21,7 @@ interface PlaceDetailsProps {
     ward?: string;
     district?: string;
     city?: string;
+    ref_id?: string;
   } | null;
   onClose: () => void;
   onDirectionClick?: () => void;
@@ -43,6 +45,35 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+  const handleShare = async () => {
+    if (!place.ref_id) {
+      toast({
+        title: "Lỗi chia sẻ",
+        description: "Không thể chia sẻ địa điểm này",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('placeId', place.ref_id);
+    
+    try {
+      await navigator.clipboard.writeText(currentUrl.toString());
+      toast({
+        title: "Đã sao chép liên kết",
+        description: "Liên kết địa điểm đã được sao chép vào clipboard",
+      });
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      toast({
+        title: "Lỗi sao chép",
+        description: "Không thể sao chép liên kết",
+        variant: "destructive"
+      });
+    }
   };
 
   // Determine if we're on mobile using a simple media query check
@@ -117,7 +148,12 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                 </div>
                 
                 <div className="flex flex-col items-center">
-                  <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full h-12 w-12"
+                    onClick={handleShare}
+                  >
                     <Share2 className="h-6 w-6 text-gray-600" />
                   </Button>
                   <span className="text-xs mt-1">Share</span>
@@ -234,7 +270,12 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                 </div>
                 
                 <div className="flex flex-col items-center">
-                  <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full h-12 w-12"
+                    onClick={handleShare}
+                  >
                     <Share2 className="h-6 w-6 text-gray-600" />
                   </Button>
                   <span className="text-xs mt-1">Share</span>

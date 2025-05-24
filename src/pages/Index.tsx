@@ -6,6 +6,7 @@ import { setSelectedPlace, setLocationInfo, setStartingPlace } from '@/store/sli
 import { setCurrentLayer, setMapRef } from '@/store/slices/mapSlice';
 import { useMapHandlers } from '@/hooks/useMapHandlers';
 import { useLocationOperations } from '@/hooks/useLocationOperations';
+import { useUrlPlaceLoader } from '@/hooks/useUrlPlaceLoader';
 import MapView, { MapViewRef } from '@/components/MapView';
 import SearchBar from '@/components/SearchBar';
 import Sidebar from '@/components/Sidebar';
@@ -33,6 +34,9 @@ const Index = () => {
   // Custom hooks
   const { handleMapContextMenu, handleMapClick, handleCloseContextMenu } = useMapHandlers();
   const { handleGetLocation, handleSetAsStart, handleSetAsEnd, handleAddWaypoint } = useLocationOperations();
+
+  // URL place loader
+  useUrlPlaceLoader(mapRef);
 
   // Event handlers
   const handleMenuToggle = () => {
