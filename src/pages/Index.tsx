@@ -273,6 +273,11 @@ const Index = () => {
     }
   };
 
+  // Handle map style change from MapView component
+  const handleMapStyleChange = (styleType: string) => {
+    setCurrentMapLayer(styleType as MapLayerType);
+  };
+
   // Setup marker drag callback when Direction component is active
   useEffect(() => {
     if (showDirections && directionRef.current && mapRef.current) {
@@ -297,7 +302,7 @@ const Index = () => {
         onContextMenu={handleMapContextMenu}
         onClick={handleMapClick}
         initialMapStyle={currentMapLayer}
-        onMapStyleChange={setCurrentMapLayer}
+        onMapStyleChange={handleMapStyleChange}
       />
       
       {/* Search Bar */}
