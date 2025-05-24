@@ -7,6 +7,7 @@ import MapControls from '@/components/MapControls';
 import PlaceDetails from '@/components/PlaceDetails';
 import Direction from '@/components/Direction';
 import MapContextMenu from '@/components/MapContextMenu';
+import LocationInfoCard from '@/components/LocationInfoCard';
 import { PlaceDetails as PlaceDetailsType } from '@/types';
 import { getReverseGeocoding } from '@/services/mapService';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ const Index = () => {
   const [isPlaceDetailCollapsed, setIsPlaceDetailCollapsed] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
   const [startingPlace, setStartingPlace] = useState<PlaceDetailsType | null>(null);
+  const [locationInfo, setLocationInfo] = useState<PlaceDetailsType | null>(null);
   const mapRef = useRef<MapViewRef>(null);
   
   // State for context menu
@@ -38,6 +40,8 @@ const Index = () => {
     setIsPlaceDetailCollapsed(false);
     // Hide directions if they were showing
     setShowDirections(false);
+    // Close location info card if it's open
+    setLocationInfo(null);
     
     // Update map view with the selected place
     if (mapRef.current) {
@@ -53,12 +57,21 @@ const Index = () => {
     }
   };
 
+  const handleCloseLocationInfo = () => {
+    setLocationInfo(null);
+    if (mapRef.current) {
+      mapRef.current.removeMarkers();
+    }
+  };
+
   const handleShowDirections = () => {
     // Set the starting place to the currently selected place
     setStartingPlace(selectedPlace);
     setShowDirections(true);
     // When showing directions, hide place details
     setSelectedPlace(null);
+    // Close location info card if it's open
+    setLocationInfo(null);
     // Clear any existing markers
     if (mapRef.current) {
       mapRef.current.removeMarkers();
@@ -87,6 +100,30 @@ const Index = () => {
     });
   };
 
+  // Handle click on map
+  const handleMapClick = async (e: { lngLat: [number, number] }) => {
+    try {
+      // Close any open UI elements
+      if (contextMenu) setContextMenu({ ...contextMenu, isOpen: false });
+      if (selectedPlace) setSelectedPlace(null);
+      
+      // Get location details
+      const placeDetails = await getReverseGeocoding(e.lngLat[0], e.lngLat[1]);
+      
+      // Set location info card
+      setLocationInfo(placeDetails);
+      
+      // Add a marker
+      if (mapRef.current) {
+        mapRef.current.removeMarkers();
+        mapRef.current.addMarker(e.lngLat[0], e.lngLat[1]);
+      }
+    } catch (error) {
+      toast.error('Failed to get location details');
+      console.error(error);
+    }
+  };
+
   // Close context menu
   const handleCloseContextMenu = () => {
     if (contextMenu) {
@@ -97,8 +134,19 @@ const Index = () => {
   // Get location details from coordinates
   const handleGetLocation = async (lng: number, lat: number) => {
     try {
+      // Close any open UI elements
+      if (selectedPlace) setSelectedPlace(null);
+      
       const placeDetails = await getReverseGeocoding(lng, lat);
-      handlePlaceSelect(placeDetails);
+      
+      // Show location info card instead of place details
+      setLocationInfo(placeDetails);
+      
+      // Add a marker
+      if (mapRef.current) {
+        mapRef.current.removeMarkers();
+        mapRef.current.addMarker(lng, lat);
+      }
     } catch (error) {
       toast.error('Failed to get location details');
       console.error(error);
@@ -112,6 +160,7 @@ const Index = () => {
         ref={mapRef} 
         className="absolute inset-0" 
         onContextMenu={handleMapContextMenu}
+        onClick={handleMapClick}
       />
       
       {/* Search Bar */}
@@ -122,11 +171,19 @@ const Index = () => {
       />
       
       {/* Place Details */}
-      {selectedPlace && (
+      {selectedPlace && !locationInfo && (
         <PlaceDetails 
           place={selectedPlace} 
           onClose={handleClosePlaceDetails}
           onDirectionClick={handleShowDirections}
+        />
+      )}
+
+      {/* Location Info Card */}
+      {locationInfo && !selectedPlace && (
+        <LocationInfoCard 
+          place={locationInfo}
+          onClose={handleCloseLocationInfo}
         />
       )}
 

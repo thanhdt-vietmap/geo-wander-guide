@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
@@ -17,9 +16,10 @@ export interface MapViewRef {
 interface MapViewProps {
   className?: string;
   onContextMenu?: (e: { lngLat: [number, number] }) => void;
+  onClick?: (e: { lngLat: [number, number] }) => void;
 }
 
-const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContextMenu }, ref) => {
+const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContextMenu, onClick }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<vietmapgl.Map | null>(null);
   const markers = useRef<vietmapgl.Marker[]>([]);
@@ -30,6 +30,8 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContex
 
   // Track if the user is dragging to prevent context menu on drag end
   const isDragging = useRef(false);
+  const clickStartPos = useRef<[number, number] | null>(null);
+  const clickTimeout = useRef<number | null>(null);
 
   // Expose map methods to parent components
   useImperativeHandle(ref, () => ({
@@ -177,6 +179,9 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContex
       map.current.on('mousedown', (e) => {
         if (e.originalEvent.button === 2) { // Right mouse button
           isDragging.current = false;
+        } else if (e.originalEvent.button === 0 && onClick) { // Left mouse button
+          clickStartPos.current = [e.point.x, e.point.y];
+          isDragging.current = false;
         }
       });
 
@@ -195,12 +200,41 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ className = '', onContex
         isDragging.current = false;
       });
     }
+    
+    // Add event listener for left-click
+    if (onClick) {
+      map.current.on('mouseup', (e) => {
+        if (e.originalEvent.button === 0 && !isDragging.current && clickStartPos.current) {
+          // Check if it's a click without drag
+          const currentPos = [e.point.x, e.point.y];
+          const startPos = clickStartPos.current;
+          
+          // Calculate the distance moved during the click
+          const dx = currentPos[0] - startPos[0];
+          const dy = currentPos[1] - startPos[1];
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          // If the distance is small, consider it a click without drag
+          if (distance < 5) {  // 5 pixels threshold
+            onClick({
+              lngLat: [e.lngLat.lng, e.lngLat.lat]
+            });
+          }
+        }
+        
+        clickStartPos.current = null;
+        isDragging.current = false;
+      });
+    }
 
     // Cleanup
     return () => {
+      if (clickTimeout.current) {
+        window.clearTimeout(clickTimeout.current);
+      }
       map.current?.remove();
     };
-  }, [onContextMenu]);
+  }, [onContextMenu, onClick]);
 
   return (
     <div ref={mapContainer} className={`w-full h-full ${className}`} />
