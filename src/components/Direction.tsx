@@ -582,16 +582,17 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       const apiParams: Record<string, string> = {
         'api-version': '1.1',
         points_encoded: 'true',
-        vehicle: vehicle,
-        'alternative_route.max_paths': '5'
+        vehicle: vehicle
       };
 
       // Add points as indexed parameters
-      validWaypoints.forEach((wp, index) => {
-        apiParams[`point.${index}`] = `${wp.lat},${wp.lng}`;
-      });
-      
-      const data: RouteResponse = await apiClient.get('/route', apiParams);
+      // validWaypoints.forEach((wp, index) => {
+      //   apiParams[`point.${index}`] = `${wp.lat},${wp.lng}`;
+      // });
+
+      // Map list point to point parameters
+      const pointParamStrings = validWaypoints.map((wp, index) => `point=${wp.lat},${wp.lng}`).join('&');
+      const data: RouteResponse = await apiClient.get(`/route?${pointParamStrings}`, apiParams);
       setRouteData(data);
       
       setRouteSummaries([]);
