@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlaceDetails } from '@/types';
-import { X, Navigation } from 'lucide-react';
+import { X, Navigation, Share } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface LocationInfoCardProps {
   place: PlaceDetails;
@@ -18,6 +19,34 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
     const timer = setTimeout(() => setAnimating(false), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleShare = async () => {
+    try {
+      if (!place.ref_id) {
+        toast({
+          title: "Lỗi chia sẻ",
+          description: "Không thể chia sẻ địa điểm này",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const shareUrl = `${window.location.origin}${window.location.pathname}?placeId=${place.ref_id}`;
+      await navigator.clipboard.writeText(shareUrl);
+      
+      toast({
+        title: "Đã sao chép liên kết",
+        description: "Liên kết chia sẻ đã được sao chép vào clipboard"
+      });
+    } catch (error) {
+      console.error('Error sharing place:', error);
+      toast({
+        title: "Lỗi chia sẻ",
+        description: "Không thể sao chép liên kết chia sẻ",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-md">
@@ -42,8 +71,18 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
                 <span className="font-medium">{place.lat.toFixed(6)}, {place.lng.toFixed(6)}</span>
               </div>
               
-              {onDirectionClick && (
-                <div className="flex justify-end items-end">
+              <div className="flex justify-end items-end gap-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1"
+                  onClick={handleShare}
+                >
+                  <Share className="h-4 w-4" />
+                  Chia sẻ
+                </Button>
+                
+                {onDirectionClick && (
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -51,10 +90,10 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
                     onClick={onDirectionClick}
                   >
                     <Navigation className="h-4 w-4" />
-                    Directions
+                    Chỉ đường
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </CardContent>

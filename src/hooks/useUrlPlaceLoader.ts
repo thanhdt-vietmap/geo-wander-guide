@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { useAppDispatch } from '@/store/hooks';
-import { setSelectedPlace } from '@/store/slices/locationSlice';
+import { setSelectedPlace, setLocationInfo } from '@/store/slices/locationSlice';
 import { setPlaceDetailCollapsed, setShowDirections } from '@/store/slices/uiSlice';
 import { SecureApiClient } from '@/services/secureApiClient';
 import { PlaceDetails } from '@/types';
@@ -28,12 +28,13 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
         
         console.log('Loaded place details from URL:', placeDetails);
         
-        // Set the place in Redux state
-        dispatch(setSelectedPlace(placeDetails));
+        // Set as location info instead of selected place to avoid conflicts
+        dispatch(setLocationInfo(placeDetails));
+        dispatch(setSelectedPlace(null));
         dispatch(setPlaceDetailCollapsed(false));
         dispatch(setShowDirections(false));
         
-        // Update search bar and map
+        // Update search bar if callback provided
         if (onPlaceSelect) {
           onPlaceSelect(placeDetails);
         }

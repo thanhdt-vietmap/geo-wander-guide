@@ -5,6 +5,7 @@ import { setSelectedPlace, setLocationInfo } from '@/store/slices/locationSlice'
 import { setPlaceDetailCollapsed, setShowDirections } from '@/store/slices/uiSlice';
 import { PlaceDetails } from '@/types';
 import { MapViewRef } from '@/components/MapView';
+import { toast } from '@/hooks/use-toast';
 
 export const usePlaceOperations = () => {
   const dispatch = useAppDispatch();
@@ -35,9 +36,38 @@ export const usePlaceOperations = () => {
     }
   }, [dispatch]);
 
+  const handleSharePlace = useCallback(async (place: PlaceDetails) => {
+    try {
+      if (!place.ref_id) {
+        toast({
+          title: "Lỗi chia sẻ",
+          description: "Không thể chia sẻ địa điểm này",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const shareUrl = `${window.location.origin}${window.location.pathname}?placeId=${place.ref_id}`;
+      await navigator.clipboard.writeText(shareUrl);
+      
+      toast({
+        title: "Đã sao chép liên kết",
+        description: "Liên kết chia sẻ đã được sao chép vào clipboard"
+      });
+    } catch (error) {
+      console.error('Error sharing place:', error);
+      toast({
+        title: "Lỗi chia sẻ",
+        description: "Không thể sao chép liên kết chia sẻ",
+        variant: "destructive"
+      });
+    }
+  }, []);
+
   return {
     handlePlaceSelect,
     handleClosePlaceDetails,
-    handleCloseLocationInfo
+    handleCloseLocationInfo,
+    handleSharePlace
   };
 };

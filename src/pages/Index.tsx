@@ -37,7 +37,7 @@ const Index = () => {
   const { handleMapContextMenu, handleMapClick, handleCloseContextMenu } = useMapHandlers();
   const { handleGetLocation, handleSetAsStart, handleSetAsEnd, handleAddWaypoint } = useLocationOperations();
   const { handleShowDirections, handleCloseDirections, handleDirectionMapClick } = useDirectionOperations();
-  const { handlePlaceSelect, handleClosePlaceDetails, handleCloseLocationInfo } = usePlaceOperations();
+  const { handlePlaceSelect, handleClosePlaceDetails, handleCloseLocationInfo, handleSharePlace } = usePlaceOperations();
 
   // URL place loader
   useUrlPlaceLoader(mapRef);
