@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import SearchSuggestions from './SearchSuggestions';
 import { toast } from '@/hooks/use-toast';
 import { SecureApiClient } from '@/services/secureApiClient';
+import { getReverseGeocoding } from '@/services/mapService';
 import { ENV } from '@/config/environment';
 
 interface SearchResult {
@@ -64,10 +66,62 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const API_KEY = '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841';
   const FOCUS_COORDINATES = '21.0285,105.8342'; // Hanoi coordinates
 
+  // Function to detect if input is lat,lng format
+  const detectLatLngFormat = (query: string): { lat: number; lng: number } | null => {
+    // Remove extra spaces and check for comma separated numbers
+    const trimmed = query.trim();
+    const regex = /^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/;
+    const match = trimmed.match(regex);
+    
+    if (match) {
+      const lat = parseFloat(match[1]);
+      const lng = parseFloat(match[2]);
+      
+      // Basic validation for reasonable lat/lng ranges
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+    
+    return null;
+  };
+
+  const searchByCoordinates = async (lat: number, lng: number) => {
+    setIsSearchLoading(true);
+    try {
+      const placeDetails = await getReverseGeocoding(lng, lat);
+      
+      if (onPlaceSelect) {
+        onPlaceSelect(placeDetails);
+      }
+      
+      setSearchQuery(placeDetails.display);
+      setShowSuggestions(false);
+      
+      console.log('Reverse geocoding result:', placeDetails);
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+      toast({
+        title: "Lỗi tìm kiếm tọa độ",
+        description: "Không thể tìm thấy thông tin vị trí cho tọa độ này",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSearchLoading(false);
+    }
+  };
+
   const searchPlaces = async (query: string) => {
     if (!query.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
+      return;
+    }
+
+    // Check if input is in lat,lng format
+    const coordinates = detectLatLngFormat(query);
+    if (coordinates) {
+      await searchByCoordinates(coordinates.lat, coordinates.lng);
       return;
     }
 
@@ -192,7 +246,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
           <Input
             type="text"
-            placeholder="Tìm kiếm bằng VietMap"
+            placeholder="Tìm kiếm địa điểm hoặc nhập tọa độ (vd: 21.0285, 105.8342)"
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={handleInputFocus}
