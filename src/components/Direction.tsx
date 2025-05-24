@@ -127,6 +127,9 @@ export interface DirectionRef {
   updateWaypointCoordinates: (index: number, lng: number, lat: number) => void;
 }
 
+const API_KEY = '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841';
+const FOCUS_COORDINATES = '21.0285,105.8342'; // Hanoi coordinates
+
 const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, startingPlace, onMapClick }, ref) => {
   const [animating, setAnimating] = useState(true);
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
@@ -264,13 +267,10 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         ));
       }
     }
-  }), [waypoints, API_KEY]);
+  }), [waypoints]);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
-
-  const API_KEY = '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841';
-  const FOCUS_COORDINATES = '21.0285,105.8342'; // Hanoi coordinates
 
   // Update map when starting place is provided
   useEffect(() => {
