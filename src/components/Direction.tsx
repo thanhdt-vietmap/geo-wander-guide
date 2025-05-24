@@ -251,10 +251,10 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             
             // Auto-update route if we have enough valid waypoints and routes are already calculated
             if (autoUpdateRoute && routeData) {
-              // Small delay to ensure waypoint state is updated
+              // Wait a bit for state to update, then call route API
               setTimeout(() => {
                 handleGetDirections();
-              }, 100);
+              }, 200);
             }
           }
         } else {
@@ -265,6 +265,13 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
               ? { ...wp, lat: lat, lng: lng }
               : wp
           ));
+          
+          // Still try to update route if reverse geocoding fails but we have coordinates
+          if (autoUpdateRoute && routeData) {
+            setTimeout(() => {
+              handleGetDirections();
+            }, 200);
+          }
         }
       } catch (error) {
         console.error('Error getting location details:', error);
@@ -274,9 +281,16 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             ? { ...wp, lat: lat, lng: lng }
             : wp
         ));
+        
+        // Still try to update route if there's an error but we have coordinates
+        if (autoUpdateRoute && routeData) {
+          setTimeout(() => {
+            handleGetDirections();
+          }, 200);
+        }
       }
     }
-  }), [waypoints, autoUpdateRoute, routeData]);
+  }), [waypoints, autoUpdateRoute, routeData, handleGetDirections]);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
