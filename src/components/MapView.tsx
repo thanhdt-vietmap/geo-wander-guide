@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
-import * as vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
+import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
 import { mapUtils } from '@/utils/utils';
-import { MapLayerType } from './MapLayerSelector';
 
 export interface MapViewRef {
-  map: vietmapgl.Map | null;
+  map: any;
   flyTo: (lng: number, lat: number) => void;
   addMarker: (lng: number, lat: number, type?: 'default' | 'start' | 'end' | 'waypoint', draggable?: boolean, index?: number) => void;
   removeMarkers: () => void;
@@ -13,11 +12,11 @@ export interface MapViewRef {
   removeRoutes: () => void;
   fitBounds: (bounds: [[number, number], [number, number]]) => void;
   highlightRoute: (routeId: string) => void;
-  setMapStyle: (styleType: MapLayerType) => void;
+  setMapStyle: (styleType: string) => void;
   rotateMap: (degrees: number) => void;
   resetNorth: () => void;
   toggle3D: () => void;
-  getCurrentLocation: () => Promise<GeolocationPosition | null>;
+  getCurrentLocation: () => Promise<any>;
   setMarkerDragCallback: (callback: ((index: number, lng: number, lat: number) => void) | null) => void;
 }
 
@@ -25,29 +24,36 @@ interface MapViewProps {
   className?: string;
   onContextMenu?: (e: { lngLat: [number, number] }) => void;
   onClick?: (e: { lngLat: [number, number] }) => void;
-  initialMapStyle?: MapLayerType;
-  onMapStyleChange?: (styleType: MapLayerType) => void;
+  initialMapStyle?: string;
+  onMapStyleChange?: (styleType: string) => void;
 }
 
 const MapView = forwardRef<MapViewRef, MapViewProps>(({ 
   className = '', 
   onContextMenu, 
-  onClick,
-  initialMapStyle = 'vector',
-  onMapStyleChange
+  onClick, 
+  initialMapStyle = 'vector', 
+  onMapStyleChange 
 }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<vietmapgl.Map | null>(null);
-  const markers = useRef<{ marker: vietmapgl.Marker; index?: number }[]>([]);
+  const map = useRef<any>(null);
+  const markers = useRef<{ marker: any; index?: number }[]>([]);
   const routes = useRef<string[]>([]);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const [currentMapStyle, setCurrentMapStyle] = useState<MapLayerType>(initialMapStyle);
+  const [currentMapStyle, setCurrentMapStyle] = useState(initialMapStyle);
   const [is3DMode, setIs3DMode] = useState(false);
-  const locationMarker = useRef<vietmapgl.Marker | null>(null);
+  const locationMarker = useRef<any>(null);
   const markerDragCallback = useRef<((index: number, lng: number, lat: number) => void) | null>(null);
 
   // Pre-defined colors for multiple routes
-  const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
+  const routeColors = [
+    '#0071bc',
+    '#d92f88', 
+    '#f7941d',
+    '#39b54a',
+    '#662d91',
+    '#ed1c24'
+  ];
 
   // Track if the user is dragging to prevent context menu on drag end
   const isDragging = useRef(false);
@@ -55,9 +61,9 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
 
   // Use useCallback to memoize event handlers and prevent unnecessary re-renders
   const handleMouseDown = useCallback((e: any) => {
-    if (e.originalEvent.button === 2) { // Right mouse button
+    if (e.originalEvent.button === 2) {
       isDragging.current = false;
-    } else if (e.originalEvent.button === 0 && onClick) { // Left mouse button
+    } else if (e.originalEvent.button === 0 && onClick) {
       clickStartPos.current = [e.point.x, e.point.y];
       isDragging.current = false;
     }
@@ -92,19 +98,18 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       const distance = Math.sqrt(dx * dx + dy * dy);
       
       // If the distance is small, consider it a click without drag
-      if (distance < 5) {  // 5 pixels threshold
+      if (distance < 5) {
         onClick({
           lngLat: [e.lngLat.lng, e.lngLat.lat]
         });
       }
     }
-    
     clickStartPos.current = null;
     isDragging.current = false;
   }, [onClick]);
 
   // Get the appropriate map style based on the layer type
-  const getMapStyle = (layerType: MapLayerType) => {
+  const getMapStyle = (layerType: string) => {
     switch (layerType) {
       case 'light':
         return mapUtils.getVietMapLightRasterTileLayer();
@@ -138,7 +143,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         });
       }
     },
-    addMarker: (lng: number, lat: number, type = 'default', draggable = false, index) => {
+    addMarker: (lng: number, lat: number, type: 'default' | 'start' | 'end' | 'waypoint' = 'default', draggable: boolean = false, index?: number) => {
       if (map.current) {
         // Create marker with different colors based on type
         const colors = {
@@ -149,13 +154,13 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         };
 
         // Create new marker
-        const marker = new vietmapgl.Marker({ 
+        const marker = new vietmapgl.Marker({
           color: colors[type],
           draggable: draggable
         })
-          .setLngLat([lng, lat])
-          .addTo(map.current);
-        
+        .setLngLat([lng, lat])
+        .addTo(map.current);
+
         // Add drag event listener if draggable
         if (draggable && typeof index === 'number') {
           marker.on('dragend', () => {
@@ -165,7 +170,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
             }
           });
         }
-        
+
         markers.current.push({ marker, index });
       }
     },
@@ -173,11 +178,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       markers.current.forEach(({ marker }) => marker.remove());
       markers.current = [];
     },
-    addRoute: (coordinates: [number, number][], routeId = 'route', color) => {
+    addRoute: (coordinates: [number, number][], routeId: string = 'route', color?: string) => {
       if (map.current) {
         // Use provided color or get one from the predefined colors
         const routeColor = color || routeColors[routes.current.length % routeColors.length];
-        
+
         // Check if the source already exists
         if (!map.current.getSource(routeId)) {
           map.current.addSource(routeId, {
@@ -204,12 +209,12 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
               'line-color': routeColor,
               'line-width': 4
             }
-          },"boundary_province");
+          }, "boundary_province");
 
           routes.current.push(routeId);
         } else {
           // Update existing source
-          const source = map.current.getSource(routeId) as vietmapgl.GeoJSONSource;
+          const source = map.current.getSource(routeId);
           if (source && typeof source.setData === 'function') {
             source.setData({
               type: 'Feature',
@@ -219,7 +224,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
                 coordinates: coordinates
               }
             });
-            
+
             // Update the color if the layer exists
             if (map.current.getLayer(routeId)) {
               map.current.setPaintProperty(routeId, 'line-color', routeColor);
@@ -230,12 +235,12 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     },
     removeRoutes: () => {
       if (map.current) {
-        routes.current.forEach(routeId => {
-          if (map.current!.getLayer(routeId)) {
-            map.current!.removeLayer(routeId);
+        routes.current.forEach((routeId) => {
+          if (map.current.getLayer(routeId)) {
+            map.current.removeLayer(routeId);
           }
-          if (map.current!.getSource(routeId)) {
-            map.current!.removeSource(routeId);
+          if (map.current.getSource(routeId)) {
+            map.current.removeSource(routeId);
           }
         });
         routes.current = [];
@@ -243,21 +248,19 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     },
     fitBounds: (bounds: [[number, number], [number, number]]) => {
       if (map.current) {
-        map.current.fitBounds(bounds, {
-          padding: 50
-        });
+        map.current.fitBounds(bounds, { padding: 50 });
       }
     },
     highlightRoute: (routeId: string) => {
       if (map.current) {
         // First set all routes to less opacity
-        routes.current.forEach(id => {
-          if (map.current!.getLayer(id)) {
-            map.current!.setPaintProperty(id, 'line-opacity', 0.5);
-            map.current!.setPaintProperty(id, 'line-width', 3);
+        routes.current.forEach((id) => {
+          if (map.current.getLayer(id)) {
+            map.current.setPaintProperty(id, 'line-opacity', 0.5);
+            map.current.setPaintProperty(id, 'line-width', 3);
           }
         });
-        
+
         // Then highlight the selected route
         if (map.current.getLayer(routeId)) {
           map.current.setPaintProperty(routeId, 'line-opacity', 1);
@@ -265,16 +268,14 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         }
       }
     },
-    setMapStyle: (styleType: MapLayerType) => {
+    setMapStyle: (styleType: string) => {
       if (map.current) {
         const newStyle = getMapStyle(styleType);
-        
         if (typeof newStyle === 'string') {
           map.current.setStyle(newStyle);
         } else {
           map.current.setStyle(newStyle);
         }
-        
         setCurrentMapStyle(styleType);
         if (onMapStyleChange) {
           onMapStyleChange(styleType);
@@ -302,7 +303,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       }
     },
     getCurrentLocation: async () => {
-      return new Promise<GeolocationPosition | null>((resolve) => {
+      return new Promise((resolve) => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -315,18 +316,18 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
                   zoom: 16,
                   essential: true
                 });
-                
+
                 // Remove previous location marker if exists
                 if (locationMarker.current) {
                   locationMarker.current.remove();
                 }
-                
+
                 // Create a pulsing dot for the location
                 locationMarker.current = new vietmapgl.Marker({
-                  color: '#4285F4',
+                  color: '#4285F4'
                 })
-                  .setLngLat([longitude, latitude])
-                  .addTo(map.current);
+                .setLngLat([longitude, latitude])
+                .addTo(map.current);
               }
               
               resolve(position);
@@ -355,14 +356,14 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   // Initialize map once
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
-    
+
     // Initialize map with selected style
     const initialStyle = getMapStyle(initialMapStyle);
     
     map.current = new vietmapgl.Map({
       container: mapContainer.current,
       style: typeof initialStyle === 'string' ? initialStyle : initialStyle,
-      center: [105.8342, 21.0285], // Hanoi, Vietnam
+      center: [105.8342, 21.0285],
       zoom: 10
     });
 
@@ -402,7 +403,10 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   }, [isMapLoaded, handleMouseDown, handleMouseMove, handleContextMenu, handleMouseUp]);
 
   return (
-    <div ref={mapContainer} className={`w-full h-full ${className}`} />
+    <div 
+      ref={mapContainer} 
+      className={`w-full h-full ${className}`}
+    />
   );
 });
 
