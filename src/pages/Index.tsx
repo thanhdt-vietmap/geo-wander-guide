@@ -4,7 +4,7 @@ import SearchBar from '@/components/SearchBar';
 import Sidebar from '@/components/Sidebar';
 import MapControls from '@/components/MapControls';
 import PlaceDetails from '@/components/PlaceDetails';
-import Direction from '@/components/Direction';
+import Direction, { DirectionRef } from '@/components/Direction';
 import MapContextMenu from '@/components/MapContextMenu';
 import LocationInfoCard from '@/components/LocationInfoCard';
 import { PlaceDetails as PlaceDetailsType } from '@/types';
@@ -22,7 +22,7 @@ const Index = () => {
   const mapRef = useRef<MapViewRef>(null);
   const directionActiveInputRef = useRef<number | null>(null);
   const [currentMapLayer, setCurrentMapLayer] = useState<MapLayerType>('vector');
-  const directionRef = useRef<any>(null);
+  const directionRef = useRef<DirectionRef>(null);
   
   // State for context menu
   const [contextMenu, setContextMenu] = useState<{

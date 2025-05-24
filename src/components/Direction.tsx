@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Search, X, ChevronUp, ChevronDown, ArrowUpDown, Plus, Navigation, Map as MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -117,10 +117,16 @@ interface DirectionProps {
     lng: number;
     name?: string;
   } | null;
-  onMapClick?: (activeInputRef: number | null) => boolean; // New prop for handling map clicks
+  onMapClick?: (activeInputRef: number | null) => boolean;
 }
 
-const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace, onMapClick }) => {
+export interface DirectionRef {
+  setEndPoint: (place: any) => void;
+  addWaypoint: (place: any) => void;
+  hasValidInputs: () => boolean;
+}
+
+const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, startingPlace, onMapClick }, ref) => {
   const [animating, setAnimating] = useState(true);
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
     { name: startingPlace?.display || "", lat: startingPlace?.lat || 0, lng: startingPlace?.lng || 0 },
@@ -184,14 +190,36 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace, o
     return false;
   };
 
-  // Expose the active input index and fill method to parent via callback
-  useEffect(() => {
-    if (onMapClick) {
-      const handler = (location: any) => fillInputWithLocation(location);
-      // Return active input index when map is clicked
-      onMapClick(activeInputIndex);
+  // Expose methods to parent component through ref
+  useImperativeHandle(ref, () => ({
+    setEndPoint: (place: any) => {
+      // Set the last waypoint as the end point
+      setWaypoints(prev => prev.map((wp, i) => 
+        i === prev.length - 1
+          ? { ...wp, name: place.display, lat: place.lat, lng: place.lng, ref_id: place.ref_id }
+          : wp
+      ));
+    },
+    addWaypoint: (place: any) => {
+      // Add a new waypoint before the last one (which should be the end point)
+      setWaypoints(prev => {
+        const newWaypoints = [...prev];
+        const newWaypoint = { 
+          name: place.display, 
+          lat: place.lat, 
+          lng: place.lng, 
+          ref_id: place.ref_id 
+        };
+        // Insert before the last waypoint (end point)
+        newWaypoints.splice(newWaypoints.length - 1, 0, newWaypoint);
+        return newWaypoints;
+      });
+    },
+    hasValidInputs: () => {
+      const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
+      return validWaypoints.length >= 2;
     }
-  }, [activeInputIndex, onMapClick, waypoints]);
+  }), [waypoints]);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
@@ -773,6 +801,8 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace, o
       </div>
     </div>
   );
-};
+});
+
+Direction.displayName = 'Direction';
 
 export default Direction;
