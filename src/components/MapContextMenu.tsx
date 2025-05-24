@@ -46,7 +46,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   if (!isOpen) return null;
 
   return (
-    <ContextMenu defaultOpen={true} onOpenChange={(open) => !open && onClose()}>
+    <ContextMenu open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <ContextMenuTrigger 
         className="fixed" 
         style={{ top: 0, left: 0, width: '100vw', height: '100vh' }} 
