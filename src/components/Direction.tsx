@@ -6,6 +6,8 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import SearchSuggestions from './SearchSuggestions';
 import RouteDetails from './RouteDetails';
+import { SecureApiClient } from '@/services/secureApiClient';
+import { ENV } from '@/config/environment';
 
 // Utility function to decode Google's polyline format
 function decodePolyline(polyline: string) {
@@ -127,8 +129,7 @@ export interface DirectionRef {
   updateWaypointCoordinates: (index: number, lng: number, lat: number) => void;
 }
 
-const API_KEY = '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841';
-const FOCUS_COORDINATES = '21.0285,105.8342'; // Hanoi coordinates
+const apiClient = SecureApiClient.getInstance();
 
 const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, startingPlace, onMapClick }, ref) => {
   const [animating, setAnimating] = useState(true);
@@ -229,48 +230,31 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         console.log(`Updating waypoint ${index} to coordinates: ${lng}, ${lat}`);
         
         // Get location details from coordinates using reverse geocoding
-        const response = await fetch(
-          `https://maps.vietmap.vn/api/reverse/v3?apikey=${API_KEY}&lng=${lng}&lat=${lat}`
-        );
+        const data = await apiClient.get<any[]>('/reverse/v3', {
+          lng: lng.toString(),
+          lat: lat.toString()
+        });
         
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Reverse geocoding response:', data);
+        console.log('Reverse geocoding response:', data);
+        
+        if (data.length > 0) {
+          // Update the waypoint with new coordinates and name
+          setWaypoints(prev => {
+            const newWaypoints = prev.map((wp, i) => 
+              i === index 
+                ? { ...wp, name: data[0].display, lat: lat, lng: lng, ref_id: data[0].ref_id }
+                : wp
+            );
+            console.log('Updated waypoints:', newWaypoints);
+            return newWaypoints;
+          });
           
-          if (data.length > 0) {
-            // Update the waypoint with new coordinates and name
-            setWaypoints(prev => {
-              const newWaypoints = prev.map((wp, i) => 
-                i === index 
-                  ? { ...wp, name: data[0].display, lat: lat, lng: lng, ref_id: data[0].ref_id }
-                  : wp
-              );
-              console.log('Updated waypoints:', newWaypoints);
-              return newWaypoints;
-            });
-            
-            // Auto-update route if we have enough valid waypoints and routes are already calculated
-            if (autoUpdateRoute && routeData) {
-              // Wait a bit for state to update, then call route API
-              setTimeout(() => {
-                handleGetDirections();
-              }, 200);
-            }
-          }
-        } else {
-          console.error('Reverse geocoding failed:', response.status);
-          // Update coordinates even if reverse geocoding fails
-          setWaypoints(prev => prev.map((wp, i) => 
-            i === index 
-              ? { ...wp, lat: lat, lng: lng }
-              : wp
-          ));
-          
-          // Still try to update route if reverse geocoding fails but we have coordinates
+          // Auto-update route if we have enough valid waypoints and routes are already calculated
           if (autoUpdateRoute && routeData) {
+            // Wait a bit for state to update, then call route API
             setTimeout(() => {
               handleGetDirections();
-            }, 200);
+            }, 300);
           }
         }
       } catch (error) {
@@ -282,11 +266,11 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             : wp
         ));
         
-        // Still try to update route if there's an error but we have coordinates
+        // Still try to update route if reverse geocoding fails but we have coordinates
         if (autoUpdateRoute && routeData) {
           setTimeout(() => {
             handleGetDirections();
-          }, 200);
+          }, 300);
         }
       }
     }
@@ -340,23 +324,13 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
     setIsSearchLoading(true);
     try {
-      const response = await fetch(
-        `https://maps.vietmap.vn/api/autocomplete/v3?apikey=${API_KEY}&text=${encodeURIComponent(query)}&focus=${FOCUS_COORDINATES}`
-      );
+      const data = await apiClient.get<SearchResult[]>('/autocomplete/v3', {
+        text: query,
+        focus: ENV.FOCUS_COORDINATES
+      });
       
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestions(data);
-        setShowSuggestions(true);
-      } else {
-        console.error('Search API error:', response.status);
-        setSuggestions([]);
-        toast({
-          title: "Search failed",
-          description: "Could not fetch search results",
-          variant: "destructive"
-        });
-      }
+      setSuggestions(data);
+      setShowSuggestions(true);
     } catch (error) {
       console.error('Search error:', error);
       setSuggestions([]);
@@ -372,35 +346,23 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const fetchPlaceDetails = async (refId: string, index: number) => {
     try {
-      const response = await fetch(
-        `https://maps.vietmap.vn/api/place/v3?apikey=${API_KEY}&refid=${encodeURIComponent(refId)}`
-      );
+      const data = await apiClient.get<any>('/place/v3', {
+        refid: refId
+      });
       
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Update the waypoint at the specified index
-        setWaypoints(prev => prev.map((wp, i) => 
-          i === index 
-            ? { ...wp, name: data.display, lat: data.lat, lng: data.lng, ref_id: refId }
-            : wp
-        ));
+      // Update the waypoint at the specified index
+      setWaypoints(prev => prev.map((wp, i) => 
+        i === index 
+          ? { ...wp, name: data.display, lat: data.lat, lng: data.lng, ref_id: refId }
+          : wp
+      ));
 
-        // Center map on this point if it's the first selection
-        if (mapRef.current && index === 0) {
-          mapRef.current.flyTo(data.lng, data.lat);
-        }
-
-        return data;
-      } else {
-        console.error('Place API error:', response.status);
-        toast({
-          title: "Failed to load place details",
-          description: "Could not fetch place details",
-          variant: "destructive"
-        });
-        return null;
+      // Center map on this point if it's the first selection
+      if (mapRef.current && index === 0) {
+        mapRef.current.flyTo(data.lng, data.lat);
       }
+
+      return data;
     } catch (error) {
       console.error('Place error:', error);
       toast({
@@ -557,103 +519,100 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     
     try {
       // Construct the points query params
-      const pointParams = validWaypoints.map(wp => `point=${wp.lat},${wp.lng}`).join('&');
-      const url = `https://maps.vietmap.vn/api/route?api-version=1.1&apikey=${API_KEY}&${pointParams}&points_encoded=true&vehicle=${vehicle}&alternative_route.max_paths=5`;
+      const params: Record<string, string> = {
+        'api-version': '1.1',
+        points_encoded: 'true',
+        vehicle: vehicle,
+        'alternative_route.max_paths': '5'
+      };
+
+      // Add points as separate parameters
+      validWaypoints.forEach((wp, index) => {
+        params[`point`] = `${wp.lat},${wp.lng}`;
+      });
       
-      const response = await fetch(url);
+      const data: RouteResponse = await apiClient.get('/route', params);
+      setRouteData(data);
       
-      if (response.ok) {
-        const data: RouteResponse = await response.json();
-        setRouteData(data);
-        
-        // Clear previous route summaries and selected route
-        setRouteSummaries([]);
-        setSelectedRouteId(null);
-        
-        // Remove any existing routes and markers
-        if (mapRef.current) {
-          mapRef.current.removeRoutes();
-          mapRef.current.removeMarkers();
-        }
-        
-        // Draw routes on the map and create summaries
-        if (data.paths && data.paths.length > 0) {
-          const newSummaries: RouteSummary[] = [];
-          
-          data.paths.forEach((path, index) => {
-            const routeId = `route-${index}`;
-            const color = routeColors[index % routeColors.length];
-            
-            // Decode and add the route to the map
-            const decodedPoints = decodePolyline(path.points);
-            if (mapRef.current) {
-              mapRef.current.addRoute(decodedPoints, routeId, color);
-            }
-            
-            // Add to summaries
-            newSummaries.push({
-              id: routeId,
-              distance: path.distance,
-              time: path.time,
-              color: color
-            });
-          });
-          
-          // Set route summaries
-          setRouteSummaries(newSummaries);
-          
-          // Auto-select first route
-          if (newSummaries.length > 0) {
-            setSelectedRouteId(newSummaries[0].id);
-            if (mapRef.current) {
-              mapRef.current.highlightRoute(newSummaries[0].id);
-            }
-          }
-          
-          // Add draggable markers for waypoints
-          if (mapRef.current) {
-            validWaypoints.forEach((wp, index) => {
-              const isStart = index === 0;
-              const isEnd = index === validWaypoints.length - 1;
-              mapRef.current.addMarker(
-                wp.lng, 
-                wp.lat, 
-                isStart ? 'start' : isEnd ? 'end' : 'waypoint',
-                true, // Make markers draggable
-                index // Pass the index for tracking
-              );
-            });
-          }
-          
-          // Fit the map to the bounds of the first route
-          const firstPath = data.paths[0];
-          if (firstPath.bbox && firstPath.bbox.length === 4 && mapRef.current) {
-            const [minLng, minLat, maxLng, maxLat] = firstPath.bbox;
-            mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
-          }
-          
-          // Enable auto-update after first successful route calculation
-          setAutoUpdateRoute(true);
-        }
-        
-        toast({
-          title: `${data.paths.length} route${data.paths.length > 1 ? 's' : ''} found`,
-          description: "Select a route to see details",
-        });
-      } else {
-        console.error('Direction API error:', response.status);
-        toast({
-          title: "Failed to get directions",
-          description: "Could not calculate route",
-          variant: "destructive"
-        });
+      // Clear previous route summaries and selected route
+      setRouteSummaries([]);
+      setSelectedRouteId(null);
+      
+      // Remove any existing routes and markers
+      if (mapRef.current) {
+        mapRef.current.removeRoutes();
+        mapRef.current.removeMarkers();
       }
+      
+      // Draw routes on the map and create summaries
+      if (data.paths && data.paths.length > 0) {
+        const newSummaries: RouteSummary[] = [];
+        
+        data.paths.forEach((path, index) => {
+          const routeId = `route-${index}`;
+          const color = routeColors[index % routeColors.length];
+          
+          // Decode and add the route to the map
+          const decodedPoints = decodePolyline(path.points);
+          if (mapRef.current) {
+            mapRef.current.addRoute(decodedPoints, routeId, color);
+          }
+          
+          // Add to summaries
+          newSummaries.push({
+            id: routeId,
+            distance: path.distance,
+            time: path.time,
+            color: color
+          });
+        });
+        
+        // Set route summaries
+        setRouteSummaries(newSummaries);
+        
+        // Auto-select first route
+        if (newSummaries.length > 0) {
+          setSelectedRouteId(newSummaries[0].id);
+          if (mapRef.current) {
+            mapRef.current.highlightRoute(newSummaries[0].id);
+          }
+        }
+        
+        // Add draggable markers for waypoints
+        if (mapRef.current) {
+          validWaypoints.forEach((wp, index) => {
+            const isStart = index === 0;
+            const isEnd = index === validWaypoints.length - 1;
+            mapRef.current.addMarker(
+              wp.lng, 
+              wp.lat, 
+              isStart ? 'start' : isEnd ? 'end' : 'waypoint',
+              true, // Make markers draggable
+              index // Pass the index for tracking
+            );
+          });
+        }
+        
+        // Fit the map to the bounds of the first route
+        const firstPath = data.paths[0];
+        if (firstPath.bbox && firstPath.bbox.length === 4 && mapRef.current) {
+          const [minLng, minLat, maxLng, maxLat] = firstPath.bbox;
+          mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
+        }
+        
+        // Enable auto-update after first successful route calculation
+        setAutoUpdateRoute(true);
+      }
+      
+      toast({
+        title: `${data.paths.length} route${data.paths.length > 1 ? 's' : ''} found`,
+        description: "Select a route to see details",
+      });
     } catch (error) {
       console.error('Direction error:', error);
       toast({
         title: "Error getting directions",
         description: "An error occurred while calculating the route",
-        variant: "destructive"
       });
     }
   };

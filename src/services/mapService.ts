@@ -1,7 +1,6 @@
 
 import { PlaceDetails } from '@/types';
-
-const API_KEY = '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841';
+import { SecureApiClient } from './secureApiClient';
 
 export interface ReverseGeocodingResponse {
   lat: number;
@@ -21,20 +20,17 @@ export interface ReverseGeocodingResponse {
   categories: any[];
 }
 
+const apiClient = SecureApiClient.getInstance();
+
 export const getReverseGeocoding = async (
   lng: number,
   lat: number
 ): Promise<PlaceDetails> => {
   try {
-    const response = await fetch(
-      `https://maps.vietmap.vn/api/reverse/v3?apikey=${API_KEY}&lng=${lng}&lat=${lat}`
-    );
-
-    if (!response.ok) {
-      throw new Error('Reverse geocoding failed');
-    }
-
-    const data: ReverseGeocodingResponse[] = await response.json();
+    const data: ReverseGeocodingResponse[] = await apiClient.get('/reverse/v3', {
+      lng: lng.toString(),
+      lat: lat.toString()
+    });
     
     if (!data.length) {
       throw new Error('No location data found');

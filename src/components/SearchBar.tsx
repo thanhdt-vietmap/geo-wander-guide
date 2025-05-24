@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import SearchSuggestions from './SearchSuggestions';
 import { toast } from '@/hooks/use-toast';
+import { SecureApiClient } from '@/services/secureApiClient';
+import { ENV } from '@/config/environment';
 
 interface SearchResult {
   ref_id: string;
@@ -45,6 +46,8 @@ interface SearchBarProps {
   onPlaceSelect?: (place: PlaceDetails) => void;
 }
 
+const apiClient = SecureApiClient.getInstance();
+
 const SearchBar: React.FC<SearchBarProps> = ({ 
   onMenuToggle, 
   isMenuOpen, 
@@ -70,23 +73,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     setIsSearchLoading(true);
     try {
-      const response = await fetch(
-        `https://maps.vietmap.vn/api/autocomplete/v3?apikey=${API_KEY}&text=${encodeURIComponent(query)}&focus=${FOCUS_COORDINATES}`
-      );
+      const data = await apiClient.get<SearchResult[]>('/autocomplete/v3', {
+        text: query,
+        focus: ENV.FOCUS_COORDINATES
+      });
       
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestions(data);
-        setShowSuggestions(true);
-      } else {
-        console.error('Search API error:', response.status);
-        setSuggestions([]);
-        toast({
-          title: "Search failed",
-          description: "Could not fetch search results",
-          variant: "destructive"
-        });
-      }
+      setSuggestions(data);
+      setShowSuggestions(true);
     } catch (error) {
       console.error('Search error:', error);
       setSuggestions([]);
@@ -103,25 +96,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const fetchPlaceDetails = async (refId: string) => {
     setIsPlaceLoading(true);
     try {
-      const response = await fetch(
-        `https://maps.vietmap.vn/api/place/v3?apikey=${API_KEY}&refid=${encodeURIComponent(refId)}`
-      );
+      const data: PlaceDetails = await apiClient.get('/place/v3', {
+        refid: refId
+      });
       
-      if (response.ok) {
-        const data: PlaceDetails = await response.json();
-        if (onPlaceSelect) {
-          onPlaceSelect(data);
-        }
-        return data;
-      } else {
-        console.error('Place API error:', response.status);
-        toast({
-          title: "Failed to load place details",
-          description: "Could not fetch place details",
-          variant: "destructive"
-        });
-        return null;
+      if (onPlaceSelect) {
+        onPlaceSelect(data);
       }
+      return data;
     } catch (error) {
       console.error('Place error:', error);
       toast({
