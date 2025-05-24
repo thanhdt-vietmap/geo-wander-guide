@@ -267,7 +267,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     
     map.current = new vietmapgl.Map({
       container: mapContainer.current,
+<<<<<<< Updated upstream
       style: typeof initialStyle === 'string' ? initialStyle : initialStyle,
+=======
+      style: mapUtils.getVietMapHybridRasterTileLayer(),
+>>>>>>> Stashed changes
       center: [105.8342, 21.0285], // Hanoi, Vietnam
       zoom: 10
     });
