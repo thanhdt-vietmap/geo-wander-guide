@@ -117,9 +117,10 @@ interface DirectionProps {
     lng: number;
     name?: string;
   } | null;
+  onMapClick?: (activeInputRef: number | null) => boolean; // New prop for handling map clicks
 }
 
-const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace }) => {
+const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace, onMapClick }) => {
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
     { name: startingPlace?.display || "", lat: startingPlace?.lat || 0, lng: startingPlace?.lng || 0 },
     { name: "", lat: 0, lng: 0 }
@@ -140,6 +141,50 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const isMobile = window.innerWidth <= 768;
+
+  // New method to fill an input with location data
+  const fillInputWithLocation = (location: { display: string; lat: number; lng: number; ref_id?: string }) => {
+    // Find index to update: use activeInputIndex if available, or find first empty input
+    let indexToUpdate = activeInputIndex;
+    
+    if (indexToUpdate === null) {
+      // Find first empty input
+      const emptyIndex = waypoints.findIndex(wp => wp.name === "");
+      indexToUpdate = emptyIndex >= 0 ? emptyIndex : null;
+    }
+    
+    // If we found an index to update, set the waypoint
+    if (indexToUpdate !== null) {
+      setWaypoints(prev => prev.map((wp, i) => 
+        i === indexToUpdate 
+          ? { ...wp, name: location.display, lat: location.lat, lng: location.lng, ref_id: location.ref_id }
+          : wp
+      ));
+      
+      // Focus on the next empty input if available
+      if (indexToUpdate < waypoints.length - 1) {
+        const nextEmptyIndex = waypoints.findIndex((wp, i) => i > indexToUpdate && wp.name === "");
+        if (nextEmptyIndex >= 0) {
+          setTimeout(() => {
+            inputRefs.current[nextEmptyIndex]?.focus();
+          }, 100);
+        }
+      }
+      
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Expose the active input index and fill method to parent via callback
+  useEffect(() => {
+    if (onMapClick) {
+      const handler = (location: any) => fillInputWithLocation(location);
+      // Return active input index when map is clicked
+      onMapClick(activeInputIndex);
+    }
+  }, [activeInputIndex, onMapClick, waypoints]);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
@@ -282,6 +327,10 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
     searchTimeoutRef.current = setTimeout(() => {
       searchPlaces(value);
     }, 300);
+  };
+
+  const handleInputFocus = (index: number) => {
+    setActiveInputIndex(index);
   };
 
   const handleSuggestionSelect = async (suggestion: SearchResult) => {
@@ -593,7 +642,7 @@ const Direction: React.FC<DirectionProps> = ({ onClose, mapRef, startingPlace })
                       placeholder={index === 0 ? "Choose starting point" : index === waypoints.length - 1 ? "Choose destination" : "Add stop"}
                       value={waypoint.name}
                       onChange={(e) => handleInputChange(e, index)}
-                      onFocus={() => setActiveInputIndex(index)}
+                      onFocus={() => handleInputFocus(index)}
                       className="pl-10 pr-8"
                       ref={el => inputRefs.current[index] = el}
                     />

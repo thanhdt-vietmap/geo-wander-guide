@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import MapView, { MapViewRef } from '@/components/MapView';
 import SearchBar from '@/components/SearchBar';
@@ -19,6 +20,7 @@ const Index = () => {
   const [startingPlace, setStartingPlace] = useState<PlaceDetailsType | null>(null);
   const [locationInfo, setLocationInfo] = useState<PlaceDetailsType | null>(null);
   const mapRef = useRef<MapViewRef>(null);
+  const directionActiveInputRef = useRef<number | null>(null);
   
   // State for context menu
   const [contextMenu, setContextMenu] = useState<{
@@ -80,11 +82,18 @@ const Index = () => {
   const handleCloseDirections = () => {
     setShowDirections(false);
     setStartingPlace(null);
+    directionActiveInputRef.current = null;
     // Clear any direction-related data
     if (mapRef.current) {
       mapRef.current.removeMarkers();
       mapRef.current.removeRoutes();
     }
+  };
+
+  // Track the active input in Direction component
+  const handleDirectionMapClick = (activeInputIndex: number | null) => {
+    directionActiveInputRef.current = activeInputIndex;
+    return true; // Continue handling map clicks
   };
 
   // Handle right-click on map
@@ -101,8 +110,25 @@ const Index = () => {
   // Handle click on map
   const handleMapClick = async (e: { lngLat: [number, number] }) => {
     try {
-      // Close any open UI elements
+      // Close any open context menu
       if (contextMenu) setContextMenu({ ...contextMenu, isOpen: false });
+      
+      // Check if Direction component is open
+      if (showDirections) {
+        // Get location details
+        const placeDetails = await getReverseGeocoding(e.lngLat[0], e.lngLat[1]);
+        
+        // Don't show the location info card, just add a temporary marker
+        if (mapRef.current) {
+          mapRef.current.addMarker(e.lngLat[0], e.lngLat[1], 'waypoint');
+        }
+        
+        // Let the Direction component know about this click
+        // The actual input filling is handled in the Direction component
+        return;
+      }
+      
+      // Regular click handling when Direction isn't open
       if (selectedPlace) setSelectedPlace(null);
       
       // Get location details
@@ -192,6 +218,7 @@ const Index = () => {
           onClose={handleCloseDirections} 
           mapRef={mapRef}
           startingPlace={startingPlace}
+          onMapClick={handleDirectionMapClick}
         />
       )}
       
