@@ -9,7 +9,7 @@ export class SecurityManager {
     if (this.isInitialized) return;
     
     this.overrideConsole();
-    this.blockDangerousRequests();
+    this.disableManualRequests();
     this.addAntiDebugging();
     
     this.isInitialized = true;
@@ -86,114 +86,69 @@ export class SecurityManager {
     );
   }
 
-  private static blockDangerousRequests(): void {
-    // Backup original fetch and XMLHttpRequest
+  private static disableManualRequests(): void {
+    // Backup original functions
     this.originalFetch = window.fetch;
     this.originalXHR = window.XMLHttpRequest;
 
-    // Updated allowed patterns - prioritize VietMap and essential resources
-    const allowedPatterns = [
-      // VietMap API endpoints - MUST be first and most specific
-      /vietmap/i,
-      /^https:\/\/maps\.vietmap\.vn/,
-      /^https:\/\/tiles\.vietmap\.vn/,
-      /^https:\/\/api\.vietmap\.vn/,
-      
-      // Local development and resources
-      /^\/api\//,
-      /^\/src\//,
-      /^\/node_modules\//,
-      /^\/public\//,
-      /^\/assets\//,
-      
-      // Development servers
-      /localhost/,
-      /127\.0\.0\.1/,
-      /\.lovableproject\.com/,
-      
-      // Build tools and frameworks
-      /vite/,
-      /react/,
-      /@vite/,
-      /@react/,
-      
-      // Relative URLs (always allow)
-      /^\.\//, 
-      /^\.\.\//, 
-      /^\/[^\/]/, 
-      
-      // Data URLs and blobs
-      /^data:/,
-      /^blob:/,
-      
-      // CDN and common resources
-      /unpkg\.com/,
-      /jsdelivr\.net/,
-      /cdnjs\.cloudflare\.com/,
-      
-      // Map tiles and resources
-      /\.png$/,
-      /\.jpg$/,
-      /\.jpeg$/,
-      /\.webp$/,
-      /\.svg$/,
-      /\.css$/,
-      /\.js$/,
-      /\.json$/,
-      /\.woff2?$/,
-      /\.ttf$/,
-      /\.eot$/
-    ];
+    let isInternalCall = false;
 
-    const isAllowedRequest = (url: string) => {
-      // Always allow relative URLs
-      if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) {
-        return true;
-      }
-      
-      // Always allow same origin
-      if (url.startsWith(window.location.origin)) {
-        return true;
-      }
-
-      // Check against allowed patterns
-      return allowedPatterns.some(pattern => pattern.test(url));
+    // Create a flag to track legitimate calls from application code
+    const markAsInternal = () => {
+      isInternalCall = true;
+      setTimeout(() => { isInternalCall = false; }, 0);
     };
 
-    // Override fetch - allow all legitimate requests
+    // Override fetch to block manual execution but allow app requests
     window.fetch = (...args: any[]) => {
-      const url = args[0]?.toString() || '';
-      
-      // Allow all legitimate requests
-      if (isAllowedRequest(url)) {
-        return this.originalFetch.apply(window, args);
+      // Check if this is called from user console/manual execution
+      const stack = new Error().stack || '';
+      const isFromConsole = stack.includes('eval') || 
+                           stack.includes('<anonymous>') || 
+                           stack.split('\n').length < 5;
+
+      if (isFromConsole && !isInternalCall) {
+        console.warn('🚫 Manual fetch requests are blocked');
+        return Promise.reject(new Error('Manual requests blocked by Security Manager'));
       }
-      
-      // Only block clearly suspicious requests
-      console.warn('🚫 Suspicious request blocked:', url);
-      return Promise.reject(new Error('Request blocked by Security Manager'));
+
+      return this.originalFetch.apply(window, args);
     };
 
-    // Override XMLHttpRequest - allow all legitimate requests
+    // Override XMLHttpRequest to block manual execution
     window.XMLHttpRequest = class extends XMLHttpRequest {
       open(method: string, url: string, async?: boolean, user?: string | null, password?: string | null) {
-        if (isAllowedRequest(url)) {
-          return super.open(method, url, async, user, password);
+        const stack = new Error().stack || '';
+        const isFromConsole = stack.includes('eval') || 
+                             stack.includes('<anonymous>') || 
+                             stack.split('\n').length < 5;
+
+        if (isFromConsole && !isInternalCall) {
+          console.warn('🚫 Manual XMLHttpRequest blocked');
+          throw new Error('Manual XMLHttpRequest blocked by Security Manager');
         }
-        
-        console.warn('🚫 Suspicious XMLHttpRequest blocked:', url);
-        throw new Error('XMLHttpRequest blocked by Security Manager');
+
+        return super.open(method, url, async, user, password);
       }
     } as any;
 
-    // Allow legitimate scripts but log for monitoring
+    // Allow legitimate scripts but monitor for suspicious activity
     const originalCreateElement = document.createElement;
     document.createElement = function(tagName: string, ...args: any[]) {
       if (tagName.toLowerCase() === 'script') {
-        console.warn('🔍 Script creation detected - monitoring');
+        const stack = new Error().stack || '';
+        const isFromConsole = stack.includes('eval') || stack.includes('<anonymous>');
+        
+        if (isFromConsole) {
+          console.warn('🚫 Manual script creation blocked');
+          throw new Error('Manual script creation blocked by Security Manager');
+        }
       }
       return originalCreateElement.call(document, tagName, ...args);
     };
+
+    // Expose internal call marker for legitimate app requests
+    (window as any).__markInternalCall = markAsInternal;
   }
 
   private static addAntiDebugging(): void {
