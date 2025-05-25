@@ -73,8 +73,7 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          utils: ['crypto-js'],
-          security: ['src/services/secureApiClient', 'src/services/hmacService', 'src/utils/securityManager']
+          utils: ['crypto-js']
         },
         entryFileNames: '[name]-[hash].js',
         chunkFileNames: '[name]-[hash].js',
