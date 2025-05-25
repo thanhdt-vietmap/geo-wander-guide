@@ -28,11 +28,11 @@ export default defineConfig(({ mode }) => ({
         drop_debugger: true,
         pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
       },
-      mangle: {
-        properties: {
-          regex: /^_/
-        }
-      },
+      // mangle: {
+      //   properties: {
+      //     regex: /^_/
+      //   }
+      // },
       format: {
         comments: false
       }
