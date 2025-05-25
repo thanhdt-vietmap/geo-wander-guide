@@ -133,14 +133,14 @@ export class SecurityManager {
 
     // Override XMLHttpRequest with selective blocking
     window.XMLHttpRequest = class extends XMLHttpRequest {
-      open(method: string, url: string, ...args: any[]) {
+      open(method: string, url: string, async?: boolean, user?: string | null, password?: string | null) {
         if (isDangerousRequest(url)) {
           console.warn('🚫 Suspicious XMLHttpRequest blocked:', url);
           throw new Error('XMLHttpRequest blocked by Security Manager');
         }
         
         // Allow legitimate requests to proceed
-        return super.open(method, url, ...args);
+        return super.open(method, url, async, user, password);
       }
     } as any;
 
