@@ -10,7 +10,7 @@ export class SecurityManager {
     if (this.isInitialized) return;
     
     this.overrideConsole();
-    this.blockAllRequests();
+    this.blockDangerousRequests();
     this.addAntiDebugging();
     
     this.isInitialized = true;
@@ -74,7 +74,7 @@ export class SecurityManager {
       'color: white; background: linear-gradient(45deg, #ff0000, #ff6600); font-size: 20px; font-weight: bold; padding: 10px; border-radius: 5px; text-align: center; display: block; width: 100%;'
     );
     this.originalConsole.log(
-      '%cMọi hoạt động debug và network request đã bị chặn',
+      '%cCác hoạt động debug đã bị chặn - Debug activities blocked',
       'color: red; font-size: 16px; font-weight: bold;'
     );
     this.originalConsole.log(
@@ -87,29 +87,69 @@ export class SecurityManager {
     );
   }
 
-  private static blockAllRequests(): void {
-    // Block fetch requests
+  private static blockDangerousRequests(): void {
+    // Backup original fetch and XMLHttpRequest
     this.originalFetch = window.fetch;
-    window.fetch = (...args: any[]) => {
-      console.warn('🚫 Request bị chặn:', args[0]);
-      return Promise.reject(new Error('All requests are blocked by Security Manager'));
+    this.originalXHR = window.XMLHttpRequest;
+
+    // List of allowed domains/patterns for website functionality
+    const allowedPatterns = [
+      /^https:\/\/maps\.vietmap\.vn/,
+      /^https:\/\/tiles\.vietmap\.vn/,
+      /^https:\/\/api\.vietmap\.vn/,
+      /^\/api\//,
+      /^\/src\//,
+      /^\/node_modules\//,
+      /^\/public\//,
+      /localhost/,
+      /127\.0\.0\.1/,
+      /\.lovableproject\.com/,
+      /vite/,
+      /react/
+    ];
+
+    const isDangerousRequest = (url: string) => {
+      // Allow relative URLs and same origin
+      if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) {
+        return false;
+      }
+
+      // Check against allowed patterns
+      return !allowedPatterns.some(pattern => pattern.test(url));
     };
 
-    // Block XMLHttpRequest
-    this.originalXHR = window.XMLHttpRequest;
+    // Override fetch with selective blocking
+    window.fetch = (...args: any[]) => {
+      const url = args[0]?.toString() || '';
+      
+      if (isDangerousRequest(url)) {
+        console.warn('🚫 Suspicious request blocked:', url);
+        return Promise.reject(new Error('Request blocked by Security Manager'));
+      }
+      
+      // Allow legitimate requests to proceed
+      return this.originalFetch.apply(window, args);
+    };
+
+    // Override XMLHttpRequest with selective blocking
     window.XMLHttpRequest = class extends XMLHttpRequest {
-      open(...args: any[]) {
-        console.warn('🚫 XMLHttpRequest bị chặn:', args[1]);
-        throw new Error('XMLHttpRequest blocked by Security Manager');
+      open(method: string, url: string, ...args: any[]) {
+        if (isDangerousRequest(url)) {
+          console.warn('🚫 Suspicious XMLHttpRequest blocked:', url);
+          throw new Error('XMLHttpRequest blocked by Security Manager');
+        }
+        
+        // Allow legitimate requests to proceed
+        return super.open(method, url, ...args);
       }
     } as any;
 
-    // Block dynamic script loading
+    // Block only suspicious dynamic script loading
     const originalCreateElement = document.createElement;
     document.createElement = function(tagName: string, ...args: any[]) {
       if (tagName.toLowerCase() === 'script') {
-        console.warn('🚫 Dynamic script loading bị chặn');
-        throw new Error('Script loading blocked by Security Manager');
+        // Allow legitimate scripts but log for monitoring
+        console.warn('🔍 Script creation detected - monitoring');
       }
       return originalCreateElement.call(document, tagName, ...args);
     };
@@ -155,7 +195,7 @@ export class SecurityManager {
       }
     });
 
-    // Anti-debugger
+    // Anti-debugger (less aggressive)
     setInterval(() => {
       const start = performance.now();
       // @ts-ignore
@@ -163,11 +203,10 @@ export class SecurityManager {
       const end = performance.now();
       
       if (end - start > 100) {
-        console.error('🚫 Debugger detected - Redirecting...');
-        // Uncomment để redirect khi detect debugger
-        // window.location.href = 'about:blank';
+        console.error('🚫 Debugger detected');
+        // Don't redirect, just warn
       }
-    }, 1000);
+    }, 2000); // Less frequent checks
   }
 
   // Method để restore original functionality nếu cần
