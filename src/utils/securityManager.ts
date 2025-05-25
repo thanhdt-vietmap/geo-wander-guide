@@ -91,9 +91,10 @@ export class SecurityManager {
     this.originalFetch = window.fetch;
     this.originalXHR = window.XMLHttpRequest;
 
-    // Updated allowed patterns for VietMap and essential resources
+    // Updated allowed patterns - prioritize VietMap and essential resources
     const allowedPatterns = [
-      // VietMap API endpoints
+      // VietMap API endpoints - MUST be first and most specific
+      /vietmap/i,
       /^https:\/\/maps\.vietmap\.vn/,
       /^https:\/\/tiles\.vietmap\.vn/,
       /^https:\/\/api\.vietmap\.vn/,
@@ -119,7 +120,7 @@ export class SecurityManager {
       // Relative URLs (always allow)
       /^\.\//, 
       /^\.\.\//, 
-      /^\/[^\/]/, // paths starting with single slash
+      /^\/[^\/]/, 
       
       // Data URLs and blobs
       /^data:/,
@@ -144,55 +145,44 @@ export class SecurityManager {
       /\.eot$/
     ];
 
-    const isDangerousRequest = (url: string) => {
+    const isAllowedRequest = (url: string) => {
       // Always allow relative URLs
       if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) {
-        return false;
+        return true;
       }
       
       // Always allow same origin
       if (url.startsWith(window.location.origin)) {
-        return false;
+        return true;
       }
 
       // Check against allowed patterns
-      return !allowedPatterns.some(pattern => pattern.test(url));
+      return allowedPatterns.some(pattern => pattern.test(url));
     };
 
-    // Override fetch with selective blocking - only log, don't block essential requests
+    // Override fetch - allow all legitimate requests
     window.fetch = (...args: any[]) => {
       const url = args[0]?.toString() || '';
       
-      if (isDangerousRequest(url)) {
-        // Log the attempt but allow VietMap and essential requests
-        if (url.includes('vietmap') || url.includes('maps.vietmap.vn')) {
-          // Allow VietMap requests to proceed
-          return this.originalFetch.apply(window, args);
-        }
-        
-        console.warn('🚫 Suspicious request blocked:', url);
-        return Promise.reject(new Error('Request blocked by Security Manager'));
+      // Allow all legitimate requests
+      if (isAllowedRequest(url)) {
+        return this.originalFetch.apply(window, args);
       }
       
-      // Allow legitimate requests to proceed
-      return this.originalFetch.apply(window, args);
+      // Only block clearly suspicious requests
+      console.warn('🚫 Suspicious request blocked:', url);
+      return Promise.reject(new Error('Request blocked by Security Manager'));
     };
 
-    // Override XMLHttpRequest with selective blocking
+    // Override XMLHttpRequest - allow all legitimate requests
     window.XMLHttpRequest = class extends XMLHttpRequest {
       open(method: string, url: string, async?: boolean, user?: string | null, password?: string | null) {
-        if (isDangerousRequest(url)) {
-          // Allow VietMap requests
-          if (url.includes('vietmap') || url.includes('maps.vietmap.vn')) {
-            return super.open(method, url, async, user, password);
-          }
-          
-          console.warn('🚫 Suspicious XMLHttpRequest blocked:', url);
-          throw new Error('XMLHttpRequest blocked by Security Manager');
+        if (isAllowedRequest(url)) {
+          return super.open(method, url, async, user, password);
         }
         
-        // Allow legitimate requests to proceed
-        return super.open(method, url, async, user, password);
+        console.warn('🚫 Suspicious XMLHttpRequest blocked:', url);
+        throw new Error('XMLHttpRequest blocked by Security Manager');
       }
     } as any;
 
