@@ -1,4 +1,3 @@
-
 // Security and anti-debugging utilities
 export class SecurityManager {
   private static isInitialized = false;
@@ -92,25 +91,67 @@ export class SecurityManager {
     this.originalFetch = window.fetch;
     this.originalXHR = window.XMLHttpRequest;
 
-    // List of allowed domains/patterns for website functionality
+    // Updated allowed patterns for VietMap and essential resources
     const allowedPatterns = [
+      // VietMap API endpoints
       /^https:\/\/maps\.vietmap\.vn/,
       /^https:\/\/tiles\.vietmap\.vn/,
       /^https:\/\/api\.vietmap\.vn/,
+      
+      // Local development and resources
       /^\/api\//,
       /^\/src\//,
       /^\/node_modules\//,
       /^\/public\//,
+      /^\/assets\//,
+      
+      // Development servers
       /localhost/,
       /127\.0\.0\.1/,
       /\.lovableproject\.com/,
+      
+      // Build tools and frameworks
       /vite/,
-      /react/
+      /react/,
+      /@vite/,
+      /@react/,
+      
+      // Relative URLs (always allow)
+      /^\.\//, 
+      /^\.\.\//, 
+      /^\/[^\/]/, // paths starting with single slash
+      
+      // Data URLs and blobs
+      /^data:/,
+      /^blob:/,
+      
+      // CDN and common resources
+      /unpkg\.com/,
+      /jsdelivr\.net/,
+      /cdnjs\.cloudflare\.com/,
+      
+      // Map tiles and resources
+      /\.png$/,
+      /\.jpg$/,
+      /\.jpeg$/,
+      /\.webp$/,
+      /\.svg$/,
+      /\.css$/,
+      /\.js$/,
+      /\.json$/,
+      /\.woff2?$/,
+      /\.ttf$/,
+      /\.eot$/
     ];
 
     const isDangerousRequest = (url: string) => {
-      // Allow relative URLs and same origin
+      // Always allow relative URLs
       if (url.startsWith('/') || url.startsWith('./') || url.startsWith('../')) {
+        return false;
+      }
+      
+      // Always allow same origin
+      if (url.startsWith(window.location.origin)) {
         return false;
       }
 
@@ -118,11 +159,17 @@ export class SecurityManager {
       return !allowedPatterns.some(pattern => pattern.test(url));
     };
 
-    // Override fetch with selective blocking
+    // Override fetch with selective blocking - only log, don't block essential requests
     window.fetch = (...args: any[]) => {
       const url = args[0]?.toString() || '';
       
       if (isDangerousRequest(url)) {
+        // Log the attempt but allow VietMap and essential requests
+        if (url.includes('vietmap') || url.includes('maps.vietmap.vn')) {
+          // Allow VietMap requests to proceed
+          return this.originalFetch.apply(window, args);
+        }
+        
         console.warn('🚫 Suspicious request blocked:', url);
         return Promise.reject(new Error('Request blocked by Security Manager'));
       }
@@ -135,6 +182,11 @@ export class SecurityManager {
     window.XMLHttpRequest = class extends XMLHttpRequest {
       open(method: string, url: string, async?: boolean, user?: string | null, password?: string | null) {
         if (isDangerousRequest(url)) {
+          // Allow VietMap requests
+          if (url.includes('vietmap') || url.includes('maps.vietmap.vn')) {
+            return super.open(method, url, async, user, password);
+          }
+          
           console.warn('🚫 Suspicious XMLHttpRequest blocked:', url);
           throw new Error('XMLHttpRequest blocked by Security Manager');
         }
@@ -144,11 +196,10 @@ export class SecurityManager {
       }
     } as any;
 
-    // Block only suspicious dynamic script loading
+    // Allow legitimate scripts but log for monitoring
     const originalCreateElement = document.createElement;
     document.createElement = function(tagName: string, ...args: any[]) {
       if (tagName.toLowerCase() === 'script') {
-        // Allow legitimate scripts but log for monitoring
         console.warn('🔍 Script creation detected - monitoring');
       }
       return originalCreateElement.call(document, tagName, ...args);
