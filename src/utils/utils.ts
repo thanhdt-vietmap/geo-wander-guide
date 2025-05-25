@@ -1,3 +1,6 @@
+
+import { ENV } from '@/config/environment';
+
 /**
  * {
     "version": 8,
@@ -23,14 +26,21 @@
 }
  */
 class MapUtils {
+  private getApiKey(): string {
+    const apiKey = ENV.VIETMAP_API_KEY;
+    console.log('MapUtils using API key:', apiKey ? 'Present' : 'Missing');
+    return apiKey;
+  }
+
   getVietMapLightRasterTileLayer = () => {
+    const apiKey = this.getApiKey();
     return {
       version: 8,
       sources: {
         raster_vm: {
           type: "raster",
           tiles: [
-            `https://maps.vietmap.vn/api/lm/{z}/{x}/{y}@2x.png?apikey=95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c`,
+            `https://maps.vietmap.vn/api/lm/{z}/{x}/{y}@2x.png?apikey=${apiKey}`,
           ],
           tileSize: 256,
           attribution: "Vietmap@copyright",
@@ -49,13 +59,14 @@ class MapUtils {
   };
 
   getVietMapDarkRasterTileLayer = () => {
+    const apiKey = this.getApiKey();
     return {
       version: 8,
       sources: {
         raster_vm: {
           type: "raster",
           tiles: [
-            `https://maps.vietmap.vn/api/dm/{z}/{x}/{y}@2x.png?apikey=95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c`,
+            `https://maps.vietmap.vn/api/dm/{z}/{x}/{y}@2x.png?apikey=${apiKey}`,
           ],
           tileSize: 256,
           attribution: "Vietmap@copyright",
@@ -74,13 +85,14 @@ class MapUtils {
   };
 
   getVietMapRasterTileLayer = () => {
+    const apiKey = this.getApiKey();
     return {
       version: 8,
       sources: {
         raster_vm: {
           type: "raster",
           tiles: [
-            `https://maps.vietmap.vn/api/tm/{z}/{x}/{y}@2x.png?apikey=95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c`,
+            `https://maps.vietmap.vn/api/tm/{z}/{x}/{y}@2x.png?apikey=${apiKey}`,
           ],
           tileSize: 256,
           attribution: "Vietmap@copyright",
@@ -99,13 +111,14 @@ class MapUtils {
   };
 
   getVietMapHybridRasterTileLayer = () => {
+    const apiKey = this.getApiKey();
     return {
       version: 8,
       sources: {
         raster_vm: {
           type: "raster",
           tiles: [
-            `https://maps.vietmap.vn/api/hm/{z}/{x}/{y}@2x.png?apikey=95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c`,
+            `https://maps.vietmap.vn/api/hm/{z}/{x}/{y}@2x.png?apikey=${apiKey}`,
           ],
           tileSize: 256,
           attribution: "Vietmap@copyright",
@@ -159,14 +172,25 @@ class MapUtils {
   };
 
   getVietMapVectorTile = () => {
-    return "https://maps.vietmap.vn/mt/tm/style.json?apikey=95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c";
+    const apiKey = this.getApiKey();
+    const url = `https://maps.vietmap.vn/mt/tm/style.json?apikey=${apiKey}`;
+    console.log('Vector tile URL:', url);
+    return url;
   };
+  
   getVietMapVectorDarkTile = () => {
-    return "https://maps.vietmap.vn/mt/dm/style.json?apikey=95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c";
+    const apiKey = this.getApiKey();
+    const url = `https://maps.vietmap.vn/mt/dm/style.json?apikey=${apiKey}`;
+    console.log('Vector dark tile URL:', url);
+    return url;
   };
 
   getVietMapLightVectorTile = () => {
-    return "https://maps.vietmap.vn/mt/lm/style.json?apikey=95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c";
+    const apiKey = this.getApiKey();
+    const url = `https://maps.vietmap.vn/mt/lm/style.json?apikey=${apiKey}`;
+    console.log('Light vector tile URL:', url);
+    return url;
   };
 }
+
 export const mapUtils = new MapUtils();
