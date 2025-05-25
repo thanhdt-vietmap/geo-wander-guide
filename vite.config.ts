@@ -55,14 +55,14 @@ export default defineConfig(({ mode }) => ({
         reduce_vars: true,
         warnings: false
       },
-      mangle: {
-        toplevel: true,
-        eval: true,
-        keep_fnames: false,
-        properties: {
-          regex: /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
-        }
-      },
+      // mangle: {
+      //   toplevel: true,
+      //   eval: true,
+      //   keep_fnames: false,
+      //   properties: {
+      //     regex: /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
+      //   }
+      // },
       format: {
         comments: false,
         beautify: false,
