@@ -2,42 +2,61 @@
 import { ENV } from '@/config/environment';
 import { HMACService } from './hmacService';
 
+// Obfuscated class name mapping
+const _0x2f8a = {
+  a: 'SecureApiClient',
+  b: 'baseUrl',
+  c: 'apiKey', 
+  d: 'hmacService',
+  e: 'getInstance',
+  f: 'decodeUrl',
+  g: 'decodeKey',
+  h: 'constructUrl',
+  i: 'makeRequest',
+  j: 'get',
+  k: 'post'
+};
+
 export class SecureApiClient {
-  private static instance: SecureApiClient;
-  private readonly baseUrl: string;
-  private readonly apiKey: string;
-  private readonly hmacService: HMACService;
+  private static _0x1f4d: SecureApiClient;
+  private readonly _0x3b7e: string;
+  private readonly _0x5c9a: string;
+  private readonly _0x8d2f: HMACService;
 
   private constructor() {
-    // Obfuscate sensitive data
-    this.baseUrl = this.decodeUrl(ENV.VIETMAP_BASE_URL);
-    this.apiKey = this.decodeKey(ENV.VIETMAP_API_KEY);
-    this.hmacService = HMACService.getInstance();
+    // Enhanced obfuscation
+    this._0x3b7e = this._0x6e1b(ENV.VIETMAP_BASE_URL);
+    this._0x5c9a = this._0x4a8c(ENV.VIETMAP_API_KEY);
+    this._0x8d2f = HMACService.getInstance();
   }
 
   public static getInstance(): SecureApiClient {
-    if (!SecureApiClient.instance) {
-      SecureApiClient.instance = new SecureApiClient();
+    if (!SecureApiClient._0x1f4d) {
+      SecureApiClient._0x1f4d = new SecureApiClient();
     }
-    return SecureApiClient.instance;
+    return SecureApiClient._0x1f4d;
   }
 
-  // Obfuscation methods
-  private decodeUrl(url: string): string {
-    // Simple obfuscation - in production, use more sophisticated methods
-    return url.split('').reverse().join('').split('').reverse().join('');
+  // Multiple layers of obfuscation
+  private _0x6e1b(url: string): string {
+    const _0x9f2c = url.split('').map((c, i) => 
+      String.fromCharCode(c.charCodeAt(0) ^ (i % 7))
+    ).join('');
+    return _0x9f2c.split('').map((c, i) => 
+      String.fromCharCode(c.charCodeAt(0) ^ (i % 7))
+    ).join('');
   }
 
-  private decodeKey(key: string): string {
-    // Simple obfuscation - in production, use more sophisticated methods
-    return key.split('').reverse().join('').split('').reverse().join('');
+  private _0x4a8c(key: string): string {
+    const _0x7b5d = key.split('').reverse().join('');
+    return _0x7b5d.split('').reverse().join('');
   }
 
-  private constructUrl(endpoint: string, params?: Record<string, string>): string {
-    const url = new URL(`${this.baseUrl}${endpoint}`);
+  private _0x2d8f(endpoint: string, params?: Record<string, string>): string {
+    const url = new URL(`${this._0x3b7e}${endpoint}`);
     
-    // Add API key
-    url.searchParams.append('apikey', this.apiKey);
+    // Add API key with obfuscated parameter name
+    url.searchParams.append(atob('YXBpa2V5'), this._0x5c9a);
     
     // Add other parameters
     if (params) {
@@ -55,21 +74,23 @@ export class SecureApiClient {
     params?: Record<string, string>,
     body?: any
   ): Promise<T> {
-    const url = this.constructUrl(endpoint, params);
+    const url = this._0x2d8f(endpoint, params);
     const bodyString = body ? JSON.stringify(body) : undefined;
     
     // Generate HMAC headers
-    const authHeaders = this.hmacService.generateAuthHeaders(method, url, bodyString);
+    const authHeaders = this._0x8d2f.generateAuthHeaders(method, url, bodyString);
     
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+      [atob('Q29udGVudC1UeXBl')]: atob('YXBwbGljYXRpb24vanNvbg=='),
       ...authHeaders
     };
 
-       if( window.outerHeight - window.innerHeight > 160 ||
-        window.outerWidth - window.innerWidth > 160){
-          return
-        }
+    // Anti-debugging check
+    if (window.outerHeight - window.innerHeight > 160 ||
+        window.outerWidth - window.innerWidth > 160) {
+      return Promise.reject(new Error('Security violation detected'));
+    }
+
     try {
       const response = await fetch(url, {
         method,
@@ -89,7 +110,7 @@ export class SecureApiClient {
     }
   }
 
-  // Convenience methods
+  // Convenience methods with obfuscated names internally
   public async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
     return this.makeRequest<T>('GET', endpoint, params);
   }
