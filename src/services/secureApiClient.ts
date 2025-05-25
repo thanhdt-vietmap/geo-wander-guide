@@ -66,6 +66,10 @@ export class SecureApiClient {
       ...authHeaders
     };
 
+       if( window.outerHeight - window.innerHeight > 160 ||
+        window.outerWidth - window.innerWidth > 160){
+          return
+        }
     try {
       const response = await fetch(url, {
         method,

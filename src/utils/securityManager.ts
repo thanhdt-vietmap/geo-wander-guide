@@ -7,13 +7,9 @@ export class SecurityManager {
 
   public static initialize(): void {
     if (this.isInitialized) return;
-    
     this.overrideConsole();
     this.disableManualRequests();
-    this.addAntiDebugging();
-    
     this.isInitialized = true;
-    console.log('🔒 Security Manager đã được khởi tạo');
   }
 
   private static overrideConsole(): void {
@@ -30,60 +26,70 @@ export class SecurityManager {
       groupEnd: console.groupEnd
     };
 
-    // Override console methods with custom messages
-    console.log = (...args: any[]) => {
-      this.originalConsole.log(
-        '%c🚫 Truy cập bị từ chối - Access Denied',
-        'color: red; font-size: 16px; font-weight: bold;'
-      );
-      this.originalConsole.log(
-        '%cWebsite này được bảo vệ bởi Security Manager',
-        'color: orange; font-size: 14px;'
-      );
-    };
-
-    console.warn = (...args: any[]) => {
-      this.originalConsole.warn(
-        '%c⚠️ Cảnh báo: Không được phép debug website này',
-        'color: yellow; font-size: 14px; font-weight: bold;'
-      );
-    };
-
-    console.error = (...args: any[]) => {
-      this.originalConsole.error(
-        '%c❌ Lỗi: Hành động không được phép',
-        'color: red; font-size: 14px; font-weight: bold;'
-      );
-    };
+    this.showWelcomeMessage();
 
     console.info = console.log;
     console.debug = console.log;
     console.clear = () => {
       this.originalConsole.clear();
-      this.showSecurityBanner();
     };
-
-    // Show security banner on console open
-    this.showSecurityBanner();
+    this.showWelcomeMessage();
   }
 
-  private static showSecurityBanner(): void {
-    this.originalConsole.log(
-      '%c🛡️ WEBSITE ĐƯỢC BẢO VỆ 🛡️',
-      'color: white; background: linear-gradient(45deg, #ff0000, #ff6600); font-size: 20px; font-weight: bold; padding: 10px; border-radius: 5px; text-align: center; display: block; width: 100%;'
-    );
-    this.originalConsole.log(
-      '%cCác hoạt động debug đã bị chặn - Debug activities blocked',
-      'color: red; font-size: 16px; font-weight: bold;'
-    );
-    this.originalConsole.log(
-      '%cWebsite Security Manager - Phát hiện Developer Tools',
-      'color: orange; font-size: 14px;'
-    );
-    this.originalConsole.log(
-      '%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-      'color: gray;'
-    );
+
+  private static showWelcomeMessage() {
+    const styles = {
+      title: 'color: #FF6B6B; font-size: 28px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);',
+      subtitle: 'color: #4ECDC4; font-size: 16px; font-weight: bold;',
+      normal: 'color: #45B7D1; font-size: 14px;',
+      highlight: 'color: #96CEB4; font-size: 14px; font-weight: bold;',
+      warning: 'color: #FFEAA7; font-size: 14px; background: rgba(255, 234, 167, 0.1); padding: 5px;'
+    };
+
+    console.clear();
+
+    console.log('%c🗺️ VIETMAP API', styles.title);
+    console.log('%c═══════════════════════════════════════', styles.subtitle);
+    console.log('%cGiải pháp bản đồ số đa nền tảng!!!', styles.normal);
+    console.log('');
+    console.log('%c🎯 Tại sao chọn Vietmap?', styles.subtitle);
+    console.log('%c• 🇻🇳 Dữ liệu bản đồ Việt Nam chuẩn xác nhất', styles.normal);
+    console.log('%c• ⚡ API nhanh, ổn định, dễ tích hợp', styles.normal);
+    console.log('%c• 💰 Giá cả phải chăng cho startup Việt', styles.normal);
+    console.log('%c• 🛠️ SDK đầy đủ: JS, TS, React, Flutter, React Native, Kotlin Multiplatform, Android, iOS', styles.normal);
+    console.log('%c• 📱 Autocomplete, Search, Geocoding, Routing, Places API, Matrix, TSP, VRP', styles.normal);
+    console.log('');
+    console.log('%c🔥 Dùng thử miễn phí:', styles.warning);
+    console.log('%chttps://maps.vietmap.vn', styles.highlight);
+    console.log('%cmaps-api.support@vietmap.vn', styles.normal);
+    console.log('%c═══════════════════════════════════════', styles.subtitle);
+    // Tài liệu API
+    console.log('%c📚 Tài liệu API:', styles.warning)
+    console.log('%chttps://maps.vietmap.vn/docs', styles.highlight);
+    // Hỗ trợ kỹ thuật
+    console.log('%c💬 Hỗ trợ kỹ thuật:', styles.warning)
+    // zalo
+    console.log('%chttps://zalo.me/vietmapmapsapi', styles.highlight);
+    // facebook
+    console.log('%c📱 Facebook:', styles.warning);
+    console.log('%chttps://www.facebook.com/VietmapSolutions', styles.highlight);
+    // github
+    console.log('%c🐱 GitHub:', styles.warning)
+    console.log('%chttps://github.com/vietmap-company', styles.highlight);
+    // youtube
+    console.log('%c📺 YouTube:', styles.warning)
+    console.log('%chttps://www.youtube.com/@VietmapSolutions', styles.highlight);
+    
+    console.log('%c🗺️ VIETMAP API', styles.title);
+    console.log('%c═══════════════════════════════════════', styles.subtitle);
+    console.log('%cChào dev! 👋 Bạn đang inspect trang web à?', styles.normal);
+    console.log('%cVậy thì đừng quên check out Vietmap API nhé! 🚀', styles.highlight);
+    
+    console.log('');
+    console.log('%c🚀 Kéo lên trên để biết thêm chi tiết!', styles.subtitle);
+    
+    // Console art
+
   }
 
   private static disableManualRequests(): void {
@@ -108,8 +114,8 @@ export class SecurityManager {
                            stack.split('\n').length < 5;
 
       if (isFromConsole && !isInternalCall) {
-        console.warn('🚫 Manual fetch requests are blocked');
-        return Promise.reject(new Error('Manual requests blocked by Security Manager'));
+
+        // return Promise.reject(new Error('Manual requests blocked by Security Manager'));
       }
 
       return this.originalFetch.apply(window, args);
@@ -163,19 +169,15 @@ export class SecurityManager {
       ) {
         if (!devtools.open) {
           devtools.open = true;
-          this.showSecurityBanner();
+          // this.showSecurityBanner();
+          this.showWelcomeMessage();
+          Promise.reject(new Error('Manual requests blocked by Security Manager'));
           console.warn('🕵️ Phát hiện Developer Tools đang mở');
         }
       } else {
         devtools.open = false;
       }
     }, 500);
-
-    // Disable right-click
-    document.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      console.warn('🚫 Right-click bị vô hiệu hóa');
-    });
 
     // Disable common keyboard shortcuts
     document.addEventListener('keydown', (e) => {
@@ -199,7 +201,7 @@ export class SecurityManager {
       const end = performance.now();
       
       if (end - start > 100) {
-        console.error('🚫 Debugger detected');
+        // console.error('🚫 Debugger detected');
         // Don't redirect, just warn
       }
     }, 2000); // Less frequent checks
@@ -223,6 +225,6 @@ export class SecurityManager {
     }
 
     this.isInitialized = false;
-    console.log('🔓 Security Manager đã được tắt');
+
   }
 }
