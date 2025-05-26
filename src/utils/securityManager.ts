@@ -8,7 +8,7 @@ export class SecurityManager {
   public static initialize(): void {
     if (this.isInitialized) return;
     this.overrideConsole();
-    this.disableManualRequests();
+    // this.disableManualRequests();
     this.isInitialized = true;
   }
 

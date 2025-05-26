@@ -11,8 +11,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -20,71 +19,63 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
-    // Only replace in production, keep env vars in development
-    ...(mode === 'production' && {
-      'process.env': JSON.stringify({})
-    })
+    ...(mode === "production" && {
+      "process.env": JSON.stringify({}),
+    }),
   },
   build: {
-    minify: mode === 'production' ? 'terser' : false,
-    ...(mode === 'production' && {
+    minify: mode === "production" ? "terser" : false,
+    ...(mode === "production" && {
       terserOptions: {
         compress: {
-          drop_console: false, // Keep console logs for debugging
-          drop_debugger: true,
-          pure_funcs: ['console.info', 'console.debug', 'console.warn'],
-          passes: 3,
-          unsafe: true,
-          unsafe_comps: true,
-          unsafe_Function: true,
-          unsafe_math: true,
-          unsafe_symbols: true,
-          unsafe_methods: true,
-          unsafe_proto: true,
-          unsafe_regexp: true,
-          unsafe_undefined: true,
+          drop_console: false, // hoặc false nếu bạn muốn giữ console
+          drop_debugger: false,
+          pure_funcs: ["console.info", "console.debug", "console.warn"],
+          passes: 2,
+          // Bỏ các unsafe_* để tránh làm hỏng chuỗi rgba()
+          // unsafe: false,
+          // unsafe_comps: false,
+          // unsafe_Function: false,
+          // unsafe_math: false,
+          // unsafe_symbols: false,
+          // unsafe_methods: false,
+          // unsafe_proto: false,
+          // unsafe_regexp: false,
+          // unsafe_undefined: false,
           sequences: true,
           dead_code: true,
           evaluate: true,
           if_return: true,
           join_vars: true,
           reduce_vars: true,
-          warnings: false
-        },
-        mangle: {
-          toplevel: true,
-          eval: true,
-          keep_fnames: false,
-          properties: {
-            regex: /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
-          }
+          warnings: false,
         },
         format: {
           comments: false,
           beautify: false,
-          ecma: 2020
-        }
-      }
+          ecma: 2020,
+        },
+      },
     }),
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
-          utils: ['crypto-js']
+          vendor: ["react", "react-dom"],
+          utils: ["crypto-js"],
         },
-        entryFileNames: '[name]-[hash].js',
-        chunkFileNames: '[name]-[hash].js',
-        assetFileNames: '[name]-[hash].[ext]'
-      }
+        entryFileNames: "[name]-[hash].js",
+        chunkFileNames: "[name]-[hash].js",
+        assetFileNames: "[name]-[hash].[ext]",
+      },
     },
-    target: 'es2020',
-    sourcemap: mode === 'development'
+    target: "es2020",
+    sourcemap: mode === "development",
   },
   esbuild: {
-    legalComments: 'none',
-    minifyIdentifiers: mode === 'production',
-    minifySyntax: mode === 'production',
-    minifyWhitespace: mode === 'production',
-    treeShaking: true
-  }
+    legalComments: "none",
+    minifyIdentifiers: mode === "production",
+    minifySyntax: mode === "production",
+    minifyWhitespace: mode === "production",
+    treeShaking: true,
+  },
 }));

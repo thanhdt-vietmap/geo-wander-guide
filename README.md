@@ -71,3 +71,21 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+
+### Deploy to VPS
+If you want to deploy this project to your own VPS, you can follow these steps:
+1. **Build the project**:
+   ```sh
+   npm run build
+   ```
+2. **Copy the `dist` folder to your VPS**:
+   You can use `scp` or any other file transfer method to copy the `dist` folder to your VPS.
+   ```sh
+    scp -r ~/Documents/customer_success/geo-wander-guide/dist/* root@103.6.235.215:/var/www/maps.vietmap.us
+   ```
+3. **Reload nginx**:
+    After copying the files, make sure to reload or restart your web server (e.g., Nginx or Apache) to serve the new files.
+    ```sh
+    sudo systemctl reload nginx
+    ```

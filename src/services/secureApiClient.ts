@@ -67,6 +67,13 @@ export class SecureApiClient {
     
     return url.toString();
   }
+  private isDesktop() {
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+
+    const isMobile = /android|iphone|ipad|ipod|windows phone|mobile/i.test(ua);
+
+    return !isMobile;
+  }
 
   public async makeRequest<T>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
@@ -86,9 +93,10 @@ export class SecureApiClient {
     };
 
     // Anti-debugging check
-    if (window.outerHeight - window.innerHeight > 160 ||
-        window.outerWidth - window.innerWidth > 160) {
-      return Promise.reject(new Error('Security violation detected'));
+
+    if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
+        window.outerWidth - window.innerWidth > 160)) {
+      return Promise.reject();
     }
 
     try {
