@@ -153,6 +153,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const [showRouteDetails, setShowRouteDetails] = useState(false);
   const [selectedPath, setSelectedPath] = useState<RoutePath | null>(null);
   const [autoUpdateRoute, setAutoUpdateRoute] = useState(false);
+  const [pendingEndPoint, setPendingEndPoint] = useState<any>(null);
   
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -163,6 +164,18 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     const timer = setTimeout(() => setAnimating(false), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Handle pending end point when component mounts
+  useEffect(() => {
+    if (pendingEndPoint) {
+      setWaypoints(prev => prev.map((wp, i) => 
+        i === prev.length - 1
+          ? { ...wp, name: pendingEndPoint.display, lat: pendingEndPoint.lat, lng: pendingEndPoint.lng, ref_id: pendingEndPoint.ref_id }
+          : wp
+      ));
+      setPendingEndPoint(null);
+    }
+  }, [pendingEndPoint]);
 
   // Function to detect if input is lat,lng format
   const detectLatLngFormat = (query: string): { lat: number; lng: number } | null => {
@@ -251,6 +264,12 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   // Expose methods to parent component through ref
   useImperativeHandle(ref, () => ({
     setEndPoint: (place: any) => {
+      // If component is not fully mounted yet, store as pending
+      if (animating) {
+        setPendingEndPoint(place);
+        return;
+      }
+      
       // Set the last waypoint as the end point
       setWaypoints(prev => prev.map((wp, i) => 
         i === prev.length - 1
@@ -326,7 +345,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         }
       }
     }
-  }), [waypoints, autoUpdateRoute, routeData]);
+  }), [waypoints, autoUpdateRoute, routeData, animating]);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];

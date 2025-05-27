@@ -48,12 +48,22 @@ export const useLocationOperations = () => {
     try {
       const placeDetails = await getReverseGeocoding(lng, lat);
       
+      // Always show directions first
       dispatch(setShowDirections(true));
       dispatch(setSelectedPlace(null));
       dispatch(setLocationInfo(null));
       
+      // If directionRef exists and Direction is already open, set end point directly
       if (directionRef.current && directionRef.current.setEndPoint) {
         directionRef.current.setEndPoint(placeDetails);
+      } else {
+        // If Direction is not open yet, store as starting place and the new location as end point
+        // We'll use a timeout to ensure Direction component is mounted before setting end point
+        setTimeout(() => {
+          if (directionRef.current && directionRef.current.setEndPoint) {
+            directionRef.current.setEndPoint(placeDetails);
+          }
+        }, 100);
       }
       
       if (mapRef?.current) {
