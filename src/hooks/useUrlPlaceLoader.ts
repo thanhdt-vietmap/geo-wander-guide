@@ -55,6 +55,11 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
           if (onPlaceSelect) {
             onPlaceSelect(placeDetails);
           }
+
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('lat');
+          newUrl.searchParams.delete('lng');
+          window.history.replaceState({}, '', newUrl.toString());
         } else {
           console.warn('No place details found for lat/lng:', lat, lng);
         }

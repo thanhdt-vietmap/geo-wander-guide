@@ -143,18 +143,13 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
           Location
         </div>
         
-        {/* Coordinates Display */}
-        <div className="px-2 py-1 text-xs text-gray-500">
-          {formatCoord(lng)}, {formatCoord(lat)}
-        </div>
-        
         {/* Copy Coordinates */}
         <button
           onClick={copyCoordinates}
           className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
         >
           <Copy className="mr-2 h-4 w-4" />
-          <span>Copy coordinates</span>
+          <span>{formatCoord(lat)}, {formatCoord(lng)}</span>
         </button>
         
         {/* Separator */}
