@@ -66,10 +66,7 @@ export const useLocationOperations = () => {
         }, 100);
       }
       
-      if (mapRef?.current) {
-        mapRef.current.removeMarkers();
-        mapRef.current.removeRoutes();
-      }
+      // Don't remove markers when setting end point - let Direction component handle markers
     } catch (error) {
       toast.error('Failed to set end point');
       console.error(error);

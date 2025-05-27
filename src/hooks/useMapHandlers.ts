@@ -39,14 +39,11 @@ export const useMapHandlers = () => {
     try {
       if (contextMenu?.isOpen) {
         dispatch(closeContextMenu());
+        return;
       }
       
+      // Don't handle map clicks when direction popup is open
       if (showDirections) {
-        const placeDetails = await getReverseGeocoding(e.lngLat[0], e.lngLat[1]);
-        
-        if (mapRef?.current) {
-          mapRef.current.addMarker(e.lngLat[0], e.lngLat[1], 'waypoint');
-        }
         return;
       }
       
