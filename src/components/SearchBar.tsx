@@ -40,12 +40,14 @@ interface PlaceDetails {
   ward: string;
   lat: number;
   lng: number;
+  ref_id?: string;
 }
 
 interface SearchBarProps {
   onMenuToggle: () => void;
   isMenuOpen: boolean;
   onPlaceSelect?: (place: PlaceDetails) => void;
+  onClose?: () => void;
 }
 
 const apiClient = SecureApiClient.getInstance();
@@ -53,7 +55,8 @@ const apiClient = SecureApiClient.getInstance();
 const SearchBar: React.FC<SearchBarProps> = ({ 
   onMenuToggle, 
   isMenuOpen, 
-  onPlaceSelect 
+  onPlaceSelect,
+  onClose
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
@@ -161,7 +164,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
       const data: PlaceDetails = await apiClient.get('/place/v3', {
         refid: refId
       });
-      
+      data.ref_id = refId; // Ensure ref_id is set
+      console.log('Place details:', data);
       if (onPlaceSelect) {
         onPlaceSelect(data);
       }
@@ -207,6 +211,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setSearchQuery('');
     setSuggestions([]);
     setShowSuggestions(false);
+    onClose();
   };
 
   const handleInputFocus = () => {

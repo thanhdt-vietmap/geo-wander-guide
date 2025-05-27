@@ -115,81 +115,95 @@ const Index = () => {
     }
   }, [dispatch]);
 
-  return (
-    <div className="relative w-full h-screen overflow-hidden bg-gray-50">
-      <MapView 
-        ref={mapRef} 
-        className="absolute inset-0 mapContainer" 
-        onContextMenu={handleMapContextMenu}
-        onClick={onMapClick}
-        initialMapStyle={currentLayer}
-        onMapStyleChange={handleMapStyleChange}
+  return (<div className="relative w-full h-screen overflow-hidden bg-gray-50">
+  <MapView 
+    ref={mapRef} 
+    className="absolute inset-0 mapContainer" 
+    onContextMenu={handleMapContextMenu}
+    onClick={onMapClick}
+    initialMapStyle={currentLayer}
+    onMapStyleChange={handleMapStyleChange}
+  />
+  
+  {/* SearchBar với z-index cao nhất để nằm trên tất cả */}
+  <div className="absolute top-0 left-0 right-0 z-50">
+    <SearchBar 
+      onMenuToggle={handleMenuToggle} 
+      isMenuOpen={isSidebarOpen}
+      onPlaceSelect={handlePlaceSelectWrapper}
+      onClose={handleClosePlaceDetailsWrapper}
+    />
+  </div>
+  
+  {/* PlaceDetails với z-index thấp hơn SearchBar */}
+  {selectedPlace && !locationInfo && (
+    <div className="absolute top-0 left-0 right-0 bottom-0 z-40">
+      <PlaceDetails 
+        place={selectedPlace} 
+        onClose={handleClosePlaceDetailsWrapper}
+        onDirectionClick={handleShowDirectionsWrapper}
       />
-      
-      <SearchBar 
-        onMenuToggle={handleMenuToggle} 
-        isMenuOpen={isSidebarOpen}
-        onPlaceSelect={handlePlaceSelectWrapper}
-      />
-      
-      {selectedPlace && !locationInfo && (
-        <PlaceDetails 
-          place={selectedPlace} 
-          onClose={handleClosePlaceDetailsWrapper}
-          onDirectionClick={handleShowDirectionsWrapper}
-        />
-      )}
-
-      {locationInfo && !selectedPlace && (
-        <LocationInfoCard 
-          place={locationInfo}
-          onClose={handleCloseLocationInfoWrapper}
-          onDirectionClick={handleShowDirectionsWrapper}
-        />
-      )}
-
-      {showDirections && (
-        <Direction 
-          ref={directionRef}
-          onClose={handleCloseDirectionsWrapper} 
-          mapRef={mapRef}
-          startingPlace={startingPlace}
-          onMapClick={handleDirectionMapClickWrapper}
-        />
-      )}
-      
-      <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarClose} />
-      
-      <MapControls 
-        mapRef={mapRef} 
-        onLayerChange={handleMapLayerChange}
-        currentLayer={currentLayer}
-      />
-      
-      {contextMenu && contextMenu.isOpen && (
-        <MapContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          lng={contextMenu.lng}
-          lat={contextMenu.lat}
-          isOpen={contextMenu.isOpen}
-          onClose={handleCloseContextMenu}
-          onGetLocation={(lng, lat) => handleGetLocation(lng, lat, mapRef)}
-          onSetAsStart={(lng, lat) => handleSetAsStart(lng, lat, mapRef)}
-          onSetAsEnd={(lng, lat) => handleSetAsEnd(lng, lat, mapRef, directionRef)}
-          onAddWaypoint={(lng, lat) => handleAddWaypoint(lng, lat, directionRef)}
-          showDirectionOptions={true}
-          canAddWaypoint={canAddWaypoint}
-        />
-      )}
-      
-      {isSidebarOpen && (
-        <div 
-          className="absolute inset-0 z-20 bg-black bg-opacity-10"
-          onClick={() => dispatch(setSidebarOpen(false))}
-        />
-      )}
     </div>
+  )}
+
+  {/* LocationInfoCard với z-index thấp hơn SearchBar */}
+  {locationInfo && !selectedPlace && (
+    <div className="absolute top-0 left-0 right-0 bottom-0 z-40">
+      <LocationInfoCard 
+        place={locationInfo}
+        onClose={handleCloseLocationInfoWrapper}
+        onDirectionClick={handleShowDirectionsWrapper}
+      />
+    </div>
+  )}
+
+  {/* Direction component */}
+  {showDirections && (
+    <Direction 
+      ref={directionRef}
+      onClose={handleCloseDirectionsWrapper} 
+      mapRef={mapRef}
+      startingPlace={startingPlace}
+      onMapClick={handleDirectionMapClickWrapper}
+    />
+  )}
+  
+  {/* Sidebar */}
+  <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarClose} />
+  
+  {/* MapControls */}
+  <MapControls 
+    mapRef={mapRef} 
+    onLayerChange={handleMapLayerChange}
+    currentLayer={currentLayer}
+  />
+  
+  {/* Context Menu */}
+  {contextMenu && contextMenu.isOpen && (
+    <MapContextMenu
+      x={contextMenu.x}
+      y={contextMenu.y}
+      lng={contextMenu.lng}
+      lat={contextMenu.lat}
+      isOpen={contextMenu.isOpen}
+      onClose={handleCloseContextMenu}
+      onGetLocation={(lng, lat) => handleGetLocation(lng, lat, mapRef)}
+      onSetAsStart={(lng, lat) => handleSetAsStart(lng, lat, mapRef)}
+      onSetAsEnd={(lng, lat) => handleSetAsEnd(lng, lat, mapRef, directionRef)}
+      onAddWaypoint={(lng, lat) => handleAddWaypoint(lng, lat, directionRef)}
+      showDirectionOptions={true}
+      canAddWaypoint={canAddWaypoint}
+    />
+  )}
+  
+  {/* Sidebar overlay */}
+  {isSidebarOpen && (
+    <div 
+      className="absolute inset-0 z-20 bg-black bg-opacity-10"
+      onClick={() => dispatch(setSidebarOpen(false))}
+    />
+  )}
+</div>
   );
 };
 

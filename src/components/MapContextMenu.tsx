@@ -192,6 +192,23 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
               <Navigation className="mr-2 h-4 w-4 text-red-600 rotate-180" />
               <span>Chọn làm điểm kết thúc</span>
             </button>
+
+            {/* Share this location */}
+            <button
+              onClick={() => {
+                const coordString = `lat=${lat.toFixed(6)}&lng=${lng.toFixed(6)}`;
+                const shareUrl = `${window.location.origin}${window.location.pathname}?${coordString}`;
+                navigator.clipboard.writeText(shareUrl)
+                  .then(() => toast.success('Coordinates copied to clipboard'))
+                  .catch(() => toast.error('Failed to copy coordinates'));
+                onClose();
+              }}
+              className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              <span>Chia sẻ tọa độ</span>
+            </button>
+
             
             {/* Add Waypoint (only if Direction is open and inputs have values) */}
             {canAddWaypoint && (

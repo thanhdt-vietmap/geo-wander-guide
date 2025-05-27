@@ -48,6 +48,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
   };
 
   const handleShare = async () => {
+    console.log('Sharing place:', place);
     if (!place.ref_id) {
       toast({
         title: "Lỗi chia sẻ",
@@ -98,14 +99,14 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                 style={{ backgroundImage: "url('/lovable-uploads/759ebf50-d075-4366-98b3-99771c255fa9.png')" }}
               >
                 {/* Close button */}
-                <Button 
+                {/* <Button 
                   variant="outline" 
                   size="icon" 
                   onClick={onClose} 
                   className="absolute top-6 right-6 bg-white rounded-full h-10 w-10 shadow-md"
                 >
                   <X className="h-5 w-5" />
-                </Button>
+                </Button> */}
               </div>
               
               {/* Address and interactions */}

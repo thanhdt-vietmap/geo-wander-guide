@@ -50,7 +50,8 @@ export const getReverseGeocoding = async (
       ward_id: data[0].boundaries.find(b => b.type === 2)?.id || 0,
       ward: data[0].boundaries.find(b => b.type === 2)?.name || '',
       lat: data[0].lat,
-      lng: data[0].lng
+      lng: data[0].lng,
+      ref_id: data[0].ref_id || ''
     };
     
     return placeDetails;

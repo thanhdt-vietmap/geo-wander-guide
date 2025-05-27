@@ -38,6 +38,7 @@ export const usePlaceOperations = () => {
 
   const handleSharePlace = useCallback(async (place: PlaceDetails) => {
     try {
+      console.log('Sharing place:', place);
       if (!place.ref_id) {
         toast({
           title: "Lỗi chia sẻ",

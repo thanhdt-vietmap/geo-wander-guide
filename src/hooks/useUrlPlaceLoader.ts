@@ -13,6 +13,53 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    const loadLatLngFromUrl = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const lat = parseFloat(urlParams.get('lat') || '');
+      const lng = parseFloat(urlParams.get('lng') || '');
+      if (isNaN(lat) || isNaN(lng)) return;
+      console.log('Loading lat/lng from URL parameters:', lat, lng);
+      if (mapRef?.current) {
+        mapRef.current.flyTo(lng, lat);
+        mapRef.current.addMarker(lng, lat);
+        dispatch(setSelectedPlace(null));
+        dispatch(setPlaceDetailCollapsed(false));
+        dispatch(setShowDirections(false));
+        const data = await apiClient.get<any[]>('/reverse/v3', {
+          lng: lng.toString(),
+          lat: lat.toString()
+        });
+        if (data && data.length > 0) {
+          const placeDetails: PlaceDetails = {
+            display: data[0].display,
+            name: data[0].name,
+            hs_num: data[0].name.split(' ')[0] || '',
+            street: data[0].name.split(' ').slice(1).join(' ') || '',
+            address: data[0].address,
+            city_id: data[0].boundaries.find(b => b.type === 0)?.id || 0,
+            city: data[0].boundaries.find(b => b.type === 0)?.name || '',
+            district_id: data[0].boundaries.find(b => b.type === 1)?.id || 0,
+            district: data[0].boundaries.find(b => b.type === 1)?.name || '',
+            ward_id: data[0].boundaries.find(b => b.type === 2)?.id || 0,
+            ward: data[0].boundaries.find(b => b.type === 2)?.name || '',
+            lat: data[0].lat,
+            lng: data[0].lng,
+            ref_id: data[0].ref_id || ''
+          };
+          console.log('Loaded place details from lat/lng:', placeDetails);
+          
+          // Set as location info instead of selected place to avoid conflicts
+          dispatch(setLocationInfo(placeDetails));
+          
+          // Update search bar if callback provided
+          if (onPlaceSelect) {
+            onPlaceSelect(placeDetails);
+          }
+        } else {
+          console.warn('No place details found for lat/lng:', lat, lng);
+        }
+      }
+    }
     const loadPlaceFromUrl = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const placeId = urlParams.get('placeId');
@@ -66,5 +113,6 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
     };
 
     loadPlaceFromUrl();
+    loadLatLngFromUrl();
   }, [dispatch, mapRef, onPlaceSelect]);
 };

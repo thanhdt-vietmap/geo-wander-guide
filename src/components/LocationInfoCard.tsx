@@ -21,6 +21,7 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
   }, []);
 
   const handleShare = async () => {
+    console.log('Sharing place:', place);
     try {
       if (!place.ref_id) {
         toast({

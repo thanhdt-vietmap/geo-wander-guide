@@ -91,7 +91,8 @@ export class SecureApiClient {
       [atob('Q29udGVudC1UeXBl')]: atob('YXBwbGljYXRpb24vanNvbg=='),
       ...authHeaders
     };
-
+    // Delayed 1.5 seconds before making the request
+    await new Promise(resolve => setTimeout(resolve, 1500));
     // Anti-debugging check
 
     if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||

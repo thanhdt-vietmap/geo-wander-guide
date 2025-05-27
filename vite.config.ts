@@ -59,9 +59,12 @@ export default defineConfig(({ mode }) => ({
     }),
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom"],
-          utils: ["crypto-js"],
+        manualChunks(id) {
+          // vendor: ["react", "react-dom"],
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+          // utils: ["crypto-js"],
         },
         entryFileNames: "[name]-[hash].js",
         chunkFileNames: "[name]-[hash].js",
