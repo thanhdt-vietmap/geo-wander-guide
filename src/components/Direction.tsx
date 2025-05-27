@@ -25,31 +25,31 @@ function decodePolyline(polyline: string) {
     let b;
     let shift = 0;
     let result = 0;
-    
+
     do {
       b = polyline.charCodeAt(index++) - 63;
       result |= (b & 0x1f) << shift;
       shift += 5;
     } while (b >= 0x20);
-    
+
     const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
     lat += dlat;
-    
+
     shift = 0;
     result = 0;
-    
+
     do {
       b = polyline.charCodeAt(index++) - 63;
       result |= (b & 0x1f) << shift;
       shift += 5;
     } while (b >= 0x20);
-    
+
     const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
     lng += dlng;
-    
+
     points.push([lng * 1e-5, lat * 1e-5]);
   }
-  
+
   return points;
 }
 
@@ -154,7 +154,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const [selectedPath, setSelectedPath] = useState<RoutePath | null>(null);
   const [autoUpdateRoute, setAutoUpdateRoute] = useState(false);
   const [pendingEndPoint, setPendingEndPoint] = useState<any>(null);
-  
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
@@ -168,7 +168,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   // Handle pending end point when component mounts
   useEffect(() => {
     if (pendingEndPoint) {
-      setWaypoints(prev => prev.map((wp, i) => 
+      setWaypoints(prev => prev.map((wp, i) =>
         i === prev.length - 1
           ? { ...wp, name: pendingEndPoint.display, lat: pendingEndPoint.lat, lng: pendingEndPoint.lng, ref_id: pendingEndPoint.ref_id }
           : wp
@@ -176,22 +176,30 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       setPendingEndPoint(null);
     }
   }, [pendingEndPoint]);
-
+  const autoFetchNewRoute = () => {
+    if (autoUpdateRoute && routeData) {
+      console.log('Auto-updating route with new coordinates');
+      // Use a small delay to ensure state has updated
+      setTimeout(() => {
+        handleGetDirections();
+      }, 1000);
+    }
+  }
   // Function to detect if input is lat,lng format
   const detectLatLngFormat = (query: string): { lat: number; lng: number } | null => {
     const trimmed = query.trim();
     const regex = /^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/;
     const match = trimmed.match(regex);
-    
+
     if (match) {
       const lat = parseFloat(match[1]);
       const lng = parseFloat(match[2]);
-      
+
       if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
         return { lat, lng };
       }
     }
-    
+
     return null;
   };
 
@@ -199,9 +207,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     setIsSearchLoading(true);
     try {
       const placeDetails = await getReverseGeocoding(lng, lat);
-      
-      setWaypoints(prev => prev.map((wp, i) => 
-        i === index 
+
+      setWaypoints(prev => prev.map((wp, i) =>
+        i === index
           ? { ...wp, name: placeDetails.display, lat: placeDetails.lat, lng: placeDetails.lng, ref_id: placeDetails.ref_id }
           : wp
       ));
@@ -209,10 +217,10 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       if (mapRef.current && index === 0) {
         mapRef.current.flyTo(placeDetails.lng, placeDetails.lat);
       }
-      
+
       setShowSuggestions(false);
       setActiveInputIndex(null);
-      
+
       console.log('Reverse geocoding result for waypoint', index, ':', placeDetails);
     } catch (error) {
       console.error('Reverse geocoding error:', error);
@@ -230,21 +238,21 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const fillInputWithLocation = (location: { display: string; lat: number; lng: number; ref_id?: string }) => {
     // Find index to update: use activeInputIndex if available, or find first empty input
     let indexToUpdate = activeInputIndex;
-    
+
     if (indexToUpdate === null) {
       // Find first empty input
       const emptyIndex = waypoints.findIndex(wp => wp.name === "");
       indexToUpdate = emptyIndex >= 0 ? emptyIndex : null;
     }
-    
+
     // If we found an index to update, set the waypoint
     if (indexToUpdate !== null) {
-      setWaypoints(prev => prev.map((wp, i) => 
-        i === indexToUpdate 
+      setWaypoints(prev => prev.map((wp, i) =>
+        i === indexToUpdate
           ? { ...wp, name: location.display, lat: location.lat, lng: location.lng, ref_id: location.ref_id }
           : wp
       ));
-      
+
       // Focus on the next empty input if available
       if (indexToUpdate < waypoints.length - 1) {
         const nextEmptyIndex = waypoints.findIndex((wp, i) => i > indexToUpdate && wp.name === "");
@@ -254,10 +262,10 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
           }, 100);
         }
       }
-      
+
       return true;
     }
-    
+
     return false;
   };
 
@@ -269,9 +277,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         setPendingEndPoint(place);
         return;
       }
-      
+
       // Set the last waypoint as the end point
-      setWaypoints(prev => prev.map((wp, i) => 
+      setWaypoints(prev => prev.map((wp, i) =>
         i === prev.length - 1
           ? { ...wp, name: place.display, lat: place.lat, lng: place.lng, ref_id: place.ref_id }
           : wp
@@ -281,11 +289,11 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       // Add a new waypoint before the last one (which should be the end point)
       setWaypoints(prev => {
         const newWaypoints = [...prev];
-        const newWaypoint = { 
-          name: place.display, 
-          lat: place.lat, 
-          lng: place.lng, 
-          ref_id: place.ref_id 
+        const newWaypoint = {
+          name: place.display,
+          lat: place.lat,
+          lng: place.lng,
+          ref_id: place.ref_id
         };
         // Insert before the last waypoint (end point)
         newWaypoints.splice(newWaypoints.length - 1, 0, newWaypoint);
@@ -299,31 +307,32 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     updateWaypointCoordinates: async (index: number, lng: number, lat: number) => {
       try {
         console.log(`Updating waypoint ${index} to coordinates: ${lng}, ${lat}`);
-        
+
         // Update the waypoint coordinates immediately without removing the marker
         setWaypoints(prev => {
-          const newWaypoints = prev.map((wp, i) => 
-            i === index 
+          const newWaypoints = prev.map((wp, i) =>
+            i === index
               ? { ...wp, lat: lat, lng: lng }
               : wp
           );
           console.log('Updated waypoints with new coordinates:', newWaypoints);
           return newWaypoints;
         });
-        
+
         // Get location details from coordinates using reverse geocoding
+        // Delay 1 second to ensure state is updated
         const data = await apiClient.get<any[]>('/reverse/v3', {
           lng: lng.toString(),
           lat: lat.toString()
         });
-        
+
         console.log('Reverse geocoding response:', data);
-        
+
         if (data.length > 0) {
           // Update the waypoint name with reverse geocoding result
           setWaypoints(prev => {
-            const newWaypoints = prev.map((wp, i) => 
-              i === index 
+            const newWaypoints = prev.map((wp, i) =>
+              i === index
                 ? { ...wp, name: data[0].display, ref_id: data[0].ref_id }
                 : wp
             );
@@ -331,15 +340,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             return newWaypoints;
           });
         }
-        
+
         // Auto-update route immediately if we have routes already calculated
-        if (autoUpdateRoute && routeData) {
-          console.log('Auto-updating route with new coordinates');
-          // Use a small delay to ensure state has updated
-          setTimeout(() => {
-            handleGetDirections();
-          }, 100);
-        }
+        // autoFetchNewRoute();
       } catch (error) {
         console.error('Error getting location details:', error);
         // Still try to update route if reverse geocoding fails but we have coordinates
@@ -410,7 +413,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         text: query,
         focus: ENV.FOCUS_COORDINATES
       });
-      
+
       setSuggestions(data);
       setShowSuggestions(true);
     } catch (error) {
@@ -431,9 +434,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       const data = await apiClient.get<any>('/place/v3', {
         refid: refId
       });
-      
-      setWaypoints(prev => prev.map((wp, i) => 
-        i === index 
+
+      setWaypoints(prev => prev.map((wp, i) =>
+        i === index
           ? { ...wp, name: data.display, lat: data.lat, lng: data.lng, ref_id: refId }
           : wp
       ));
@@ -456,8 +459,8 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const value = e.target.value;
-    
-    setWaypoints(prev => prev.map((wp, i) => 
+
+    setWaypoints(prev => prev.map((wp, i) =>
       i === index ? { ...wp, name: value } : wp
     ));
 
@@ -478,13 +481,13 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const handleSuggestionSelect = async (suggestion: SearchResult) => {
     if (activeInputIndex !== null) {
-      setWaypoints(prev => prev.map((wp, i) => 
+      setWaypoints(prev => prev.map((wp, i) =>
         i === activeInputIndex ? { ...wp, name: suggestion.display } : wp
       ));
-      
+
       await fetchPlaceDetails(suggestion.ref_id, activeInputIndex);
     }
-    
+
     setShowSuggestions(false);
     setActiveInputIndex(null);
   };
@@ -545,15 +548,15 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const handleSelectRoute = (routeId: string) => {
     setSelectedRouteId(routeId);
-    
+
     if (mapRef.current) {
       mapRef.current.highlightRoute(routeId);
     }
-    
+
     const routeIndex = parseInt(routeId.replace('route-', ''));
     if (routeData?.paths && routeData.paths[routeIndex]) {
       const path = routeData.paths[routeIndex];
-      
+
       if (path.bbox && path.bbox.length === 4 && mapRef.current) {
         const [minLng, minLat, maxLng, maxLat] = path.bbox;
         mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
@@ -563,7 +566,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const handleShowRouteDetails = () => {
     if (!selectedRouteId || !routeData) return;
-    
+
     const routeIndex = parseInt(selectedRouteId.replace('route-', ''));
     if (routeData.paths && routeData.paths[routeIndex]) {
       setSelectedPath(routeData.paths[routeIndex]);
@@ -578,7 +581,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const handleGetDirections = async () => {
     const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
-    
+
     if (validWaypoints.length < 2) {
       toast({
         title: "Invalid route",
@@ -587,7 +590,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       });
       return;
     }
-    
+
     try {
       const params: Record<string, string> = {
         'api-version': '1.1',
@@ -601,7 +604,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       validWaypoints.forEach((wp) => {
         pointParams.push(`${wp.lat},${wp.lng}`);
       });
-      
+
       // Convert to the format expected by the API client
       const apiParams: Record<string, string> = {
         'api-version': '1.1',
@@ -612,27 +615,27 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       const pointParamStrings = validWaypoints.map((wp, index) => `point=${wp.lat},${wp.lng}`).join('&');
       const data: RouteResponse = await apiClient.get(`/route?${pointParamStrings}`, apiParams);
       setRouteData(data);
-      
+
       setRouteSummaries([]);
       setSelectedRouteId(null);
-      
+
       if (mapRef.current) {
         mapRef.current.removeRoutes();
         mapRef.current.removeMarkers();
       }
-      
+
       if (data.paths && data.paths.length > 0) {
         const newSummaries: RouteSummary[] = [];
-        
+
         data.paths.forEach((path, index) => {
           const routeId = `route-${index}`;
           const color = routeColors[index % routeColors.length];
-          
+
           const decodedPoints = decodePolyline(path.points);
           if (mapRef.current) {
             mapRef.current.addRoute(decodedPoints, routeId, color);
           }
-          
+
           newSummaries.push({
             id: routeId,
             distance: path.distance,
@@ -640,40 +643,40 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             color: color
           });
         });
-        
+
         setRouteSummaries(newSummaries);
-        
+
         if (newSummaries.length > 0) {
           setSelectedRouteId(newSummaries[0].id);
           if (mapRef.current) {
             mapRef.current.highlightRoute(newSummaries[0].id);
           }
         }
-        
+
         // Re-add markers after updating routes - using current waypoint coordinates
         if (mapRef.current) {
           validWaypoints.forEach((wp, index) => {
             const isStart = index === 0;
             const isEnd = index === validWaypoints.length - 1;
             mapRef.current.addMarker(
-              wp.lng, 
-              wp.lat, 
+              wp.lng,
+              wp.lat,
               isStart ? 'start' : isEnd ? 'end' : 'waypoint',
               true,
               index
             );
           });
         }
-        
+
         const firstPath = data.paths[0];
         if (firstPath.bbox && firstPath.bbox.length === 4 && mapRef.current) {
           const [minLng, minLat, maxLng, maxLat] = firstPath.bbox;
           mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
         }
-        
+
         setAutoUpdateRoute(true);
       }
-      
+
       toast({
         title: `${data.paths.length} route${data.paths.length > 1 ? 's' : ''} found`,
         description: "Select a route to see details",
@@ -694,15 +697,14 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   }
 
   return (
-    <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-100 w-[500px] overflow-auto ${
-      animating ? 'animate-in fade-in slide-in-from-left duration-100' : ''
-    }`}>
+    <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-100 w-[500px] overflow-auto ${animating ? 'animate-in fade-in slide-in-from-left duration-100' : ''
+      }`}>
       <div className="flex h-full">
         <div className="bg-white shadow-lg pt-0 w-full flex flex-col border-r">
           <DirectionHeader onClose={onClose} />
-          
+
           <VehicleSelector vehicle={vehicle} onVehicleChange={setVehicle} />
-          
+
           <div className="px-6 py-4 relative" ref={searchContainerRef}>
             {/* Waypoints inputs */}
             <div className="space-y-3 mb-4">
@@ -739,7 +741,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
                 </div>
               ))}
             </div>
-            
+
             {/* Add waypoint button */}
             <Button
               variant="outline"
@@ -749,9 +751,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
               <Plus className="h-4 w-4" />
               Add stop
             </Button>
-            
+
             <Separator className="my-4" />
-            
+
             {/* Get directions button */}
             <Button
               className="w-full mb-4"
@@ -762,9 +764,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
               Get directions
             </Button>
           </div>
-          
+
           <Separator />
-          
+
           <RouteList
             routeSummaries={routeSummaries}
             selectedRouteId={selectedRouteId}

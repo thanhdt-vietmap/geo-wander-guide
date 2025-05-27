@@ -126,17 +126,17 @@ const Index = () => {
   
   {/* SearchBar với z-index cao nhất để nằm trên tất cả */}
   <div className="absolute top-0 left-0 right-0 z-50">
-    <SearchBar 
+   {!showDirections&&( <SearchBar 
       onMenuToggle={handleMenuToggle} 
       isMenuOpen={isSidebarOpen}
       onPlaceSelect={handlePlaceSelectWrapper}
       onClose={handleClosePlaceDetailsWrapper}
-    />
+    />)}
   </div>
   
   {/* PlaceDetails với z-index thấp hơn SearchBar */}
   {selectedPlace && !locationInfo && (
-    <div className="absolute top-0 left-0 right-0 bottom-0 z-40">
+    <div className="absolute top-0 left-0 bottom-0 z-40">
       <PlaceDetails 
         place={selectedPlace} 
         onClose={handleClosePlaceDetailsWrapper}
@@ -147,7 +147,7 @@ const Index = () => {
 
   {/* LocationInfoCard với z-index thấp hơn SearchBar */}
   {locationInfo && !selectedPlace && (
-    <div className="absolute top-0 left-0 right-0 bottom-0 z-40">
+    <div className="absolute  left-0 right-0 bottom-0 z-40">
       <LocationInfoCard 
         place={locationInfo}
         onClose={handleCloseLocationInfoWrapper}

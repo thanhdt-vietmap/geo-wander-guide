@@ -249,9 +249,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
         variant="outline"
         size="icon"
         onClick={onMenuToggle}
-        className="bg-white shadow-md hover:bg-gray-50 flex-shrink-0 w-10 h-10 rounded-lg border-gray-200"
+        className="bg-white shadow-md hover:bg-gray-50 flex-shrink-0 w-12 h-12 rounded-lg border-gray-200"
       >
-        {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {isMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
       </Button>
       
       <div className="w-96 relative" ref={searchContainerRef}>

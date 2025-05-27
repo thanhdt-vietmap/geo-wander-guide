@@ -92,7 +92,7 @@ export class SecureApiClient {
       ...authHeaders
     };
     // Delayed 1.5 seconds before making the request
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 500));
     // Anti-debugging check
 
     if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||

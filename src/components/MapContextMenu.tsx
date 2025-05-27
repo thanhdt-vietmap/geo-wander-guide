@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Copy, MapPin, X, Navigation, Plus } from 'lucide-react';
+import { Copy, MapPin, X, Navigation, Plus, Share } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface MapContextMenuProps {
@@ -34,7 +34,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
 }) => {
   const [animating, setAnimating] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     if (isOpen) {
       setAnimating(true);
@@ -117,21 +117,20 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   return (
     <>
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 z-40 bg-transparent" 
+      <div
+        className="fixed inset-0 z-40 bg-transparent"
         onClick={onClose}
         onContextMenu={(e) => {
           e.preventDefault();
           onClose();
         }}
       />
-      
+
       {/* Context Menu */}
       <div
         ref={menuRef}
-        className={`fixed z-50 w-56 rounded-md border bg-white p-1 shadow-md transition-all duration-100 ${
-          animating ? 'animate-in fade-in zoom-in-95' : ''
-        }`}
+        className={`fixed z-50 w-56 rounded-md border bg-white p-1 shadow-md transition-all duration-100 ${animating ? 'animate-in fade-in zoom-in-95' : ''
+          }`}
         style={{
           left: `${adjustedX}px`,
           top: `${adjustedY}px`,
@@ -142,7 +141,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
         <div className="px-2 py-1.5 text-sm font-semibold text-gray-700 border-b">
           Location
         </div>
-        
+
         {/* Copy Coordinates */}
         <button
           onClick={copyCoordinates}
@@ -151,10 +150,10 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
           <Copy className="mr-2 h-4 w-4" />
           <span>{formatCoord(lat)}, {formatCoord(lng)}</span>
         </button>
-        
+
         {/* Separator */}
         <div className="my-1 h-px bg-gray-200" />
-        
+
         {/* Get Location Details */}
         <button
           onClick={getLocationInfo}
@@ -163,13 +162,30 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
           <MapPin className="mr-2 h-4 w-4" />
           <span>Get location details</span>
         </button>
-        
+
+
+        {/* Share this location */}
+        <button
+          onClick={() => {
+            const coordString = `lat=${lat.toFixed(6)}&lng=${lng.toFixed(6)}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}?${coordString}`;
+            navigator.clipboard.writeText(shareUrl)
+              .then(() => toast.success('Coordinates copied to clipboard'))
+              .catch(() => toast.error('Failed to copy coordinates'));
+            onClose();
+          }}
+          className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+        >
+          <Share className="mr-2 h-4 w-4" />
+          <span>Chia sẻ tọa độ</span>
+        </button>
+
         {/* Direction Options */}
         {showDirectionOptions && (
           <>
             {/* Separator */}
             <div className="my-1 h-px bg-gray-200" />
-            
+
             {/* Set as Starting Point */}
             <button
               onClick={setAsStart}
@@ -178,7 +194,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
               <Navigation className="mr-2 h-4 w-4 text-green-600" />
               <span>Chọn làm điểm bắt đầu</span>
             </button>
-            
+
             {/* Set as End Point */}
             <button
               onClick={setAsEnd}
@@ -188,23 +204,6 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
               <span>Chọn làm điểm kết thúc</span>
             </button>
 
-            {/* Share this location */}
-            <button
-              onClick={() => {
-                const coordString = `lat=${lat.toFixed(6)}&lng=${lng.toFixed(6)}`;
-                const shareUrl = `${window.location.origin}${window.location.pathname}?${coordString}`;
-                navigator.clipboard.writeText(shareUrl)
-                  .then(() => toast.success('Coordinates copied to clipboard'))
-                  .catch(() => toast.error('Failed to copy coordinates'));
-                onClose();
-              }}
-              className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
-            >
-              <Copy className="mr-2 h-4 w-4" />
-              <span>Chia sẻ tọa độ</span>
-            </button>
-
-            
             {/* Add Waypoint (only if Direction is open and inputs have values) */}
             {canAddWaypoint && (
               <button
@@ -217,10 +216,10 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
             )}
           </>
         )}
-        
+
         {/* Separator */}
         <div className="my-1 h-px bg-gray-200" />
-        
+
         {/* Close Button */}
         <button
           onClick={onClose}
