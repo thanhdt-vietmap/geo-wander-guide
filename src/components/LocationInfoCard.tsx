@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlaceDetails } from '@/types';
-import { X, Navigation, Share } from 'lucide-react';
+import { X, Navigation, Share, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAppSelector } from '@/store/hooks';
 
 interface LocationInfoCardProps {
   place: PlaceDetails;
@@ -14,6 +15,7 @@ interface LocationInfoCardProps {
 
 const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onDirectionClick }) => {
   const [animating, setAnimating] = useState(true);
+  const { isLocationLoading } = useAppSelector((state) => state.ui);
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimating(false), 100);
@@ -48,6 +50,19 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
       });
     }
   };
+
+  if (isLocationLoading) {
+    return (
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-md">
+        <Card className="shadow-lg border-t-4 border-t-primary">
+          <CardContent className="p-4 flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <span className="text-sm text-muted-foreground">Đang tải thông tin địa điểm...</span>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-md">

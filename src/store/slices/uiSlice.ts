@@ -5,12 +5,14 @@ interface UIState {
   isSidebarOpen: boolean;
   isPlaceDetailCollapsed: boolean;
   showDirections: boolean;
+  isLocationLoading: boolean;
 }
 
 const initialState: UIState = {
   isSidebarOpen: false,
   isPlaceDetailCollapsed: false,
   showDirections: false,
+  isLocationLoading: false,
 };
 
 const uiSlice = createSlice({
@@ -29,8 +31,11 @@ const uiSlice = createSlice({
     setShowDirections: (state, action: PayloadAction<boolean>) => {
       state.showDirections = action.payload;
     },
+    setLocationLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLocationLoading = action.payload;
+    },
   },
 });
 
-export const { setSidebarOpen, toggleSidebar, setPlaceDetailCollapsed, setShowDirections } = uiSlice.actions;
+export const { setSidebarOpen, toggleSidebar, setPlaceDetailCollapsed, setShowDirections, setLocationLoading } = uiSlice.actions;
 export default uiSlice.reducer;
