@@ -1,11 +1,10 @@
 
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { getReverseGeocoding } from '@/services/mapService';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setContextMenu, closeContextMenu } from '@/store/slices/mapSlice';
 import { setLocationInfo, setSelectedPlace } from '@/store/slices/locationSlice';
-import { setLocationLoading } from '@/store/slices/uiSlice';
 
 export const useMapHandlers = () => {
   const dispatch = useAppDispatch();
@@ -43,19 +42,16 @@ export const useMapHandlers = () => {
       }
       
       if (showDirections) {
-        dispatch(setLocationLoading(true));
         const placeDetails = await getReverseGeocoding(e.lngLat[0], e.lngLat[1]);
         
         if (mapRef?.current) {
           mapRef.current.addMarker(e.lngLat[0], e.lngLat[1], 'waypoint');
         }
-        dispatch(setLocationLoading(false));
         return;
       }
       
       if (selectedPlace) dispatch(setSelectedPlace(null));
       
-      dispatch(setLocationLoading(true));
       const placeDetails = await getReverseGeocoding(e.lngLat[0], e.lngLat[1]);
       dispatch(setLocationInfo(placeDetails));
       
@@ -63,9 +59,7 @@ export const useMapHandlers = () => {
         mapRef.current.removeMarkers();
         mapRef.current.addMarker(e.lngLat[0], e.lngLat[1]);
       }
-      dispatch(setLocationLoading(false));
     } catch (error) {
-      dispatch(setLocationLoading(false));
       toast.error('Failed to get location details');
       console.error(error);
     }
