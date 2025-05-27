@@ -1,4 +1,3 @@
-
 import React, { useRef, useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setSidebarOpen, setPlaceDetailCollapsed } from '@/store/slices/uiSlice';
@@ -190,7 +189,7 @@ const Index = () => {
       onGetLocation={(lng, lat) => handleGetLocation(lng, lat, mapRef)}
       onSetAsStart={(lng, lat) => handleSetAsStart(lng, lat, mapRef)}
       onSetAsEnd={(lng, lat) => handleSetAsEnd(lng, lat, mapRef, directionRef)}
-      onAddWaypoint={(lng, lat) => handleAddWaypoint(lng, lat, directionRef)}
+      onAddWaypoint={(lng, lat) => handleAddWaypoint(lng, lat, directionRef, mapRef)}
       showDirectionOptions={true}
       canAddWaypoint={canAddWaypoint}
     />

@@ -53,6 +53,11 @@ export const useLocationOperations = () => {
       dispatch(setSelectedPlace(null));
       dispatch(setLocationInfo(null));
       
+      // Add marker immediately for visual feedback
+      if (mapRef?.current) {
+        mapRef.current.addMarker(lng, lat, 'end');
+      }
+      
       // If directionRef exists and Direction is already open, set end point directly
       if (directionRef.current && directionRef.current.setEndPoint) {
         directionRef.current.setEndPoint(placeDetails);
@@ -65,17 +70,20 @@ export const useLocationOperations = () => {
           }
         }, 100);
       }
-      
-      // Don't remove markers when setting end point - let Direction component handle markers
     } catch (error) {
       toast.error('Failed to set end point');
       console.error(error);
     }
   }, [dispatch]);
 
-  const handleAddWaypoint = useCallback(async (lng: number, lat: number, directionRef: any) => {
+  const handleAddWaypoint = useCallback(async (lng: number, lat: number, directionRef: any, mapRef: any) => {
     try {
       const placeDetails = await getReverseGeocoding(lng, lat);
+      
+      // Add marker immediately for visual feedback
+      if (mapRef?.current) {
+        mapRef.current.addMarker(lng, lat, 'waypoint');
+      }
       
       if (directionRef.current && directionRef.current.addWaypoint) {
         directionRef.current.addWaypoint(placeDetails);
