@@ -300,6 +300,17 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       try {
         console.log(`Updating waypoint ${index} to coordinates: ${lng}, ${lat}`);
         
+        // Update the waypoint coordinates immediately without removing the marker
+        setWaypoints(prev => {
+          const newWaypoints = prev.map((wp, i) => 
+            i === index 
+              ? { ...wp, lat: lat, lng: lng }
+              : wp
+          );
+          console.log('Updated waypoints with new coordinates:', newWaypoints);
+          return newWaypoints;
+        });
+        
         // Get location details from coordinates using reverse geocoding
         const data = await apiClient.get<any[]>('/reverse/v3', {
           lng: lng.toString(),
@@ -309,39 +320,33 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         console.log('Reverse geocoding response:', data);
         
         if (data.length > 0) {
-          // Update the waypoint with new coordinates and name
+          // Update the waypoint name with reverse geocoding result
           setWaypoints(prev => {
             const newWaypoints = prev.map((wp, i) => 
               i === index 
-                ? { ...wp, name: data[0].display, lat: lat, lng: lng, ref_id: data[0].ref_id }
+                ? { ...wp, name: data[0].display, ref_id: data[0].ref_id }
                 : wp
             );
-            console.log('Updated waypoints:', newWaypoints);
+            console.log('Updated waypoints with location name:', newWaypoints);
             return newWaypoints;
           });
-          
-          // Auto-update route if we have enough valid waypoints and routes are already calculated
-          if (autoUpdateRoute && routeData) {
-            // Wait a bit for state to update, then call route API
-            setTimeout(() => {
-              handleGetDirections();
-            }, 300);
-          }
+        }
+        
+        // Auto-update route immediately if we have routes already calculated
+        if (autoUpdateRoute && routeData) {
+          console.log('Auto-updating route with new coordinates');
+          // Use a small delay to ensure state has updated
+          setTimeout(() => {
+            handleGetDirections();
+          }, 100);
         }
       } catch (error) {
         console.error('Error getting location details:', error);
-        // Update coordinates even if reverse geocoding fails
-        setWaypoints(prev => prev.map((wp, i) => 
-          i === index 
-            ? { ...wp, lat: lat, lng: lng }
-            : wp
-        ));
-        
         // Still try to update route if reverse geocoding fails but we have coordinates
         if (autoUpdateRoute && routeData) {
           setTimeout(() => {
             handleGetDirections();
-          }, 300);
+          }, 100);
         }
       }
     }
@@ -645,6 +650,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
           }
         }
         
+        // Re-add markers after updating routes - using current waypoint coordinates
         if (mapRef.current) {
           validWaypoints.forEach((wp, index) => {
             const isStart = index === 0;
