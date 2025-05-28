@@ -334,10 +334,8 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
                   locationMarker.current.remove();
                 }
 
-                // Create a pulsing dot for the location
-                locationMarker.current = new vietmapgl.Marker({
-                  color: '#4285F4'
-                })
+                // Use default SDK location marker (no custom color or styling)
+                locationMarker.current = new vietmapgl.Marker()
                 .setLngLat([longitude, latitude])
                 .addTo(map.current);
               }
