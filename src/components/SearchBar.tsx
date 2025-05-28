@@ -8,6 +8,7 @@ import { SecureApiClient } from '@/services/secureApiClient';
 import { getReverseGeocoding } from '@/services/mapService';
 import { ENV } from '@/config/environment';
 import { useUrlPlaceLoader } from '@/hooks/useUrlPlaceLoader';
+import { MapViewRef } from './MapView';
 
 interface SearchResult {
   ref_id: string;
@@ -48,6 +49,7 @@ interface SearchBarProps {
   isMenuOpen: boolean;
   onPlaceSelect?: (place: PlaceDetails) => void;
   onClose?: () => void;
+  mapRef?: React.RefObject<MapViewRef>; // Optional map reference for future use
 }
 
 const apiClient = SecureApiClient.getInstance();
@@ -56,7 +58,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onMenuToggle, 
   isMenuOpen, 
   onPlaceSelect,
-  onClose
+  onClose,
+  mapRef
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
@@ -138,9 +141,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     setIsSearchLoading(true);
     try {
+      // focus: lat,lng: 21.0285,105.8342
+      const focus = mapRef?.current?.getCenter();
+      const focusCoordinates = focus ? `${focus[1]},${focus[0]}` : ENV.FOCUS_COORDINATES;
       const data = await apiClient.get<SearchResult[]>('/autocomplete/v3', {
         text: query,
-        focus: ENV.FOCUS_COORDINATES
+        focus: focusCoordinates
       });
       
       setSuggestions(data);
@@ -244,7 +250,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, []);
 
   return (
-    <div className="absolute top-6 left-6 z-20 flex items-center gap-4">
+    <div className="absolute top-6 left-6 z-20 flex items-start gap-4">
       <Button
         variant="outline"
         size="icon"

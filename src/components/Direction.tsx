@@ -12,6 +12,7 @@ import RouteList from './direction/RouteList';
 import { SecureApiClient } from '@/services/secureApiClient';
 import { getReverseGeocoding } from '@/services/mapService';
 import { ENV } from '@/config/environment';
+import { MapViewRef } from './MapView';
 
 // Utility function to decode Google's polyline format
 function decodePolyline(polyline: string) {
@@ -116,7 +117,7 @@ interface RouteSummary {
 
 interface DirectionProps {
   onClose: () => void;
-  mapRef: React.RefObject<any>;
+  mapRef: React.RefObject<MapViewRef>;
   startingPlace?: {
     display: string;
     lat: number;
@@ -268,7 +269,15 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
     return false;
   };
-
+  useEffect(() => {
+    if (waypoints.length < 2) {
+      return
+    }
+    const validWaypoints = waypoints.filter(wp => wp && wp.lat !== 0 && wp.lng !== 0);
+    if (validWaypoints.length == waypoints.length) {
+      autoFetchNewRoute();
+    }
+  }, [waypoints]);
   // Expose methods to parent component through ref
   useImperativeHandle(ref, () => ({
     setEndPoint: (place: any) => {
@@ -330,6 +339,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
         if (data.length > 0) {
           // Update the waypoint name with reverse geocoding result
+          console.log('updating new waypoint', waypoints)
           setWaypoints(prev => {
             const newWaypoints = prev.map((wp, i) =>
               i === index
@@ -339,15 +349,17 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             console.log('Updated waypoints with location name:', newWaypoints);
             return newWaypoints;
           });
+          console.log('Updated waypoint', waypoints);
         }
 
+
         // Auto-update route immediately if we have routes already calculated
-        // autoFetchNewRoute();
       } catch (error) {
         console.error('Error getting location details:', error);
         // Still try to update route if reverse geocoding fails but we have coordinates
         if (autoUpdateRoute && routeData) {
           setTimeout(() => {
+            console.log('Updated waypoint', waypoints);
             handleGetDirections();
           }, 100);
         }
@@ -409,9 +421,12 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
     setIsSearchLoading(true);
     try {
+
+        const focus = mapRef?.current?.getCenter();
+        const focusCoordinates = focus ? `${focus[1]},${focus[0]}` : ENV.FOCUS_COORDINATES;
       const data = await apiClient.get<SearchResult[]>('/autocomplete/v3', {
         text: query,
-        focus: ENV.FOCUS_COORDINATES
+        focus: focusCoordinates
       });
 
       setSuggestions(data);
@@ -581,7 +596,8 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const handleGetDirections = async () => {
     const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
-
+    console.log('waypoints:', waypoints);
+    console.log('Valid waypoints:', validWaypoints);
     if (validWaypoints.length < 2) {
       toast({
         title: "Invalid route",
@@ -600,10 +616,10 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       };
 
       // Add each waypoint as a separate point parameter
-      const pointParams: string[] = [];
-      validWaypoints.forEach((wp) => {
-        pointParams.push(`${wp.lat},${wp.lng}`);
-      });
+      // const pointParams: string[] = [];
+      // validWaypoints.forEach((wp) => {
+      //   pointParams.push(`${wp.lat},${wp.lng}`);
+      // });
 
       // Convert to the format expected by the API client
       const apiParams: Record<string, string> = {
@@ -613,6 +629,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       };
       // Do not modify this line, it is required for the API client
       const pointParamStrings = validWaypoints.map((wp, index) => `point=${wp.lat},${wp.lng}`).join('&');
+      console.log('Direction response:', pointParamStrings);
       const data: RouteResponse = await apiClient.get(`/route?${pointParamStrings}`, apiParams);
       setRouteData(data);
 

@@ -17,6 +17,7 @@ export interface MapViewRef {
   resetNorth: () => void;
   toggle3D: () => void;
   getCurrentLocation: () => Promise<any>;
+  getCenter: () => [number, number] | null;
   setMarkerDragCallback: (callback: ((index: number, lng: number, lat: number) => void) | null) => void;
 }
 
@@ -36,7 +37,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   onMapStyleChange 
 }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<any>(null);
+  const map = useRef<vietmapgl.Map>(null);
   const markers = useRef<{ marker: any; index?: number }[]>([]);
   const routes = useRef<string[]>([]);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -138,10 +139,18 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       if (map.current) {
         map.current.flyTo({
           center: [lng, lat],
-          zoom: 16,
-          essential: true
+          zoom: 14,
+          essential: true,
+          duration:500
         });
       }
+    },
+    getCenter: () => {
+      if (map.current) {
+        const center = map.current.getCenter();
+        return [center.lng, center.lat];
+      }
+      return null;
     },
     addMarker: (lng: number, lat: number, type: 'default' | 'start' | 'end' | 'waypoint' = 'default', draggable: boolean = false, index?: number) => {
       if (map.current) {
@@ -214,8 +223,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
           routes.current.push(routeId);
         } else {
           // Update existing source
-          const source = map.current.getSource(routeId);
-          if (source && typeof source.setData === 'function') {
+
+          const source = map.current.getSource(routeId) 
+          // check if source is  vietmapgl.GeoJSONSource;
+          
+          if (source && source instanceof vietmapgl.GeoJSONSource && typeof source.setData === 'function') {
             source.setData({
               type: 'Feature',
               properties: {},

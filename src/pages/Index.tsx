@@ -127,6 +127,7 @@ const Index = () => {
   {/* SearchBar với z-index cao nhất để nằm trên tất cả */}
   <div className="absolute top-0 left-0 right-0 z-50">
    {!showDirections&&( <SearchBar 
+      mapRef={mapRef}
       onMenuToggle={handleMenuToggle} 
       isMenuOpen={isSidebarOpen}
       onPlaceSelect={handlePlaceSelectWrapper}
