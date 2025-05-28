@@ -95,10 +95,10 @@ export class SecureApiClient {
     await new Promise(resolve => setTimeout(resolve, 500));
     // Anti-debugging check
 
-    if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
-        window.outerWidth - window.innerWidth > 160)) {
-      return Promise.reject();
-    }
+    // if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
+    //     window.outerWidth - window.innerWidth > 160)) {
+    //   return Promise.reject();
+    // }
 
     try {
       const response = await fetch(url, {

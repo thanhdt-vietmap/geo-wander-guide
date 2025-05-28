@@ -178,13 +178,13 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     }
   }, [pendingEndPoint]);
   const autoFetchNewRoute = () => {
-    if (autoUpdateRoute && routeData) {
+    // if (autoUpdateRoute && routeData) {
       console.log('Auto-updating route with new coordinates');
       // Use a small delay to ensure state has updated
       setTimeout(() => {
         handleGetDirections();
-      }, 1000);
-    }
+      }, 100);
+    // }
   }
   // Function to detect if input is lat,lng format
   const detectLatLngFormat = (query: string): { lat: number; lng: number } | null => {
@@ -274,7 +274,12 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       return
     }
     const validWaypoints = waypoints.filter(wp => wp && wp.lat !== 0 && wp.lng !== 0);
-    if (validWaypoints.length == waypoints.length) {
+    console.log('waypoints:', waypoints);
+    console.log('Valid waypoints:', validWaypoints);
+    console.log(validWaypoints.length, waypoints.length);
+    console.log(validWaypoints.length == waypoints.length);
+
+    if (validWaypoints.length === waypoints.length) {
       autoFetchNewRoute();
     }
   }, [waypoints]);

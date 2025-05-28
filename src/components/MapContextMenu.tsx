@@ -70,7 +70,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   }, [isOpen, onClose]);
 
   const copyCoordinates = () => {
-    const coordString = `${lng.toFixed(6)}, ${lat.toFixed(6)}`;
+    const coordString = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     navigator.clipboard.writeText(coordString)
       .then(() => toast.success('Coordinates copied to clipboard'))
       .catch(() => toast.error('Failed to copy coordinates'));

@@ -97,7 +97,7 @@ const MapControls: React.FC<MapControlsProps> = ({
       {/* Main Controls Group */}
       <div className="flex flex-col gap-2">
         {/* Location Button */}
-        <Button
+        {/* <Button
           variant="outline"
           size="icon"
           onClick={handleGetLocation}
@@ -106,7 +106,7 @@ const MapControls: React.FC<MapControlsProps> = ({
           title="Get current location"
         >
           <MapPin className={`h-4 w-4 ${isGettingLocation ? 'animate-pulse' : ''}`} />
-        </Button>
+        </Button> */}
         
         {/* 3D Toggle Button */}
         <Button
