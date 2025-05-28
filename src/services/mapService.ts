@@ -1,6 +1,6 @@
 
 import { PlaceDetails } from '@/types';
-import { SecureApiClient } from './secureApiClient';
+import { apiService } from './apiService';
 
 export interface ReverseGeocodingResponse {
   lat: number;
@@ -20,14 +20,12 @@ export interface ReverseGeocodingResponse {
   categories: any[];
 }
 
-const apiClient = SecureApiClient.getInstance();
-
 export const getReverseGeocoding = async (
   lng: number,
   lat: number
 ): Promise<PlaceDetails> => {
   try {
-    const data: ReverseGeocodingResponse[] = await apiClient.get('/reverse/v3', {
+    const data: ReverseGeocodingResponse[] = await apiService.get('/reverse/v3', {
       lng: lng.toString(),
       lat: lat.toString()
     });

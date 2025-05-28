@@ -3,11 +3,9 @@ import { useEffect } from 'react';
 import { useAppDispatch } from '@/store/hooks';
 import { setSelectedPlace, setLocationInfo } from '@/store/slices/locationSlice';
 import { setPlaceDetailCollapsed, setShowDirections } from '@/store/slices/uiSlice';
-import { SecureApiClient } from '@/services/secureApiClient';
+import { apiService } from '@/services/apiService';
 import { PlaceDetails } from '@/types';
 import { toast } from '@/hooks/use-toast';
-
-const apiClient = SecureApiClient.getInstance();
 
 export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDetails) => void) => {
   const dispatch = useAppDispatch();
@@ -25,7 +23,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
         dispatch(setSelectedPlace(null));
         dispatch(setPlaceDetailCollapsed(false));
         dispatch(setShowDirections(false));
-        const data = await apiClient.get<any[]>('/reverse/v3', {
+        const data = await apiService.get<any[]>('/reverse/v3', {
           lng: lng.toString(),
           lat: lat.toString()
         });
@@ -74,7 +72,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
       try {
         console.log('Loading place from URL parameter:', placeId);
         
-        const placeDetails: PlaceDetails = await apiClient.get('/place/v3', {
+        const placeDetails: PlaceDetails = await apiService.get('/place/v3', {
           refid: placeId
         });
         
