@@ -14,7 +14,7 @@ export class ApiService {
     this.secureClient = SecureApiClient.getInstance();
     this.config = {
       useProxy: false,
-      proxyBaseUrl: '/api',
+      proxyBaseUrl: '/proxy',
       ...config
     };
   }
@@ -28,7 +28,7 @@ export class ApiService {
     if (this.config.useProxy) {
       return this.proxyRequest<T>(method, endpoint, params, body);
     } else {
-      return this.secureClient.makeRequest<T>(method, endpoint, params, body);
+      return this.secureClient.makeApiClientRequest<T>(method, endpoint, params, body);
     }
   }
 

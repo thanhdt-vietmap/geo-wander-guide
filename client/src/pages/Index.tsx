@@ -1,24 +1,23 @@
 import React, { useRef, useCallback, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setSidebarOpen, setPlaceDetailCollapsed } from '@/store/slices/uiSlice';
-import { setLocationInfo } from '@/store/slices/locationSlice';
-import { setCurrentLayer, setMapRef } from '@/store/slices/mapSlice';
-import { useMapHandlers } from '@/hooks/useMapHandlers';
-import { useLocationOperations } from '@/hooks/useLocationOperations';
-import { useDirectionOperations } from '@/hooks/useDirectionOperations';
-import { usePlaceOperations } from '@/hooks/usePlaceOperations';
-import { useUrlPlaceLoader } from '@/hooks/useUrlPlaceLoader';
-import MapView, { MapViewRef } from '@/components/MapView';
-import SearchBar from '@/components/SearchBar';
-import Sidebar from '@/components/Sidebar';
-import MapControls from '@/components/MapControls';
-import PlaceDetails from '@/components/PlaceDetails';
-import Direction, { DirectionRef } from '@/components/Direction';
-import MapContextMenu from '@/components/MapContextMenu';
-import LocationInfoCard from '@/components/LocationInfoCard';
-import { PlaceDetails as PlaceDetailsType } from '@/types';
-import { MapLayerType } from '@/components/MapLayerSelector';
-
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setSidebarOpen, setPlaceDetailCollapsed } from '../store/slices/uiSlice';
+import { setLocationInfo } from '../store/slices/locationSlice';
+import { setCurrentLayer, setMapRef } from '../store/slices/mapSlice';
+import { useMapHandlers } from '../hooks/useMapHandlers';
+import { useLocationOperations } from '../hooks/useLocationOperations';
+import { useDirectionOperations } from '../hooks/useDirectionOperations';
+import { usePlaceOperations } from '../hooks/usePlaceOperations';
+import { useUrlPlaceLoader } from '../hooks/useUrlPlaceLoader';
+import MapView, { MapViewRef } from '../components/MapView';
+import SearchBar from '../components/SearchBar';
+import Sidebar from '../components/Sidebar';
+import MapControls from '../components/MapControls';
+import PlaceDetails from '../components/PlaceDetails';
+import Direction, { DirectionRef } from '../components/Direction';
+import MapContextMenu from '../components/MapContextMenu';
+import LocationInfoCard from '../components/LocationInfoCard';
+import { PlaceDetails as PlaceDetailsType } from '../types';
+import { MapLayerType } from '../components/MapLayerSelector';
 const Index = () => {
   const dispatch = useAppDispatch();
   
@@ -87,7 +86,7 @@ const Index = () => {
   };
 
   const canAddWaypoint = showDirections && directionRef.current?.hasValidInputs?.();
-
+ 
   // Map click handler with proper dependencies
   const onMapClick = useCallback(
     (e: { lngLat: [number, number] }) => handleMapClick(e, mapRef),

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../components/ui/button';
 import { Map as MapIcon } from 'lucide-react';
 
 interface RouteSummary {

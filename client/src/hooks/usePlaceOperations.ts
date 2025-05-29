@@ -1,11 +1,11 @@
 
 import { useCallback } from 'react';
-import { useAppDispatch } from '@/store/hooks';
-import { setSelectedPlace, setLocationInfo } from '@/store/slices/locationSlice';
-import { setPlaceDetailCollapsed, setShowDirections } from '@/store/slices/uiSlice';
-import { PlaceDetails } from '@/types';
-import { MapViewRef } from '@/components/MapView';
-import { toast } from '@/hooks/use-toast';
+import { useAppDispatch } from '../store/hooks';
+import { setSelectedPlace, setLocationInfo } from '../store/slices/locationSlice';
+import { setPlaceDetailCollapsed, setShowDirections } from '../store/slices/uiSlice';
+import { PlaceDetails } from '../types';
+import { MapViewRef } from '../components/MapView';
+import { toast } from '../hooks/use-toast';
 
 export const usePlaceOperations = () => {
   const dispatch = useAppDispatch();

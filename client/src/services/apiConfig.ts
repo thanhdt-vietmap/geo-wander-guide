@@ -2,7 +2,7 @@
 import { apiService } from './apiService';
 
 export class ApiConfig {
-  static enableProxyMode(proxyBaseUrl: string = '/api') {
+  static enableProxyMode(proxyBaseUrl: string = '/proxy') {
     console.log('Switching to proxy mode with base URL:', proxyBaseUrl);
     apiService.setProxyMode(true, proxyBaseUrl);
   }

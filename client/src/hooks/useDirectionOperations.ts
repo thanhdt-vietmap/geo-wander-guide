@@ -1,10 +1,10 @@
 
 import { useCallback, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setStartingPlace, setSelectedPlace, setLocationInfo } from '@/store/slices/locationSlice';
-import { setShowDirections } from '@/store/slices/uiSlice';
-import { DirectionRef } from '@/components/Direction';
-import { MapViewRef } from '@/components/MapView';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setStartingPlace, setSelectedPlace, setLocationInfo } from '../store/slices/locationSlice';
+import { setShowDirections } from '../store/slices/uiSlice';
+import { DirectionRef } from '../components/Direction';
+import { MapViewRef } from '../components/MapView';
 
 export const useDirectionOperations = () => {
   const dispatch = useAppDispatch();

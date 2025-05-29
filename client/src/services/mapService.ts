@@ -1,5 +1,5 @@
 
-import { PlaceDetails } from '@/types';
+import { PlaceDetails } from '../types';
 import { apiService } from './apiService';
 
 export interface ReverseGeocodingResponse {

@@ -47,7 +47,7 @@ const _0x7d3c = (key: string, fallback: string, index: number): string => {
 export const ENV = {
   VIETMAP_API_KEY: _0x7d3c('VITE_VIETMAP_API_KEY', '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841', 1),
   VIETMAP_BASE_URL: _0x7d3c('VITE_VIETMAP_BASE_URL', 'https://maps.vietmap.vn/api', 0),
-  HMAC_SECRET: _0x7d3c('VITE_HMAC_SECRET', 'your-hmac-secret-key', 2),
+  HMAC_SECRET: _0x7d3c('VITE_HMAC_SECRET', 'aW5zdGFuY2U=', 2),
   FOCUS_COORDINATES: _0x7d3c('VITE_FOCUS_COORDINATES', '21.0285,105.8342', 3)
 };
 

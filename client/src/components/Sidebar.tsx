@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { MapPin, Route, Clock, Star, Settings, Info, Home, BookOpen, Code, FileText, DollarSign, LogIn } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Button } from '../components/ui/button';
+import { Separator } from '../components/ui/separator';
 
 interface SidebarProps {
   isOpen: boolean;

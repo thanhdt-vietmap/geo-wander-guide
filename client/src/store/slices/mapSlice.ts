@@ -1,7 +1,7 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { MapLayerType } from '@/components/MapLayerSelector';
-import type { MapViewRef } from '@/components/MapView';
+import { MapLayerType } from '../../components/MapLayerSelector';
+import type { MapViewRef } from '../../components/MapView';
 
 interface MapState {
   currentLayer: MapLayerType;

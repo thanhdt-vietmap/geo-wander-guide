@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Layers, ZoomIn, ZoomOut, Navigation, RotateCcw, Compass, MapPin, Rotate3d } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import type { MapViewRef } from './MapView';
 import MapLayerSelector, { MapLayerType } from './MapLayerSelector';

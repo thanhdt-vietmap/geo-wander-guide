@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
 import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
-import { mapUtils } from '@/utils/utils';
+import { mapUtils } from '../utils/utils';
 
 export interface MapViewRef {
   map: any;
@@ -37,7 +37,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   onMapStyleChange 
 }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<vietmapgl.Map>(null);
+  const map = useRef<vietmapgl.Map | null>(null);
   const markers = useRef<{ marker: any; index?: number }[]>([]);
   const routes = useRef<string[]>([]);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -248,10 +248,10 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     removeRoutes: () => {
       if (map.current) {
         routes.current.forEach((routeId) => {
-          if (map.current.getLayer(routeId)) {
+          if (map?.current?.getLayer(routeId)) {
             map.current.removeLayer(routeId);
           }
-          if (map.current.getSource(routeId)) {
+          if (map.current?.getSource(routeId)) {
             map.current.removeSource(routeId);
           }
         });
@@ -267,7 +267,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       if (map.current) {
         // First set all routes to less opacity
         routes.current.forEach((id) => {
-          if (map.current.getLayer(id)) {
+          if (map.current?.getLayer(id)) {
             map.current.setPaintProperty(id, 'line-opacity', 0.5);
             map.current.setPaintProperty(id, 'line-width', 3);
           }

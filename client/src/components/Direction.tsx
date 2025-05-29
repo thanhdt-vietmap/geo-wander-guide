@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { ArrowUpDown, Plus, Navigation } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { toast } from '@/hooks/use-toast';
+import { Button } from '../components/ui/button';
+import { Separator } from '../components/ui/separator';
+import { toast } from '../hooks/use-toast';
 import SearchSuggestions from './SearchSuggestions';
 import RouteDetails from './RouteDetails';
 import DirectionHeader from './direction/DirectionHeader';
 import VehicleSelector from './direction/VehicleSelector';
 import WaypointInput from './direction/WaypointInput';
 import RouteList from './direction/RouteList';
-import { SecureApiClient } from '@/services/secureApiClient';
-import { getReverseGeocoding } from '@/services/mapService';
-import { ENV } from '@/config/environment';
+import { SecureApiClient } from '../services/secureApiClient';
+import { getReverseGeocoding } from '../services/mapService';
+import { ENV } from '../config/environment';
 import { MapViewRef } from './MapView';
 
 // Utility function to decode Google's polyline format
 function decodePolyline(polyline: string) {
-  const points = [];
+  const points: [number, number][] = [];
   let index = 0;
   const len = polyline.length;
   let lat = 0;
@@ -680,7 +680,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
           validWaypoints.forEach((wp, index) => {
             const isStart = index === 0;
             const isEnd = index === validWaypoints.length - 1;
-            mapRef.current.addMarker(
+            mapRef?.current?.addMarker(
               wp.lng,
               wp.lat,
               isStart ? 'start' : isEnd ? 'end' : 'waypoint',

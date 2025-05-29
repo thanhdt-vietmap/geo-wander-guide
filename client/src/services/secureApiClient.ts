@@ -1,6 +1,7 @@
 
-import { ENV } from '@/config/environment';
+import { ENV } from '../config/environment';
 import { HMACService } from './hmacService';
+import {apiClient} from '../api/client';
 
 // Obfuscated class name mapping
 const _0x2f8a = {
@@ -95,11 +96,11 @@ export class SecureApiClient {
     await new Promise(resolve => setTimeout(resolve, 500));
     // Anti-debugging check
 
-    if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
-        window.outerWidth - window.innerWidth > 160)) {
-      return Promise.reject();
-    }
-
+    // if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
+    //     window.outerWidth - window.innerWidth > 160)) {
+    //   return Promise.reject();
+    // }
+    this.getUserInfo();
     try {
       const response = await fetch(url, {
         method,
@@ -121,10 +122,50 @@ export class SecureApiClient {
 
   // Convenience methods with obfuscated names internally
   public async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-    return this.makeRequest<T>('GET', endpoint, params);
+    return this.makeApiClientRequest<T>('GET', endpoint, params);
   }
 
   public async post<T>(endpoint: string, body?: any, params?: Record<string, string>): Promise<T> {
-    return this.makeRequest<T>('POST', endpoint, params, body);
+    return this.makeApiClientRequest<T>('POST', endpoint, params, body);
+  }
+  public getUserInfo = () => {
+    apiClient.get('/users')
+      .then(response => {
+        console.log('User info fetched:', response);
+        // Handle user info as needed
+      }
+      )
+      .catch(error => {
+        console.error('Error fetching user info:', error);
+      }
+    );
+  }
+
+  // Make request using apiClient
+
+  public async makeApiClientRequest<T>(
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    endpoint: string,
+    params?: Record<string, string>,
+    body?: any
+  ): Promise<T> {
+
+    // const url = this._0x2d8f(endpoint, params);
+    const bodyString = body ? JSON.stringify(body) : undefined;
+
+    // Generate HMAC headers
+    const authHeaders = this._0x8d2f.generateAuthHeaders(method, 'maps.vietmap.vn', bodyString);
+
+    const headers: HeadersInit = {
+      [atob('Q29udGVudC1UeXBl')]: atob('YXBwbGljYXRpb24vanNvbg=='),
+      ...authHeaders
+    };
+
+    try {
+      return await apiClient.makeRequest<T>(method, endpoint, params,headers, bodyString);
+    } catch (error) {
+      console.error(`API request error for ${endpoint}:`, error);
+      throw error;
+    }
   }
 }

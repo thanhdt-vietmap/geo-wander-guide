@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 import SearchSuggestions from './SearchSuggestions';
-import { toast } from '@/hooks/use-toast';
-import { SecureApiClient } from '@/services/secureApiClient';
-import { getReverseGeocoding } from '@/services/mapService';
-import { ENV } from '@/config/environment';
-import { useUrlPlaceLoader } from '@/hooks/useUrlPlaceLoader';
+import { toast } from '../hooks/use-toast';
+import { SecureApiClient } from '../services/secureApiClient';
+import { getReverseGeocoding } from '../services/mapService';
+import { ENV } from '../config/environment';
+import { useUrlPlaceLoader } from '../hooks/useUrlPlaceLoader';
 import { MapViewRef } from './MapView';
 
 interface SearchResult {
@@ -217,7 +217,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setSearchQuery('');
     setSuggestions([]);
     setShowSuggestions(false);
-    onClose();
+    if(onClose){
+    onClose();}
   };
 
   const handleInputFocus = () => {

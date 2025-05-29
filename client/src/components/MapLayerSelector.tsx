@@ -1,9 +1,10 @@
 
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+// import { Button } from '@/client/src/components/ui/button';
+import { Button } from './../components/ui/button';
+import { Separator } from '../components/ui/separator';
+import { cn } from '../lib/utils';
 
 export type MapLayerType = 'vector' | 'light' | 'dark' | 'hybrid' | 'satellite' | 'raster' | 'vector-dark' | 'vector-light';
 

@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { Navigation, BookmarkIcon, Share2, Edit, MapPin, Building, Tag, Clock, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from "@/components/ui/separator";
+import { Button } from '../components/ui/button';
+import { Separator } from "../components/ui/separator";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-} from "@/components/ui/drawer";
-import { toast } from '@/hooks/use-toast';
+} from "../components/ui/drawer";
+import { toast } from '../hooks/use-toast';
 
 interface PlaceDetailsProps {
   place: {

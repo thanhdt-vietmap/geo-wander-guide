@@ -1,11 +1,11 @@
 
 import { useEffect } from 'react';
-import { useAppDispatch } from '@/store/hooks';
-import { setSelectedPlace, setLocationInfo } from '@/store/slices/locationSlice';
-import { setPlaceDetailCollapsed, setShowDirections } from '@/store/slices/uiSlice';
-import { apiService } from '@/services/apiService';
-import { PlaceDetails } from '@/types';
-import { toast } from '@/hooks/use-toast';
+import { useAppDispatch } from '../store/hooks';
+import { setSelectedPlace, setLocationInfo } from '../store/slices/locationSlice';
+import { setPlaceDetailCollapsed, setShowDirections } from '../store/slices/uiSlice';
+import { apiService } from '../services/apiService';
+import { PlaceDetails } from '../types';
+import { toast } from '../hooks/use-toast';
 
 export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDetails) => void) => {
   const dispatch = useAppDispatch();

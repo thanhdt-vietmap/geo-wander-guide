@@ -1,10 +1,10 @@
 
 import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { getReverseGeocoding } from '@/services/mapService';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setContextMenu, closeContextMenu } from '@/store/slices/mapSlice';
-import { setLocationInfo, setSelectedPlace } from '@/store/slices/locationSlice';
+import { getReverseGeocoding } from '../services/mapService';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setContextMenu, closeContextMenu } from '../store/slices/mapSlice';
+import { setLocationInfo, setSelectedPlace } from '../store/slices/locationSlice';
 
 export const useMapHandlers = () => {
   const dispatch = useAppDispatch();

@@ -1,5 +1,5 @@
 
-import { ENV } from '@/config/environment';
+import { ENV } from '../config/environment';
 
 /**
  * {
