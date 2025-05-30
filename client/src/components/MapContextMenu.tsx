@@ -170,8 +170,8 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
             const coordString = `lat=${lat.toFixed(6)}&lng=${lng.toFixed(6)}`;
             const shareUrl = `${window.location.origin}${window.location.pathname}?${coordString}`;
             navigator.clipboard.writeText(shareUrl)
-              .then(() => toast.success('Coordinates copied to clipboard'))
-              .catch(() => toast.error('Failed to copy coordinates'));
+              .then(() => toast.success('Shared coordinates copied to clipboard'))
+              .catch(() => toast.error('Failed to copy shared coordinates'));
             onClose();
           }}
           className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
@@ -192,7 +192,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
               className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
             >
               <Navigation className="mr-2 h-4 w-4 text-green-600" />
-              <span>Chọn làm điểm bắt đầu</span>
+              <span>Direction from here</span>
             </button>
 
             {/* Set as End Point */}
@@ -201,7 +201,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
               className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
             >
               <Navigation className="mr-2 h-4 w-4 text-red-600 rotate-180" />
-              <span>Chọn làm điểm kết thúc</span>
+              <span>Direction to here</span>
             </button>
 
             {/* Add Waypoint (only if Direction is open and inputs have values) */}
@@ -211,7 +211,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
                 className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
               >
                 <Plus className="mr-2 h-4 w-4 text-blue-600" />
-                <span>Thêm điểm đến</span>
+                <span>Add stop</span>
               </button>
             )}
           </>

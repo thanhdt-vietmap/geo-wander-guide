@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
 import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
@@ -23,7 +24,7 @@ export interface MapViewRef {
 
 interface MapViewProps {
   className?: string;
-  onContextMenu?: (e: { lngLat: [number, number] }) => void;
+  onContextMenu?: (e: { lngLat: [number, number]; originalEvent?: MouseEvent }) => void;
   onClick?: (e: { lngLat: [number, number] }) => void;
   initialMapStyle?: string;
   onMapStyleChange?: (styleType: string) => void;
@@ -59,11 +60,16 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   // Track if the user is dragging to prevent context menu on drag end
   const isDragging = useRef(false);
   const clickStartPos = useRef<[number, number] | null>(null);
+  const mouseDownTime = useRef<number>(0);
 
   // Use useCallback to memoize event handlers and prevent unnecessary re-renders
   const handleMouseDown = useCallback((e: any) => {
+    mouseDownTime.current = Date.now();
+    
     if (e.originalEvent.button === 2) {
+      // Right click
       isDragging.current = false;
+      console.log('Right click detected');
     } else if (e.originalEvent.button === 0 && onClick) {
       clickStartPos.current = [e.point.x, e.point.y];
       isDragging.current = false;
@@ -71,20 +77,39 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   }, [onClick]);
 
   const handleMouseMove = useCallback(() => {
-    isDragging.current = true;
+    // Only consider it dragging if mouse has been down for a bit and moved
+    if (Date.now() - mouseDownTime.current > 50) {
+      isDragging.current = true;
+    }
   }, []);
 
   const handleContextMenu = useCallback((e: any) => {
-    // Prevent default browser context menu
-    e.preventDefault();
+    console.log('handleContextMenu called:', {
+      isDragging: isDragging.current,
+      button: e.originalEvent?.button,
+      which: e.originalEvent?.which,
+      lngLat: [e.lngLat.lng, e.lngLat.lat],
+      clientX: e.originalEvent?.clientX,
+      clientY: e.originalEvent?.clientY
+    });
     
-    // Only trigger if not dragging
+    // Always prevent the default browser context menu
+    if (e.originalEvent) {
+      e.originalEvent.preventDefault();
+      e.originalEvent.stopPropagation();
+    }
+    
+    // Only trigger our custom context menu if not dragging
     if (!isDragging.current && onContextMenu) {
+      console.log('Triggering custom context menu');
       onContextMenu({
-        lngLat: [e.lngLat.lng, e.lngLat.lat]
+        lngLat: [e.lngLat.lng, e.lngLat.lat],
+        originalEvent: e.originalEvent
       });
     }
+    
     isDragging.current = false;
+    return false;
   }, [onContextMenu]);
 
   const handleMouseUp = useCallback((e: any) => {
@@ -111,6 +136,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
 
   // Get the appropriate map style based on the layer type
   const getMapStyle = (layerType: string) => {
+    // ... keep existing code (getMapStyle function)
     switch (layerType) {
       case 'light':
         return mapUtils.getVietMapLightRasterTileLayer();
@@ -134,6 +160,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
 
   // Expose map methods to parent components
   useImperativeHandle(ref, () => ({
+    // ... keep existing code (all map methods)
     map: map.current,
     flyTo: (lng: number, lat: number) => {
       if (map.current) {
@@ -248,11 +275,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     removeRoutes: () => {
       if (map.current) {
         routes.current.forEach((routeId) => {
-          if (map?.current?.getLayer(routeId)) {
-            map.current.removeLayer(routeId);
+          if (map.current?.getLayer(routeId)) {
+            map.current?.removeLayer(routeId);
           }
           if (map.current?.getSource(routeId)) {
-            map.current.removeSource(routeId);
+            map.current?.removeSource(routeId);
           }
         });
         routes.current = [];
@@ -268,8 +295,8 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         // First set all routes to less opacity
         routes.current.forEach((id) => {
           if (map.current?.getLayer(id)) {
-            map.current.setPaintProperty(id, 'line-opacity', 0.5);
-            map.current.setPaintProperty(id, 'line-width', 3);
+            map.current?.setPaintProperty(id, 'line-opacity', 0.5);
+            map.current?.setPaintProperty(id, 'line-width', 3);
           }
         });
 
@@ -343,7 +370,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
               resolve(position);
             },
             (error) => {
-              // console.error('Error getting location:', error);
+              console.error('Error getting location:', error);
               resolve(null);
             },
             {
@@ -353,7 +380,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
             }
           );
         } else {
-          // console.error('Geolocation is not supported by this browser.');
+          console.error('Geolocation is not supported by this browser.');
           resolve(null);
         }
       });
@@ -395,11 +422,46 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   useEffect(() => {
     if (!isMapLoaded || !map.current) return;
 
+    console.log('Adding event listeners to map');
+
     // Register the event listeners
     map.current.on('mousedown', handleMouseDown);
     map.current.on('mousemove', handleMouseMove);
     map.current.on('contextmenu', handleContextMenu);
     map.current.on('mouseup', handleMouseUp);
+
+    // Also listen for right click on the container directly
+    const handleContainerContextMenu = (e: MouseEvent) => {
+      console.log('Container context menu event:', e);
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (!isDragging.current && onContextMenu && map.current) {
+        // Convert pixel coordinates to lng/lat
+        const rect = mapContainer.current?.getBoundingClientRect();
+        if (rect) {
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          try {
+            const lngLat = map.current.unproject([x, y]);
+            console.log('Triggering context menu from container event');
+            onContextMenu({
+              lngLat: [lngLat.lng, lngLat.lat],
+              originalEvent: e
+            });
+          } catch (error) {
+            console.error('Error unprojecting coordinates:', error);
+          }
+        }
+      }
+      return false;
+    };
+
+    // Add event listener to the container element
+    if (mapContainer.current) {
+      mapContainer.current.addEventListener('contextmenu', handleContainerContextMenu);
+    }
 
     // Cleanup function to remove event listeners
     return () => {
@@ -409,13 +471,21 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         map.current.off('contextmenu', handleContextMenu);
         map.current.off('mouseup', handleMouseUp);
       }
+      if (mapContainer.current) {
+        mapContainer.current.removeEventListener('contextmenu', handleContainerContextMenu);
+      }
     };
-  }, [isMapLoaded, handleMouseDown, handleMouseMove, handleContextMenu, handleMouseUp]);
+  }, [isMapLoaded, handleMouseDown, handleMouseMove, handleContextMenu, handleMouseUp, onContextMenu]);
 
   return (
     <div 
       ref={mapContainer} 
       className={`w-full h-full ${className}`}
+      onContextMenu={(e) => {
+        console.log('React onContextMenu triggered');
+        e.preventDefault();
+        return false;
+      }}
     />
   );
 });
