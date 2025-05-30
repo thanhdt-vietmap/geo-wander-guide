@@ -13,7 +13,7 @@ export const useMapHandlers = () => {
   const { selectedPlace } = useAppSelector((state) => state.location);
 
   const handleMapContextMenu = useCallback((e: { lngLat: [number, number] }) => {
-    console.log('Context menu triggered at:', e.lngLat);
+    // console.log('Context menu triggered at:', e.lngLat);
     
     let x = 100;
     let y = 100;
@@ -24,7 +24,7 @@ export const useMapHandlers = () => {
       y = mouseEvent.clientY;
     }
     
-    console.log('Setting context menu at position:', { x, y });
+    // console.log('Setting context menu at position:', { x, y });
     
     dispatch(setContextMenu({
       isOpen: true,
@@ -58,7 +58,7 @@ export const useMapHandlers = () => {
       }
     } catch (error) {
       toast.error('Failed to get location details');
-      console.error(error);
+      // console.error(error);
     }
   }, [contextMenu?.isOpen, showDirections, selectedPlace, dispatch]);
 

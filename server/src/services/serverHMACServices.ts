@@ -52,6 +52,8 @@ export class ServerHMACService {
     };
   }
   public verifyHMAC(method: string, url: string, timestamp: number, receivedSignature: string, body?:string): boolean {
+    // console.log(`Verifying HMAC for method: ${method}, url: ${url}, timestamp: ${timestamp}`);
+
     const expectedSignature = this.generateHMAC(method, 'maps.vietmap.vn', timestamp, body);
     return expectedSignature === receivedSignature;
 }

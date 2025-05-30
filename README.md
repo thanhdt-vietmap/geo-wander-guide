@@ -89,3 +89,32 @@ If you want to deploy this project to your own VPS, you can follow these steps:
     ```sh
     sudo systemctl reload nginx
     ```
+
+## Docker
+`docker build --platform linux/amd64 -t vmlivemap .`
+
+`docker save -o vmlivemap.tar vmlivemap:latest`
+
+`scp vmlivemap.tar root@103.6.235.215:/root/`
+
+
+## VPS
+
+`docker stop vmlivemap-container`
+
+`docker rm vmlivemap-container`
+
+`docker image prune -a`
+
+`docker load -i vmlivemap.tar`
+
+`docker run -d --name vmlivemap-container -p 5665:5005 vmlivemap:latest`
+
+
+Reload nginx
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+
+```

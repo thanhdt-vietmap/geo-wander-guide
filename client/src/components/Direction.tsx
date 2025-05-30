@@ -179,7 +179,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   }, [pendingEndPoint]);
   const autoFetchNewRoute = () => {
     // if (autoUpdateRoute && routeData) {
-      console.log('Auto-updating route with new coordinates');
+
       // Use a small delay to ensure state has updated
       setTimeout(() => {
         handleGetDirections();
@@ -222,9 +222,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       setShowSuggestions(false);
       setActiveInputIndex(null);
 
-      console.log('Reverse geocoding result for waypoint', index, ':', placeDetails);
+      // // console.log('Reverse geocoding result for waypoint', index, ':', placeDetails);
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
+      // console.error('Reverse geocoding error:', error);
       toast({
         title: "Lỗi tìm kiếm tọa độ",
         description: "Không thể tìm thấy thông tin vị trí cho tọa độ này",
@@ -274,10 +274,10 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       return
     }
     const validWaypoints = waypoints.filter(wp => wp && wp.lat !== 0 && wp.lng !== 0);
-    console.log('waypoints:', waypoints);
-    console.log('Valid waypoints:', validWaypoints);
-    console.log(validWaypoints.length, waypoints.length);
-    console.log(validWaypoints.length == waypoints.length);
+    // console.log('waypoints:', waypoints);
+    // console.log('Valid waypoints:', validWaypoints);
+    // console.log(validWaypoints.length, waypoints.length);
+    // console.log(validWaypoints.length == waypoints.length);
 
     if (validWaypoints.length === waypoints.length) {
       autoFetchNewRoute();
@@ -320,7 +320,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     },
     updateWaypointCoordinates: async (index: number, lng: number, lat: number) => {
       try {
-        console.log(`Updating waypoint ${index} to coordinates: ${lng}, ${lat}`);
+        // console.log(`Updating waypoint ${index} to coordinates: ${lng}, ${lat}`);
 
         // Update the waypoint coordinates immediately without removing the marker
         setWaypoints(prev => {
@@ -329,7 +329,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
               ? { ...wp, lat: lat, lng: lng }
               : wp
           );
-          console.log('Updated waypoints with new coordinates:', newWaypoints);
+          // console.log('Updated waypoints with new coordinates:', newWaypoints);
           return newWaypoints;
         });
 
@@ -340,31 +340,31 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
           lat: lat.toString()
         });
 
-        console.log('Reverse geocoding response:', data);
+        // console.log('Reverse geocoding response:', data);
 
         if (data.length > 0) {
           // Update the waypoint name with reverse geocoding result
-          console.log('updating new waypoint', waypoints)
+          // console.log('updating new waypoint', waypoints)
           setWaypoints(prev => {
             const newWaypoints = prev.map((wp, i) =>
               i === index
                 ? { ...wp, name: data[0].display, ref_id: data[0].ref_id }
                 : wp
             );
-            console.log('Updated waypoints with location name:', newWaypoints);
+            // console.log('Updated waypoints with location name:', newWaypoints);
             return newWaypoints;
           });
-          console.log('Updated waypoint', waypoints);
+          // console.log('Updated waypoint', waypoints);
         }
 
 
         // Auto-update route immediately if we have routes already calculated
       } catch (error) {
-        console.error('Error getting location details:', error);
+        // console.error('Error getting location details:', error);
         // Still try to update route if reverse geocoding fails but we have coordinates
         if (autoUpdateRoute && routeData) {
           setTimeout(() => {
-            console.log('Updated waypoint', waypoints);
+            // console.log('Updated waypoint', waypoints);
             handleGetDirections();
           }, 100);
         }
@@ -437,7 +437,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       setSuggestions(data);
       setShowSuggestions(true);
     } catch (error) {
-      console.error('Search error:', error);
+      // console.error('Search error:', error);
       setSuggestions([]);
       toast({
         title: "Search error",
@@ -467,7 +467,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
       return data;
     } catch (error) {
-      console.error('Place error:', error);
+      // console.error('Place error:', error);
       toast({
         title: "Error loading place",
         description: "An error occurred while loading place details",
@@ -601,8 +601,8 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const handleGetDirections = async () => {
     const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
-    console.log('waypoints:', waypoints);
-    console.log('Valid waypoints:', validWaypoints);
+    // console.log('waypoints:', waypoints);
+    // console.log('Valid waypoints:', validWaypoints);
     if (validWaypoints.length < 2) {
       toast({
         title: "Invalid route",
@@ -634,7 +634,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       };
       // Do not modify this line, it is required for the API client
       const pointParamStrings = validWaypoints.map((wp, index) => `point=${wp.lat},${wp.lng}`).join('&');
-      console.log('Direction response:', pointParamStrings);
+      // console.log('Direction response:', pointParamStrings);
       const data: RouteResponse = await apiClient.get(`/route?${pointParamStrings}`, apiParams);
       setRouteData(data);
 
@@ -704,7 +704,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         description: "Select a route to see details",
       });
     } catch (error) {
-      console.error('Direction error:', error);
+      // console.error('Direction error:', error);
       toast({
         title: "Error getting directions",
         description: "An error occurred while calculating the route",

@@ -21,7 +21,7 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
   }, []);
 
   const handleShare = async () => {
-    console.log('Sharing place:', place);
+    // // // // console.log('Sharing place:', place);
     try {
       if (!place.ref_id) {
         toast({
@@ -40,7 +40,7 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
         description: "Liên kết chia sẻ đã được sao chép vào clipboard"
       });
     } catch (error) {
-      console.error('Error sharing place:', error);
+      // console.error('Error sharing place:', error);
       toast({
         title: "Lỗi chia sẻ",
         description: "Không thể sao chép liên kết chia sẻ",

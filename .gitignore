@@ -21,3 +21,6 @@ node_modules
 *.sln
 *.sw?
 .env
+*.tar
+/client/dist/
+/server/dist/

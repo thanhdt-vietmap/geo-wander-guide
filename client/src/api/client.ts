@@ -1,5 +1,5 @@
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '' 
+  ? 'https://maps.vietmap.us' 
   : 'http://localhost:5005';
 
 export const apiClient = {
@@ -34,8 +34,7 @@ export const apiClient = {
       Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
     }
     const bodyString = body ? JSON.stringify(body) : undefined;
-    console.log(`Making ${method} request to ${url.toString()} with body:`, bodyString);
-    console.log(`Headers:`, headers);
+
     const response = await fetch(url.toString(), {
       method,
       headers: headers || {

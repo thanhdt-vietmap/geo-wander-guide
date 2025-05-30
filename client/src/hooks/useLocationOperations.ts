@@ -22,7 +22,7 @@ export const useLocationOperations = () => {
       }
     } catch (error) {
       toast.error('Failed to get location details');
-      console.error(error);
+      // console.error(error);
     }
   }, [dispatch]);
 
@@ -40,7 +40,7 @@ export const useLocationOperations = () => {
       }
     } catch (error) {
       toast.error('Failed to set starting point');
-      console.error(error);
+      // console.error(error);
     }
   }, [dispatch]);
 
@@ -72,7 +72,7 @@ export const useLocationOperations = () => {
       }
     } catch (error) {
       toast.error('Failed to set end point');
-      console.error(error);
+      // console.error(error);
     }
   }, [dispatch]);
 
@@ -90,7 +90,7 @@ export const useLocationOperations = () => {
       }
     } catch (error) {
       toast.error('Failed to add waypoint');
-      console.error(error);
+      // console.error(error);
     }
   }, []);
 

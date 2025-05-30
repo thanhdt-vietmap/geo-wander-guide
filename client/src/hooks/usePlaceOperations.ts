@@ -38,7 +38,7 @@ export const usePlaceOperations = () => {
 
   const handleSharePlace = useCallback(async (place: PlaceDetails) => {
     try {
-      console.log('Sharing place:', place);
+      // console.log('Sharing place:', place);
       if (!place.ref_id) {
         toast({
           title: "Lỗi chia sẻ",
@@ -56,7 +56,7 @@ export const usePlaceOperations = () => {
         description: "Liên kết chia sẻ đã được sao chép vào clipboard"
       });
     } catch (error) {
-      console.error('Error sharing place:', error);
+      // console.error('Error sharing place:', error);
       toast({
         title: "Lỗi chia sẻ",
         description: "Không thể sao chép liên kết chia sẻ",

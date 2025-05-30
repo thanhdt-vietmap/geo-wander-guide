@@ -48,7 +48,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
   };
 
   const handleShare = async () => {
-    console.log('Sharing place:', place);
+    // console.log('Sharing place:', place);
     if (!place.ref_id) {
       toast({
         title: "Lỗi chia sẻ",
@@ -68,7 +68,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
         description: "Liên kết địa điểm đã được sao chép vào clipboard",
       });
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      // console.error('Failed to copy to clipboard:', error);
       toast({
         title: "Lỗi sao chép",
         description: "Không thể sao chép liên kết",

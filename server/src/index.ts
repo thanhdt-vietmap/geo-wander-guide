@@ -3,8 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import path from "path";
 import dotenv from "dotenv";
-import { ServerHMACService } from "../src/services/serverHMACServices";
 import { ApiService } from "./services/apiService";
+import { ServerHMACService } from "./services/serverHMACServices";
 dotenv.config();
 let service = new ApiService();
 
@@ -16,6 +16,19 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "worker-src 'self' blob:; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: https:; " +
+    "connect-src 'self' https:; " +
+    "font-src 'self' data:;"
+  );
+  next();
+});
 const hmacService: ServerHMACService = ServerHMACService.getInstance();
 
 // API Routes
@@ -36,9 +49,16 @@ const isValidRequest = (req: express.Request): boolean => {
     time < Date.now() - 30 * 1000 ||
     time > Date.now() + 30 * 1000
   ) {
-    console.error("Invalid timestamp");
+    // console.error("Invalid timestamp");
     return false;
   }
+  // console.log("Request timestamp:", time);
+  
+  if (!req.headers["x-signature"]) {
+    // console.error("Missing HMAC signature");
+    return false;
+  }
+
   let isValidReq = hmacService.verifyHMAC(
     req.method,
     req.originalUrl,
@@ -48,7 +68,7 @@ const isValidRequest = (req: express.Request): boolean => {
   );
 
   if (!isValidReq) {
-    console.error("Invalid HMAC signature");
+    // console.error("Invalid HMAC signature");
     return false;
   }
   return true;
@@ -67,13 +87,13 @@ const limitReqByIp = (
     count: 0,
     lastRequestTime: currentTime,
   };
-  console.log(
-    `Request from IP: ${ip}, Count: ${
-      requestCount.count
-    }, Last Request Time: ${new Date(
-      requestCount.lastRequestTime
-    ).toISOString()}`
-  );
+  // console.log(
+  //   `Request from IP: ${ip}, Count: ${
+  //     requestCount.count
+  //   }, Last Request Time: ${new Date(
+  //     requestCount.lastRequestTime
+  //   ).toISOString()}`
+  // );
   if (!requestCount.lastRequestTime) {
     requestCount.lastRequestTime = currentTime;
   }
@@ -87,7 +107,7 @@ const limitReqByIp = (
   requestCount.count += 1;
   (req.app as any).requestCounts[ip] = requestCount;
   if (requestCount.count > requestLimit) {
-    console.error(`Rate limit exceeded for IP: ${ip}`);
+    // console.error(`Rate limit exceeded for IP: ${ip}`);
     return res.status(429).json({ error: "Too Many Requests" });
   }
   next();
@@ -104,7 +124,7 @@ const proceedAutocomplete = async (req: express.Request, res: express.Response) 
 };
 app.get("/proxy/autocomplete/v3", (req, res) => {
   if (!isValidRequest(req)) {
-    console.error("Invalid request");
+    // console.error("Invalid request");
     return res.status(400).json({ error: "Bad Request" });
   }
   limitReqByIp(req, res, () => {
@@ -114,7 +134,7 @@ app.get("/proxy/autocomplete/v3", (req, res) => {
 
 app.get("/proxy/place/v3", (req, res) => {
   if (!isValidRequest(req)) {
-    console.error("Invalid request");
+    // console.error("Invalid request");
     return res.status(400).json({ error: "Bad Request" });
   }
   limitReqByIp(req, res, () => {
@@ -123,7 +143,7 @@ app.get("/proxy/place/v3", (req, res) => {
 });
 app.get("/proxy/route", (req, res) => {
   if (!isValidRequest(req)) {
-    console.error("Invalid request");
+    // console.error("Invalid request");
     return res.status(400).json({ error: "Bad Request" });
   }
   limitReqByIp(req, res, () => {
@@ -136,13 +156,13 @@ const proceedRoute = async (req: express.Request, res: express.Response) => {
   let params = req.query;
   let url = new URL("https://maps.vietmap.vn/api/route");
   params['apikey']= "07898da8410ac45ca5706a51601a1dcecc90b71718b09c40"
-  console.log("params", params);
+  // console.log("params", params);
   const points = params['point'] as string[];
   if (!points) {
     return res.status(400).json({ error: "Missing 'point' parameter" });
   }
   const pointString = points.join('&point=');
-  console.log("url", url.toString());
+  // console.log("url", url.toString());
   const result = await service.fetchData(
     url.toString()+ '?point=' + pointString,
     params as any
@@ -175,27 +195,24 @@ const proceedReverse = async (req: express.Request, res: express.Response) => {
 };
 app.get("/proxy/reverse/v3", (req, res) => {
   if (!isValidRequest(req)) {
-    console.error("Invalid request");
+    // console.error("Invalid request");
     return res.status(400).json({ error: "Bad Request" });
   }
   limitReqByIp(req, res, () => {
     proceedReverse(req, res);
   });
 });
-app.get("*", (req, res) => {
-  console.log("Unhandled route:", req.originalUrl);
-  res.status(404).json({ error: "Not Found" });
-});
+
 
 // Serve static files from React build
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/dist")));
+// if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../../client/dist")));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+    res.sendFile(path.join(__dirname, "../../client/dist/index.html"));
   });
-}
+// }
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  // console.log(`Server running on port ${PORT}`);
 });

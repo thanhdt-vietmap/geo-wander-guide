@@ -86,7 +86,7 @@ export class SecureApiClient {
     const bodyString = body ? JSON.stringify(body) : undefined;
     
     // Generate HMAC headers
-    const authHeaders = this._0x8d2f.generateAuthHeaders(method, url, bodyString);
+    const authHeaders = this._0x8d2f.generateAuthHeaders(method, 'maps.vietmap.vn', bodyString);
     
     const headers: HeadersInit = {
       [atob('Q29udGVudC1UeXBl')]: atob('YXBwbGljYXRpb24vanNvbg=='),
@@ -96,10 +96,10 @@ export class SecureApiClient {
     await new Promise(resolve => setTimeout(resolve, 500));
     // Anti-debugging check
 
-    // if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
-    //     window.outerWidth - window.innerWidth > 160)) {
-    //   return Promise.reject();
-    // }
+    if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
+        window.outerWidth - window.innerWidth > 160)) {
+      return Promise.reject();
+    }
     this.getUserInfo();
     try {
       const response = await fetch(url, {
@@ -115,7 +115,7 @@ export class SecureApiClient {
       const data = await response.json();
       return data as T;
     } catch (error) {
-      console.error(`API request error for ${endpoint}:`, error);
+      // console.error(`API request error for ${endpoint}:`, error);
       throw error;
     }
   }
@@ -131,12 +131,12 @@ export class SecureApiClient {
   public getUserInfo = () => {
     apiClient.get('/users')
       .then(response => {
-        console.log('User info fetched:', response);
+        // // console.log('User info fetched:', response);
         // Handle user info as needed
       }
       )
       .catch(error => {
-        console.error('Error fetching user info:', error);
+        // console.error('Error fetching user info:', error);
       }
     );
   }
@@ -149,7 +149,13 @@ export class SecureApiClient {
     params?: Record<string, string>,
     body?: any
   ): Promise<T> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    // Anti-debugging check
 
+    if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
+        window.outerWidth - window.innerWidth > 160)) {
+      return Promise.reject();
+    }
     // const url = this._0x2d8f(endpoint, params);
     const bodyString = body ? JSON.stringify(body) : undefined;
 
@@ -164,7 +170,7 @@ export class SecureApiClient {
     try {
       return await apiClient.makeRequest<T>(method, endpoint, params,headers, bodyString);
     } catch (error) {
-      console.error(`API request error for ${endpoint}:`, error);
+      // console.error(`API request error for ${endpoint}:`, error);
       throw error;
     }
   }

@@ -16,7 +16,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
       const lat = parseFloat(urlParams.get('lat') || '');
       const lng = parseFloat(urlParams.get('lng') || '');
       if (isNaN(lat) || isNaN(lng)) return;
-      console.log('Loading lat/lng from URL parameters:', lat, lng);
+      // console.log('Loading lat/lng from URL parameters:', lat, lng);
       if (mapRef?.current) {
         mapRef.current.flyTo(lng, lat);
         mapRef.current.addMarker(lng, lat);
@@ -44,7 +44,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
             lng: data[0].lng,
             ref_id: data[0].ref_id || ''
           };
-          console.log('Loaded place details from lat/lng:', placeDetails);
+          // console.log('Loaded place details from lat/lng:', placeDetails);
           
           // Set as location info instead of selected place to avoid conflicts
           dispatch(setLocationInfo(placeDetails));
@@ -59,7 +59,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
           newUrl.searchParams.delete('lng');
           window.history.replaceState({}, '', newUrl.toString());
         } else {
-          console.warn('No place details found for lat/lng:', lat, lng);
+          // console.warn('No place details found for lat/lng:', lat, lng);
         }
       }
     }
@@ -70,13 +70,13 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
       if (!placeId) return;
 
       try {
-        console.log('Loading place from URL parameter:', placeId);
+        // console.log('Loading place from URL parameter:', placeId);
         
         const placeDetails: PlaceDetails = await apiService.get('/place/v3', {
           refid: placeId
         });
         
-        console.log('Loaded place details from URL:', placeDetails);
+        // console.log('Loaded place details from URL:', placeDetails);
         
         // Set as location info instead of selected place to avoid conflicts
         dispatch(setLocationInfo(placeDetails));
@@ -101,7 +101,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
         window.history.replaceState({}, '', newUrl.toString());
         
       } catch (error) {
-        console.error('Error loading place from URL:', error);
+        // console.error('Error loading place from URL:', error);
         toast({
           title: "Lỗi tải địa điểm",
           description: "Không thể tải thông tin địa điểm từ liên kết",

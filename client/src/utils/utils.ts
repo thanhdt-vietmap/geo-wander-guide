@@ -28,7 +28,7 @@ import { ENV } from '../config/environment';
 class MapUtils {
   private getApiKey(): string {
     const apiKey = ENV.VIETMAP_API_KEY;
-    console.log('MapUtils using API key:', apiKey ? 'Present' : 'Missing');
+    // console.log('MapUtils using API key:', apiKey ? 'Present' : 'Missing');
     return apiKey;
   }
 
@@ -174,21 +174,21 @@ class MapUtils {
   getVietMapVectorTile = () => {
     const apiKey = this.getApiKey();
     const url = `https://maps.vietmap.vn/mt/tm/style.json?apikey=${apiKey}`;
-    console.log('Vector tile URL:', url);
+    // console.log('Vector tile URL:', url);
     return url;
   };
   
   getVietMapVectorDarkTile = () => {
     const apiKey = this.getApiKey();
     const url = `https://maps.vietmap.vn/mt/dm/style.json?apikey=${apiKey}`;
-    console.log('Vector dark tile URL:', url);
+    // console.log('Vector dark tile URL:', url);
     return url;
   };
 
   getVietMapLightVectorTile = () => {
     const apiKey = this.getApiKey();
     const url = `https://maps.vietmap.vn/mt/lm/style.json?apikey=${apiKey}`;
-    console.log('Light vector tile URL:', url);
+    // console.log('Light vector tile URL:', url);
     return url;
   };
 }

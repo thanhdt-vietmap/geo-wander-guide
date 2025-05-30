@@ -77,7 +77,7 @@ const MapControls: React.FC<MapControlsProps> = ({
         }
       } catch (error) {
         toast.error('Error getting location. Please try again.');
-        console.error('Location error:', error);
+        // console.error('Location error:', error);
       } finally {
         setIsGettingLocation(false);
       }

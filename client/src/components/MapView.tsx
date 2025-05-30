@@ -343,7 +343,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
               resolve(position);
             },
             (error) => {
-              console.error('Error getting location:', error);
+              // console.error('Error getting location:', error);
               resolve(null);
             },
             {
@@ -353,7 +353,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
             }
           );
         } else {
-          console.error('Geolocation is not supported by this browser.');
+          // console.error('Geolocation is not supported by this browser.');
           resolve(null);
         }
       });

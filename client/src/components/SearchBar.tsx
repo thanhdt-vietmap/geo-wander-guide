@@ -112,9 +112,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setSearchQuery(placeDetails.display);
       setShowSuggestions(false);
       
-      console.log('Reverse geocoding result:', placeDetails);
+      // console.log('Reverse geocoding result:', placeDetails);
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
+      // console.error('Reverse geocoding error:', error);
       toast({
         title: "Lỗi tìm kiếm tọa độ",
         description: "Không thể tìm thấy thông tin vị trí cho tọa độ này",
@@ -152,7 +152,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setSuggestions(data);
       setShowSuggestions(true);
     } catch (error) {
-      console.error('Search error:', error);
+      // console.error('Search error:', error);
       setSuggestions([]);
       toast({
         title: "Search error",
@@ -171,13 +171,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
         refid: refId
       });
       data.ref_id = refId; // Ensure ref_id is set
-      console.log('Place details:', data);
+      // console.log('Place details:', data);
       if (onPlaceSelect) {
         onPlaceSelect(data);
       }
       return data;
     } catch (error) {
-      console.error('Place error:', error);
+      // console.error('Place error:', error);
       toast({
         title: "Error loading place",
         description: "An error occurred while loading place details",
@@ -210,7 +210,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     
     // Fetch place details
     const placeDetails = await fetchPlaceDetails(suggestion.ref_id);
-    console.log('Selected place details:', placeDetails);
+    // console.log('Selected place details:', placeDetails);
   };
 
   const clearSearch = () => {

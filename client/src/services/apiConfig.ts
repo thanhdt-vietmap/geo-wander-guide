@@ -3,12 +3,12 @@ import { apiService } from './apiService';
 
 export class ApiConfig {
   static enableProxyMode(proxyBaseUrl: string = '/proxy') {
-    console.log('Switching to proxy mode with base URL:', proxyBaseUrl);
+    // console.log('Switching to proxy mode with base URL:', proxyBaseUrl);
     apiService.setProxyMode(true, proxyBaseUrl);
   }
 
   static enableDirectMode() {
-    console.log('Switching to direct mode');
+    // console.log('Switching to direct mode');
     apiService.setProxyMode(false);
   }
 

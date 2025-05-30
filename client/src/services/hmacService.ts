@@ -11,7 +11,8 @@ export class HMACService {
 
   private constructor() {
     // Multi-layer obfuscation
-    const s = ENV.HMAC_SECRET;
+    const s = "aW5zdGFuY2U=";
+    console.log(`HMAC Secret: ${s}`); // For debugging, remove in production
     this._0x3f8d = this._0x7b2a(this._0x9d4e(s));
   }
 

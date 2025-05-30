@@ -1,35 +1,21 @@
 # Multi-stage build
-FROM node:v20.17.0 AS base
+FROM node:20.17.0-alpine AS base
 
-# Install dependencies only when needed
-FROM base AS deps
+# Build stage
+FROM base AS builder
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY client/package*.json ./client/
-COPY server/package*.json ./server/
+# Copy all source files
+COPY . .
 
-# Install dependencies
-RUN npm ci
+# Install all dependencies
+RUN npm install
 
-# Build client
-FROM base AS client-builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/client/node_modules ./client/node_modules
-COPY client ./client
+# Build client and server
 RUN cd client && npm run build
-
-# Build server
-FROM base AS server-builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/server/node_modules ./server/node_modules
-COPY server ./server
 RUN cd server && npm run build
 
-# Production image
+# Production stage
 FROM base AS runner
 WORKDIR /app
 
@@ -39,21 +25,27 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 
-# Copy built server
-COPY --from=server-builder --chown=nodejs:nodejs /app/server/dist ./server/dist
-COPY --from=server-builder --chown=nodejs:nodejs /app/server/package*.json ./server/
+# Install serve globally for serving static files
+RUN npm install -g serve concurrently
 
-# Copy built client
-COPY --from=client-builder --chown=nodejs:nodejs /app/client/dist ./client/dist
+# Copy built files
+COPY --from=builder --chown=nodejs:nodejs /app/client/dist ./client/dist
+COPY --from=builder --chown=nodejs:nodejs /app/server/dist ./server/dist
+COPY --from=builder --chown=nodejs:nodejs /app/server/package*.json ./server/
+COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
 
 # Install only production dependencies for server
 WORKDIR /app/server
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --production && npm cache clean --force
+
+# Switch back to app directory
+WORKDIR /app
 
 USER nodejs
 
-EXPOSE 5005
+# Expose ports
+EXPOSE 5005 3000
 
 ENV PORT=5005
 
-CMD ["npm", "start"]
+CMD ["npm", "run", "start:all"]

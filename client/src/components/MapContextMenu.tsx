@@ -112,7 +112,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   const adjustedX = Math.min(x, window.innerWidth - 240); // 240px is approximate menu width
   const adjustedY = Math.min(y, window.innerHeight - 250); // Increased height for new options
 
-  console.log('Rendering context menu at adjusted position:', { adjustedX, adjustedY, originalX: x, originalY: y });
+  // console.log('Rendering context menu at adjusted position:', { adjustedX, adjustedY, originalX: x, originalY: y });
 
   return (
     <>
