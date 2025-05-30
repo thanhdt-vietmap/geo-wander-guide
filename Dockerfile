@@ -11,8 +11,11 @@ COPY . .
 # Install all dependencies
 RUN npm install
 
-# Build client and server
-RUN cd client && npm run build
+# Install javascript-obfuscator globally in the build stage
+RUN npm install -g javascript-obfuscator
+
+# Build client with secure obfuscation and server
+RUN cd client && npm run build:secure
 RUN cd server && npm run build
 
 # Production stage
@@ -28,7 +31,7 @@ RUN adduser --system --uid 1001 nodejs
 # Install serve globally for serving static files
 RUN npm install -g serve concurrently
 
-# Copy built files
+# Copy built files (using dist for obfuscated client build)
 COPY --from=builder --chown=nodejs:nodejs /app/client/dist ./client/dist
 COPY --from=builder --chown=nodejs:nodejs /app/server/dist ./server/dist
 COPY --from=builder --chown=nodejs:nodejs /app/server/package*.json ./server/

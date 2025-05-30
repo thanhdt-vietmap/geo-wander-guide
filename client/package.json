@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "obfuscate": "javascript-obfuscator dist --output dist-obf --ignore '**/vietmap*.js'",
-    "build:secure": "vite build && rm -rf dist-final && cp -r dist dist-final && javascript-obfuscator dist --output dist-final --ignore '**/vendor*.js'"
+    "build:secure": "npm run build && find ./dist -name '*.js' ! -name '*vendor*' -exec sh -c 'echo \"Obfuscating: $1\" && javascript-obfuscator \"$1\" --output \"$1\" --compact true --self-defending true' _ {} \\; && echo 'Build complete with obfuscation!'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -81,6 +81,7 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "javascript-obfuscator": "^4.1.1",
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
