@@ -17,12 +17,13 @@ export default defineConfig(({ mode }) => ({
     headers: {
       'Content-Security-Policy': 
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co;" +
         "worker-src 'self' blob:; " +
         "style-src 'self' 'unsafe-inline'; " +
         "img-src 'self' data: https:; " +
-        "connect-src 'self' https:; " +
-        "font-src 'self' data:;"
+        // "connect-src 'self' https:; " +
+        "font-src 'self' data:;" +
+        "connect-src 'self' http://localhost:5005 https:;"
     }
   },
   plugins: [

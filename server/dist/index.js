@@ -46,17 +46,17 @@ const isValidRequest = (req) => {
     if (isNaN(time) ||
         time < Date.now() - 30 * 1000 ||
         time > Date.now() + 30 * 1000) {
-        console.error("Invalid timestamp");
+        // console.error("Invalid timestamp");
         return false;
     }
-    console.log("Request timestamp:", time);
+    // console.log("Request timestamp:", time);
     if (!req.headers["x-signature"]) {
-        console.error("Missing HMAC signature");
+        // console.error("Missing HMAC signature");
         return false;
     }
     let isValidReq = hmacService.verifyHMAC(req.method, req.originalUrl, time, req.headers["x-signature"], JSON.stringify(req.body));
     if (!isValidReq) {
-        console.error("Invalid HMAC signature");
+        // console.error("Invalid HMAC signature");
         return false;
     }
     return true;
@@ -70,7 +70,13 @@ const limitReqByIp = (req, res, next) => {
         count: 0,
         lastRequestTime: currentTime,
     };
-    console.log(`Request from IP: ${ip}, Count: ${requestCount.count}, Last Request Time: ${new Date(requestCount.lastRequestTime).toISOString()}`);
+    // console.log(
+    //   `Request from IP: ${ip}, Count: ${
+    //     requestCount.count
+    //   }, Last Request Time: ${new Date(
+    //     requestCount.lastRequestTime
+    //   ).toISOString()}`
+    // );
     if (!requestCount.lastRequestTime) {
         requestCount.lastRequestTime = currentTime;
     }
@@ -84,7 +90,7 @@ const limitReqByIp = (req, res, next) => {
     requestCount.count += 1;
     req.app.requestCounts[ip] = requestCount;
     if (requestCount.count > requestLimit) {
-        console.error(`Rate limit exceeded for IP: ${ip}`);
+        // console.error(`Rate limit exceeded for IP: ${ip}`);
         return res.status(429).json({ error: "Too Many Requests" });
     }
     next();
@@ -98,7 +104,7 @@ const proceedAutocomplete = async (req, res) => {
 };
 app.get("/proxy/autocomplete/v3", (req, res) => {
     if (!isValidRequest(req)) {
-        console.error("Invalid request");
+        // console.error("Invalid request");
         return res.status(400).json({ error: "Bad Request" });
     }
     limitReqByIp(req, res, () => {
@@ -107,7 +113,7 @@ app.get("/proxy/autocomplete/v3", (req, res) => {
 });
 app.get("/proxy/place/v3", (req, res) => {
     if (!isValidRequest(req)) {
-        console.error("Invalid request");
+        // console.error("Invalid request");
         return res.status(400).json({ error: "Bad Request" });
     }
     limitReqByIp(req, res, () => {
@@ -116,7 +122,7 @@ app.get("/proxy/place/v3", (req, res) => {
 });
 app.get("/proxy/route", (req, res) => {
     if (!isValidRequest(req)) {
-        console.error("Invalid request");
+        // console.error("Invalid request");
         return res.status(400).json({ error: "Bad Request" });
     }
     limitReqByIp(req, res, () => {
@@ -128,13 +134,13 @@ const proceedRoute = async (req, res) => {
     let params = req.query;
     let url = new URL("https://maps.vietmap.vn/api/route");
     params['apikey'] = "07898da8410ac45ca5706a51601a1dcecc90b71718b09c40";
-    console.log("params", params);
+    // console.log("params", params);
     const points = params['point'];
     if (!points) {
         return res.status(400).json({ error: "Missing 'point' parameter" });
     }
     const pointString = points.join('&point=');
-    console.log("url", url.toString());
+    // console.log("url", url.toString());
     const result = await service.fetchData(url.toString() + '?point=' + pointString, params);
     return res.json(result);
 };
@@ -156,7 +162,7 @@ const proceedReverse = async (req, res) => {
 };
 app.get("/proxy/reverse/v3", (req, res) => {
     if (!isValidRequest(req)) {
-        console.error("Invalid request");
+        // console.error("Invalid request");
         return res.status(400).json({ error: "Bad Request" });
     }
     limitReqByIp(req, res, () => {
@@ -171,6 +177,6 @@ app.get("*", (req, res) => {
 });
 // }
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    // console.log(`Server running on port ${PORT}`);
 });
 //# sourceMappingURL=index.js.map

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
 import vietmapgl from '@vietmap/vietmap-gl-js/dist/vietmap-gl';
 import '@vietmap/vietmap-gl-js/dist/vietmap-gl.css';
@@ -24,7 +23,7 @@ export interface MapViewRef {
 
 interface MapViewProps {
   className?: string;
-  onContextMenu?: (e: { lngLat: [number, number]; originalEvent?: MouseEvent }) => void;
+  onContextMenu?: (e: { lngLat: [number, number] }) => void;
   onClick?: (e: { lngLat: [number, number] }) => void;
   initialMapStyle?: string;
   onMapStyleChange?: (styleType: string) => void;
@@ -60,61 +59,94 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   // Track if the user is dragging to prevent context menu on drag end
   const isDragging = useRef(false);
   const clickStartPos = useRef<[number, number] | null>(null);
-  const mouseDownTime = useRef<number>(0);
+  const rightClickStartPos = useRef<[number, number] | null>(null);
+  const rightClickTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Detect OS for platform-specific right-click handling
+  // macOS: Uses native contextmenu event from map library (works reliably)
+  // Windows: Requires additional mouseup handling + direct DOM event listener
+  const isMacOS = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+  const isWindows = /Win/.test(navigator.platform);
 
   // Use useCallback to memoize event handlers and prevent unnecessary re-renders
   const handleMouseDown = useCallback((e: any) => {
-    mouseDownTime.current = Date.now();
-    
     if (e.originalEvent.button === 2) {
-      // Right click
+      // Right mouse button
       isDragging.current = false;
-      console.log('Right click detected');
+      rightClickStartPos.current = [e.point.x, e.point.y];
+      
+      // Clear any existing timeout
+      if (rightClickTimeout.current) {
+        clearTimeout(rightClickTimeout.current);
+        rightClickTimeout.current = null;
+      }
     } else if (e.originalEvent.button === 0 && onClick) {
+      // Left mouse button
       clickStartPos.current = [e.point.x, e.point.y];
       isDragging.current = false;
     }
   }, [onClick]);
 
   const handleMouseMove = useCallback(() => {
-    // Only consider it dragging if mouse has been down for a bit and moved
-    if (Date.now() - mouseDownTime.current > 50) {
+    if (!isDragging.current) {
       isDragging.current = true;
+      
+      // Clear right click timeout if user starts dragging
+      if (rightClickTimeout.current) {
+        clearTimeout(rightClickTimeout.current);
+        rightClickTimeout.current = null;
+      }
     }
   }, []);
 
   const handleContextMenu = useCallback((e: any) => {
-    console.log('handleContextMenu called:', {
-      isDragging: isDragging.current,
-      button: e.originalEvent?.button,
-      which: e.originalEvent?.which,
-      lngLat: [e.lngLat.lng, e.lngLat.lat],
-      clientX: e.originalEvent?.clientX,
-      clientY: e.originalEvent?.clientY
-    });
+    // Prevent default browser context menu
+    e.preventDefault();
+    e.originalEvent?.preventDefault();
     
-    // Always prevent the default browser context menu
-    if (e.originalEvent) {
-      e.originalEvent.preventDefault();
-      e.originalEvent.stopPropagation();
-    }
-    
-    // Only trigger our custom context menu if not dragging
+    // Only trigger if not dragging and we have onContextMenu handler
     if (!isDragging.current && onContextMenu) {
-      console.log('Triggering custom context menu');
+      // Clear any pending timeout before triggering
+      if (rightClickTimeout.current) {
+        clearTimeout(rightClickTimeout.current);
+        rightClickTimeout.current = null;
+      }
+      
       onContextMenu({
-        lngLat: [e.lngLat.lng, e.lngLat.lat],
-        originalEvent: e.originalEvent
+        lngLat: [e.lngLat.lng, e.lngLat.lat]
       });
     }
-    
     isDragging.current = false;
-    return false;
   }, [onContextMenu]);
 
   const handleMouseUp = useCallback((e: any) => {
-    if (e.originalEvent.button === 0 && !isDragging.current && clickStartPos.current && onClick) {
-      // Check if it's a click without drag
+    if (e.originalEvent.button === 2) {
+      // Right mouse button up - handle for Windows compatibility
+      if (!isDragging.current && rightClickStartPos.current && onContextMenu && isWindows) {
+        const currentPos = [e.point.x, e.point.y];
+        const startPos = rightClickStartPos.current;
+        
+        // Calculate the distance moved during the right click
+        const dx = currentPos[0] - startPos[0];
+        const dy = currentPos[1] - startPos[1];
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // If the distance is small, consider it a right click without drag
+        if (distance < 5) {
+          // Use a small timeout to ensure contextmenu event doesn't override this
+          rightClickTimeout.current = setTimeout(() => {
+            if (onContextMenu) {
+              onContextMenu({
+                lngLat: [e.lngLat.lng, e.lngLat.lat]
+              });
+            }
+            rightClickTimeout.current = null;
+          }, 10);
+        }
+      }
+      rightClickStartPos.current = null;
+    } else if (e.originalEvent.button === 0 && !isDragging.current && clickStartPos.current && onClick) {
+      // Left mouse button - existing logic
       const currentPos = [e.point.x, e.point.y];
       const startPos = clickStartPos.current;
       
@@ -131,12 +163,15 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       }
     }
     clickStartPos.current = null;
-    isDragging.current = false;
-  }, [onClick]);
+    
+    // Reset dragging state after a short delay to ensure proper cleanup
+    setTimeout(() => {
+      isDragging.current = false;
+    }, 50);
+  }, [onClick, onContextMenu, isWindows]);
 
   // Get the appropriate map style based on the layer type
   const getMapStyle = (layerType: string) => {
-    // ... keep existing code (getMapStyle function)
     switch (layerType) {
       case 'light':
         return mapUtils.getVietMapLightRasterTileLayer();
@@ -160,7 +195,6 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
 
   // Expose map methods to parent components
   useImperativeHandle(ref, () => ({
-    // ... keep existing code (all map methods)
     map: map.current,
     flyTo: (lng: number, lat: number) => {
       if (map.current) {
@@ -275,11 +309,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     removeRoutes: () => {
       if (map.current) {
         routes.current.forEach((routeId) => {
-          if (map.current?.getLayer(routeId)) {
-            map.current?.removeLayer(routeId);
+          if (map?.current?.getLayer(routeId)) {
+            map.current.removeLayer(routeId);
           }
           if (map.current?.getSource(routeId)) {
-            map.current?.removeSource(routeId);
+            map.current.removeSource(routeId);
           }
         });
         routes.current = [];
@@ -295,8 +329,8 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         // First set all routes to less opacity
         routes.current.forEach((id) => {
           if (map.current?.getLayer(id)) {
-            map.current?.setPaintProperty(id, 'line-opacity', 0.5);
-            map.current?.setPaintProperty(id, 'line-width', 3);
+            map.current.setPaintProperty(id, 'line-opacity', 0.5);
+            map.current.setPaintProperty(id, 'line-width', 3);
           }
         });
 
@@ -310,11 +344,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     setMapStyle: (styleType: string) => {
       if (map.current) {
         const newStyle = getMapStyle(styleType);
-        if (typeof newStyle === 'string') {
-          map.current.setStyle(newStyle);
-        } else {
-          map.current.setStyle(newStyle);
-        }
+        map.current.setStyle(newStyle as any);
         setCurrentMapStyle(styleType);
         if (onMapStyleChange) {
           onMapStyleChange(styleType);
@@ -370,7 +400,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
               resolve(position);
             },
             (error) => {
-              console.error('Error getting location:', error);
+              // console.error('Error getting location:', error);
               resolve(null);
             },
             {
@@ -380,7 +410,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
             }
           );
         } else {
-          console.error('Geolocation is not supported by this browser.');
+          // console.error('Geolocation is not supported by this browser.');
           resolve(null);
         }
       });
@@ -399,7 +429,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     
     map.current = new vietmapgl.Map({
       container: mapContainer.current,
-      style: typeof initialStyle === 'string' ? initialStyle : initialStyle,
+      style: initialStyle as any,
       center: [105.8342, 21.0285],
       zoom: 10
     });
@@ -422,70 +452,76 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   useEffect(() => {
     if (!isMapLoaded || !map.current) return;
 
-    console.log('Adding event listeners to map');
-
     // Register the event listeners
     map.current.on('mousedown', handleMouseDown);
     map.current.on('mousemove', handleMouseMove);
     map.current.on('contextmenu', handleContextMenu);
     map.current.on('mouseup', handleMouseUp);
 
-    // Also listen for right click on the container directly
-    const handleContainerContextMenu = (e: MouseEvent) => {
-      console.log('Container context menu event:', e);
-      e.preventDefault();
-      e.stopPropagation();
-      
-      if (!isDragging.current && onContextMenu && map.current) {
-        // Convert pixel coordinates to lng/lat
-        const rect = mapContainer.current?.getBoundingClientRect();
-        if (rect) {
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          
-          try {
+    // Additional direct event listener for Windows compatibility only
+    const mapElement = mapContainer.current;
+    let handleDirectContextMenu: ((e: MouseEvent) => void) | null = null;
+
+    if (isWindows && mapElement && onContextMenu) {
+      handleDirectContextMenu = (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Only trigger if not dragging
+        if (!isDragging.current && onContextMenu && map.current) {
+          // Convert screen coordinates to map coordinates
+          const rect = mapElement.getBoundingClientRect();
+          if (rect) {
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
             const lngLat = map.current.unproject([x, y]);
-            console.log('Triggering context menu from container event');
+            
+            // Clear any pending timeout
+            if (rightClickTimeout.current) {
+              clearTimeout(rightClickTimeout.current);
+              rightClickTimeout.current = null;
+            }
+            
             onContextMenu({
-              lngLat: [lngLat.lng, lngLat.lat],
-              originalEvent: e
+              lngLat: [lngLat.lng, lngLat.lat]
             });
-          } catch (error) {
-            console.error('Error unprojecting coordinates:', error);
           }
         }
-      }
-      return false;
-    };
+        
+        // Reset dragging state after handling
+        setTimeout(() => {
+          isDragging.current = false;
+        }, 100);
+      };
 
-    // Add event listener to the container element
-    if (mapContainer.current) {
-      mapContainer.current.addEventListener('contextmenu', handleContainerContextMenu);
+      mapElement.addEventListener('contextmenu', handleDirectContextMenu, { passive: false });
     }
 
     // Cleanup function to remove event listeners
     return () => {
+      // Clear any pending timeout
+      if (rightClickTimeout.current) {
+        clearTimeout(rightClickTimeout.current);
+        rightClickTimeout.current = null;
+      }
+      
       if (map.current) {
         map.current.off('mousedown', handleMouseDown);
         map.current.off('mousemove', handleMouseMove);
         map.current.off('contextmenu', handleContextMenu);
         map.current.off('mouseup', handleMouseUp);
       }
-      if (mapContainer.current) {
-        mapContainer.current.removeEventListener('contextmenu', handleContainerContextMenu);
+
+      if (handleDirectContextMenu && mapElement && isWindows) {
+        mapElement.removeEventListener('contextmenu', handleDirectContextMenu);
       }
     };
-  }, [isMapLoaded, handleMouseDown, handleMouseMove, handleContextMenu, handleMouseUp, onContextMenu]);
+  }, [isMapLoaded, handleMouseDown, handleMouseMove, handleContextMenu, handleMouseUp, onContextMenu, isWindows]);
 
   return (
     <div 
       ref={mapContainer} 
       className={`w-full h-full ${className}`}
-      onContextMenu={(e) => {
-        console.log('React onContextMenu triggered');
-        e.preventDefault();
-        return false;
-      }}
     />
   );
 });

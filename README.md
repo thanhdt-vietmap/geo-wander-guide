@@ -108,7 +108,7 @@ If you want to deploy this project to your own VPS, you can follow these steps:
 
 `docker load -i vmlivemap.tar`
 
-`docker run -d --name vmlivemap-container -p 5665:5005 vmlivemap:latest`
+`docker run -d --name vmlivemap-container --restart=always -p 5665:5005 vmlivemap:latest`
 
 
 Reload nginx

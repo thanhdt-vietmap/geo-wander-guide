@@ -67,7 +67,8 @@
     "tailwindcss-animate": "^1.0.7",
     "terser": "^5.39.2",
     "vaul": "^0.9.3",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "maplibre-gl": "^5.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
