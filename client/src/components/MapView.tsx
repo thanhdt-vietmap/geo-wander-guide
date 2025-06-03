@@ -10,7 +10,7 @@ export interface MapViewRef {
   removeMarkers: () => void;
   addRoute: (coordinates: [number, number][], routeId?: string, color?: string) => void;
   removeRoutes: () => void;
-  fitBounds: (bounds: [[number, number], [number, number]]) => void;
+  fitBounds: (bounds: [[number, number], [number, number]], options?: { padding?: number | { top?: number; bottom?: number; left?: number; right?: number } }) => void;
   highlightRoute: (routeId: string) => void;
   setMapStyle: (styleType: string) => void;
   rotateMap: (degrees: number) => void;
@@ -319,9 +319,28 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         routes.current = [];
       }
     },
-    fitBounds: (bounds: [[number, number], [number, number]]) => {
+    fitBounds: (bounds: [[number, number], [number, number]], options?: { padding?: number | { top?: number; bottom?: number; left?: number; right?: number } }) => {
       if (map.current) {
-        map.current.fitBounds(bounds, { padding: 50 });
+        const defaultPadding = 50;
+        let paddingConfig: any = { padding: defaultPadding };
+        
+        if (options?.padding) {
+          if (typeof options.padding === 'number') {
+            paddingConfig = { padding: options.padding };
+          } else {
+            // Use object padding format for MapboxGL/VietMapGL
+            paddingConfig = {
+              padding: {
+                top: options.padding.top || defaultPadding,
+                bottom: options.padding.bottom || defaultPadding,
+                left: options.padding.left || defaultPadding,
+                right: options.padding.right || defaultPadding
+              }
+            };
+          }
+        }
+        
+        map.current.fitBounds(bounds, paddingConfig);
       }
     },
     highlightRoute: (routeId: string) => {

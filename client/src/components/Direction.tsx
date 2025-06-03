@@ -136,6 +136,9 @@ export interface DirectionRef {
 
 const apiClient = SecureApiClient.getInstance();
 
+// Direction panel width constant
+const DIRECTION_PANEL_WIDTH = 500;
+
 const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, startingPlace, onMapClick }, ref) => {
   const [animating, setAnimating] = useState(true);
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
@@ -282,7 +285,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     if (validWaypoints.length === waypoints.length) {
       autoFetchNewRoute();
     }
-  }, [waypoints]);
+  }, [waypoints,vehicle]);
   // Expose methods to parent component through ref
   useImperativeHandle(ref, () => ({
     setEndPoint: (place: any) => {
@@ -693,7 +696,15 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         const firstPath = data.paths[0];
         if (firstPath.bbox && firstPath.bbox.length === 4 && mapRef.current) {
           const [minLng, minLat, maxLng, maxLat] = firstPath.bbox;
-          mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
+          // Add padding left to account for Direction panel width
+          mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
+            padding: {
+              top: 100,
+              bottom: 100,
+              left: DIRECTION_PANEL_WIDTH + 50, // Direction width + extra padding
+              right: 100
+            }
+          });
         }
 
         setAutoUpdateRoute(true);
