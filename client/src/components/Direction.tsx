@@ -130,8 +130,10 @@ interface DirectionProps {
 export interface DirectionRef {
   setEndPoint: (place: any) => void;
   addWaypoint: (place: any) => void;
+  setAllWaypoints: (waypoints: any[]) => void;
   hasValidInputs: () => boolean;
   updateWaypointCoordinates: (index: number, lng: number, lat: number) => void;
+  setVehicle: (vehicleType: string) => void;
 }
 
 const apiClient = SecureApiClient.getInstance();
@@ -158,10 +160,12 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const [selectedPath, setSelectedPath] = useState<RoutePath | null>(null);
   const [autoUpdateRoute, setAutoUpdateRoute] = useState(false);
   const [pendingEndPoint, setPendingEndPoint] = useState<any>(null);
+  const [pendingWaypoints, setPendingWaypoints] = useState<any[]>([]);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const reverseGeocodingCache = useRef<Map<string, any>>(new Map()); // Cache for reverse geocoding results
 
   // Add animation effect
   useEffect(() => {
@@ -180,6 +184,22 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       setPendingEndPoint(null);
     }
   }, [pendingEndPoint]);
+
+  // Handle pending waypoints (for URL loading with multiple waypoints)
+  useEffect(() => {
+    if (pendingWaypoints.length > 0) {
+      // Create waypoints array with correct length (pendingWaypoints.length)
+      const newWaypoints: WayPoint[] = pendingWaypoints.map(wp => ({
+        name: wp.display || wp.name || "",
+        lat: wp.lat || 0,
+        lng: wp.lng || 0,
+        ref_id: wp.ref_id
+      }));
+      
+      setWaypoints(newWaypoints);
+      setPendingWaypoints([]);
+    }
+  }, [pendingWaypoints]);
   const autoFetchNewRoute = () => {
     // if (autoUpdateRoute && routeData) {
 
@@ -210,7 +230,21 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const searchByCoordinates = async (lat: number, lng: number, index: number) => {
     setIsSearchLoading(true);
     try {
-      const placeDetails = await getReverseGeocoding(lng, lat);
+      // Create unique key for this coordinate pair
+      const coordKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+
+      let placeDetails;
+
+      // Check cache first to avoid duplicate reverse geocoding calls
+      if (reverseGeocodingCache.current.has(coordKey)) {
+        placeDetails = reverseGeocodingCache.current.get(coordKey);
+      } else {
+        // Add 500ms delay before making reverse geocoding call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        placeDetails = await getReverseGeocoding(lng, lat);
+        // Cache the result
+        reverseGeocodingCache.current.set(coordKey, placeDetails);
+      }
 
       setWaypoints(prev => prev.map((wp, i) =>
         i === index
@@ -317,6 +351,23 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         return newWaypoints;
       });
     },
+    setAllWaypoints: (waypoints: any[]) => {
+      // If component is not fully mounted yet, store as pending
+      if (animating) {
+        setPendingWaypoints(waypoints);
+        return;
+      }
+
+      // Set all waypoints at once (for URL loading)
+      const formattedWaypoints: WayPoint[] = waypoints.map(wp => ({
+        name: wp.display || wp.name || "",
+        lat: wp.lat || 0,
+        lng: wp.lng || 0,
+        ref_id: wp.ref_id
+      }));
+      
+      setWaypoints(formattedWaypoints);
+    },
     hasValidInputs: () => {
       const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
       return validWaypoints.length >= 2;
@@ -324,6 +375,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     updateWaypointCoordinates: async (index: number, lng: number, lat: number) => {
       try {
         // console.log(`Updating waypoint ${index} to coordinates: ${lng}, ${lat}`);
+
+        // Create unique key for this coordinate pair
+        const coordKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
 
         // Update the waypoint coordinates immediately without removing the marker
         setWaypoints(prev => {
@@ -336,8 +390,24 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
           return newWaypoints;
         });
 
+        // Check cache first to avoid duplicate reverse geocoding calls
+        if (reverseGeocodingCache.current.has(coordKey)) {
+          const cachedData = reverseGeocodingCache.current.get(coordKey);
+          setWaypoints(prev => {
+            const newWaypoints = prev.map((wp, i) =>
+              i === index
+                ? { ...wp, name: cachedData.display, ref_id: cachedData.ref_id }
+                : wp
+            );
+            return newWaypoints;
+          });
+          return;
+        }
+
+        // Add 500ms delay before making reverse geocoding call
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Get location details from coordinates using reverse geocoding
-        // Delay 1 second to ensure state is updated
         const data = await apiClient.get<any[]>('/reverse/v3', {
           lng: lng.toString(),
           lat: lat.toString()
@@ -346,6 +416,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         // console.log('Reverse geocoding response:', data);
 
         if (data.length > 0) {
+          // Cache the result
+          reverseGeocodingCache.current.set(coordKey, data[0]);
+          
           // Update the waypoint name with reverse geocoding result
           // console.log('updating new waypoint', waypoints)
           setWaypoints(prev => {
@@ -371,6 +444,12 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             handleGetDirections();
           }, 100);
         }
+      }
+    },
+    setVehicle: (vehicleType: string) => {
+      const allowedVehicleTypes = ['car', 'bike', 'foot', 'motorcycle'] as const;
+      if (allowedVehicleTypes.includes(vehicleType as any)) {
+        setVehicle(vehicleType as 'car' | 'bike' | 'foot' | 'motorcycle');
       }
     }
   }), [waypoints, autoUpdateRoute, routeData, animating]);
@@ -624,7 +703,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     const domain = window.location.origin;
     
     // Generate the share URL
-    return `${domain}/route?points=${pointsParam}&vehicle=${vehicle}`;
+    return `${domain}?points=${pointsParam}&vehicle=${vehicle}`;
   };
 
   const handleCopyRoute = async () => {

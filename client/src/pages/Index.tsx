@@ -8,6 +8,7 @@ import { useLocationOperations } from '../hooks/useLocationOperations';
 import { useDirectionOperations } from '../hooks/useDirectionOperations';
 import { usePlaceOperations } from '../hooks/usePlaceOperations';
 import { useUrlPlaceLoader } from '../hooks/useUrlPlaceLoader';
+import { useUrlDirectionLoader } from '../hooks/useUrlDirectionLoader';
 import MapView, { MapViewRef } from '../components/MapView';
 import SearchBar from '../components/SearchBar';
 import Sidebar from '../components/Sidebar';
@@ -37,8 +38,9 @@ const Index = () => {
   const { handleShowDirections, handleCloseDirections, handleDirectionMapClick } = useDirectionOperations();
   const { handlePlaceSelect, handleClosePlaceDetails, handleCloseLocationInfo, handleSharePlace } = usePlaceOperations();
 
-  // URL place loader
+  // URL loaders
   useUrlPlaceLoader(mapRef);
+  useUrlDirectionLoader(mapRef, directionRef);
 
   // Event handlers
   const handleMenuToggle = () => {

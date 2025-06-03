@@ -98,8 +98,8 @@ const limitReqByIp = (
     requestCount.lastRequestTime = currentTime;
   }
   const timeSinceLastRequest = currentTime - requestCount.lastRequestTime;
-  const requestLimit = 5; // Max requests per 6s
-  const resetTime = 6 * 1000; // Reset every 6s
+  const requestLimit = 15; // Max requests per 6s
+  const resetTime = 15 * 1000; // Reset every 6s
   if (timeSinceLastRequest > resetTime) {
     requestCount.count = 0; // Reset count if more than a minute has passed
     requestCount.lastRequestTime = currentTime;
