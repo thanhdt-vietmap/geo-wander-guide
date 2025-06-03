@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { ArrowUpDown, Plus, Navigation } from 'lucide-react';
+import { ArrowUpDown, Plus, Navigation, Share2, Copy } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { toast } from '../hooks/use-toast';
@@ -582,7 +582,14 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
       if (path.bbox && path.bbox.length === 4 && mapRef.current) {
         const [minLng, minLat, maxLng, maxLat] = path.bbox;
-        mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]]);
+        mapRef.current.fitBounds([[minLng, minLat], [maxLng, maxLat]], {
+          padding: {
+            top: 100,
+            bottom: 100,
+            left: DIRECTION_PANEL_WIDTH + 50, // Direction width + extra padding
+            right: 100
+          }
+        });
       }
     }
   };
@@ -600,6 +607,90 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const handleBackFromDetails = () => {
     setShowRouteDetails(false);
     setSelectedPath(null);
+  };
+
+  const generateShareUrl = (): string => {
+    const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
+    if (validWaypoints.length < 2) {
+      return '';
+    }
+
+    // Format waypoints as lat,lng;lat,lng;lat,lng
+    const pointsParam = validWaypoints
+      .map(wp => `${wp.lat},${wp.lng}`)
+      .join(';');
+
+    // Get current domain
+    const domain = window.location.origin;
+    
+    // Generate the share URL
+    return `${domain}/route?points=${pointsParam}&vehicle=${vehicle}`;
+  };
+
+  const handleCopyRoute = async () => {
+    const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
+    if (validWaypoints.length < 2) {
+      toast({
+        title: "Cannot copy route",
+        description: "Please set at least start and end locations",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const shareUrl = generateShareUrl();
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Route URL copied!",
+        description: "Share link has been copied to clipboard",
+      });
+    } catch (error) {
+      // If clipboard fails, show the URL in a toast for manual copying
+      toast({
+        title: "Share URL",
+        description: shareUrl,
+      });
+    }
+  };
+
+  const handleShareRoute = async () => {
+    const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
+    if (validWaypoints.length < 2) {
+      toast({
+        title: "Cannot share route",
+        description: "Please set at least start and end locations",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const shareUrl = generateShareUrl();
+
+    try {
+      // Try to use native share API if available
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Route from Geo Wander Guide',
+          text: 'Check out this route!',
+          url: shareUrl
+        });
+      } else {
+        // Fallback to clipboard if native share not available
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Route URL copied!",
+          description: "Native sharing not available. Link copied to clipboard instead.",
+        });
+      }
+    } catch (error) {
+      // If both sharing and clipboard fail, show the URL in a toast for manual copying
+      toast({
+        title: "Share URL",
+        description: shareUrl,
+      });
+    }
   };
 
   const handleGetDirections = async () => {
@@ -789,13 +880,35 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
             {/* Get directions button */}
             <Button
-              className="w-full mb-4"
+              className="w-full mb-2"
               onClick={handleGetDirections}
               disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
             >
               <Navigation className="h-4 w-4 mr-2" />
               Get directions
             </Button>
+
+            {/* Share route buttons */}
+            <div className="flex gap-2 mb-4">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleCopyRoute}
+                disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy URL
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleShareRoute}
+                disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+            </div>
           </div>
 
           <Separator />
