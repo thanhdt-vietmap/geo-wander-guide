@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { ArrowUpDown, Plus, Navigation, Share2, Copy } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
@@ -11,8 +11,11 @@ import WaypointInput from './direction/WaypointInput';
 import RouteList from './direction/RouteList';
 import { SecureApiClient } from '../services/secureApiClient';
 import { getReverseGeocoding } from '../services/mapService';
+import { RouteShareService } from '../services/routeShareService';
 import { ENV } from '../config/environment';
 import { MapViewRef } from './MapView';
+import { useLocationOperations } from '../hooks/useLocationOperations';
+import { debug } from 'console';
 
 // Utility function to decode Google's polyline format
 function decodePolyline(polyline: string) {
@@ -134,6 +137,7 @@ export interface DirectionRef {
   hasValidInputs: () => boolean;
   updateWaypointCoordinates: (index: number, lng: number, lat: number) => void;
   setVehicle: (vehicleType: string) => void;
+  setWaypointsFromCoordinates: (coordinates: Array<{lat: number, lng: number}>) => void;
 }
 
 const apiClient = SecureApiClient.getInstance();
@@ -161,7 +165,9 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const [autoUpdateRoute, setAutoUpdateRoute] = useState(false);
   const [pendingEndPoint, setPendingEndPoint] = useState<any>(null);
   const [pendingWaypoints, setPendingWaypoints] = useState<any[]>([]);
-
+  const [isLoadingFromUrl, setIsLoadingFromUrl] = useState(false);
+  const { handleGetLocation, handleSetAsStart, handleSetAsEnd, handleAddWaypoint } = useLocationOperations();
+  // const [isBuildingFromUrl, setIsBuildingFromUrl] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
@@ -307,6 +313,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     return false;
   };
   useEffect(() => {
+    if(isLoadingFromUrl==true) return 
     if (waypoints.length < 2) {
       return
     }
@@ -316,10 +323,46 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     // console.log(validWaypoints.length, waypoints.length);
     // console.log(validWaypoints.length == waypoints.length);
 
-    if (validWaypoints.length === waypoints.length) {
+    if (validWaypoints.length === waypoints.length && !isLoadingFromUrl) {
       autoFetchNewRoute();
     }
-  }, [waypoints,vehicle]);
+  }, [waypoints, isLoadingFromUrl]);
+
+  // Update URL when waypoints or vehicle change (but not during URL loading)
+  useEffect(() => {
+    if (isLoadingFromUrl) {
+      return; // Don't update URL while loading from URL
+    }
+
+    const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
+    
+    if (validWaypoints.length >= 2) {
+      // Generate URL using RouteShareService
+      const shareUrl = RouteShareService.generateShareUrl(validWaypoints, vehicle);
+      const urlParams = new URL(shareUrl).searchParams;
+      
+      // Update current URL with new parameters
+      const newUrl = new URL(window.location.href);
+      const pointsParam = urlParams.get('points');
+      const vehicleParam = urlParams.get('vehicle');
+      
+      if (pointsParam) {
+        newUrl.searchParams.set('points', pointsParam);
+      }
+      if (vehicleParam) {
+        newUrl.searchParams.set('vehicle', vehicleParam);
+      }
+      
+      // Use replaceState to update URL without adding to history
+      window.history.replaceState({}, '', newUrl.toString());
+    } else {
+      // Clear URL parameters if not enough valid waypoints
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('points');
+      newUrl.searchParams.delete('vehicle');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [waypoints, vehicle, isLoadingFromUrl]);
   // Expose methods to parent component through ref
   useImperativeHandle(ref, () => ({
     setEndPoint: (place: any) => {
@@ -451,8 +494,71 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       if (allowedVehicleTypes.includes(vehicleType as any)) {
         setVehicle(vehicleType as 'car' | 'bike' | 'foot' | 'motorcycle');
       }
+    },
+    setWaypointsFromCoordinates: (coordinates: Array<{lat: number, lng: number}>) => {
+      console.log('Setting waypoints from coordinates:', coordinates);
+      
+      // Set flag to prevent URL updates during loading
+      setIsLoadingFromUrl(true);
+      
+      // Create waypoints array from coordinates
+      // const newWaypoints: WayPoint[] = coordinates.map((coord, index) => ({
+      //   name: `${coord.lat.toFixed(6)}, ${coord.lng.toFixed(6)}`, // Temporary coordinate display
+      //   lat: coord.lat,
+      //   lng: coord.lng,
+      //   ref_id: undefined
+      // }));
+      // // setPendingWaypoints(newWaypoints); 
+      // // // Set waypoints immediately
+      // setWaypoints(newWaypoints);
+      
+      // Fill inputs sequentially with 500ms delay and update activeInputIndex
+      const fillInputsSequentially = async () => {
+
+        for (let i = 0; i < coordinates.length; i++) {
+          const coord = coordinates[i];
+             
+          // Update activeInputIndex to show visual feedback
+          setActiveInputIndex(i);
+          
+          if(i==0){
+            console.log('Setting starting point:', coord);
+            handleSetAsStart(coord.lng, coord.lat, mapRef.current);
+          }else
+          if(i == coordinates.length - 1){
+            console.log('Setting end point:', coord);
+            handleSetAsEnd(coord.lng, coord.lat, mapRef.current, ref);
+          }else{
+            console.log('Adding waypoint:', coord);
+            handleAddWaypoint(coord.lng, coord.lat, ref, mapRef.current);
+          }
+
+          // Update the waypoint with coordinate string
+          // setWaypoints(prev => prev.map((wp, index) => 
+          //   index === i 
+          //     ? { ...wp, name: `${coord.lat.toFixed(6)}, ${coord.lng.toFixed(6)}` }
+          //     : wp
+          // ));
+          
+          // Wait 500ms before next input (except for the last one)
+          if (i < coordinates.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+        
+        // Clear active input index after filling all inputs
+        setActiveInputIndex(null);
+        
+        // Clear the loading flag after a short delay
+        setTimeout(() => {
+          setIsLoadingFromUrl(false);
+          handleGetDirections();
+        }, 500);
+      };
+      
+      fillInputsSequentially();
     }
-  }), [waypoints, autoUpdateRoute, routeData, animating]);
+  }), [waypoints, autoUpdateRoute, routeData, animating, isLoadingFromUrl]);
 
   // Pre-defined colors for multiple routes
   const routeColors = ['#0071bc', '#d92f88', '#f7941d', '#39b54a', '#662d91', '#ed1c24'];
@@ -462,6 +568,17 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     if (startingPlace && mapRef.current) {
       mapRef.current.flyTo(startingPlace.lng, startingPlace.lat);
       mapRef.current.addMarker(startingPlace.lng, startingPlace.lat, 'start');
+    }
+  }, [startingPlace]);
+
+  // Sync waypoints with startingPlace prop changes
+  useEffect(() => {
+    if (startingPlace) {
+      setWaypoints(prev => prev.map((wp, i) =>
+        i === 0
+          ? { ...wp, name: startingPlace.display || "", lat: startingPlace.lat || 0, lng: startingPlace.lng || 0 }
+          : wp
+      ));
     }
   }, [startingPlace]);
 
@@ -594,7 +711,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     setActiveInputIndex(null);
   };
 
-  const handleAddWaypoint = () => {
+  const handleAddDirectionWaypoint = () => {
     setWaypoints(prev => [...prev, { name: "", lat: 0, lng: 0 }]);
   };
 
@@ -689,87 +806,15 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   };
 
   const generateShareUrl = (): string => {
-    const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
-    if (validWaypoints.length < 2) {
-      return '';
-    }
-
-    // Format waypoints as lat,lng;lat,lng;lat,lng
-    const pointsParam = validWaypoints
-      .map(wp => `${wp.lat},${wp.lng}`)
-      .join(';');
-
-    // Get current domain
-    const domain = window.location.origin;
-    
-    // Generate the share URL
-    return `${domain}?points=${pointsParam}&vehicle=${vehicle}`;
+    return RouteShareService.generateShareUrl(waypoints, vehicle);
   };
 
   const handleCopyRoute = async () => {
-    const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
-    if (validWaypoints.length < 2) {
-      toast({
-        title: "Cannot copy route",
-        description: "Please set at least start and end locations",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const shareUrl = generateShareUrl();
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Route URL copied!",
-        description: "Share link has been copied to clipboard",
-      });
-    } catch (error) {
-      // If clipboard fails, show the URL in a toast for manual copying
-      toast({
-        title: "Share URL",
-        description: shareUrl,
-      });
-    }
+    await RouteShareService.copyRouteToClipboard(waypoints, vehicle);
   };
 
   const handleShareRoute = async () => {
-    const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
-    if (validWaypoints.length < 2) {
-      toast({
-        title: "Cannot share route",
-        description: "Please set at least start and end locations",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const shareUrl = generateShareUrl();
-
-    try {
-      // Try to use native share API if available
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Route from Geo Wander Guide',
-          text: 'Check out this route!',
-          url: shareUrl
-        });
-      } else {
-        // Fallback to clipboard if native share not available
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: "Route URL copied!",
-          description: "Native sharing not available. Link copied to clipboard instead.",
-        });
-      }
-    } catch (error) {
-      // If both sharing and clipboard fail, show the URL in a toast for manual copying
-      toast({
-        title: "Share URL",
-        description: shareUrl,
-      });
-    }
+    await RouteShareService.shareRoute(waypoints, vehicle);
   };
 
   const handleGetDirections = async () => {
@@ -949,7 +994,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             <Button
               variant="outline"
               className="w-full flex items-center justify-center gap-2"
-              onClick={handleAddWaypoint}
+              onClick={handleAddDirectionWaypoint}
             >
               <Plus className="h-4 w-4" />
               Add stop

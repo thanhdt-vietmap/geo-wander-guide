@@ -26,6 +26,12 @@ export const useDirectionOperations = () => {
       mapRef.current.removeMarkers();
       mapRef.current.removeRoutes();
     }
+
+    // Clear URL parameters when closing directions
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.delete('points');
+    newUrl.searchParams.delete('vehicle');
+    window.history.replaceState({}, '', newUrl.toString());
   }, [dispatch]);
 
   const handleDirectionMapClick = useCallback((activeInputIndex: number | null) => {

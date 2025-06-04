@@ -149,7 +149,7 @@ export class SecureApiClient {
     params?: Record<string, string>,
     body?: any
   ): Promise<T> {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // await new Promise(resolve => setTimeout(resolve, 500));
     // Anti-debugging check
 
     // if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||

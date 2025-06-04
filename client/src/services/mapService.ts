@@ -55,6 +55,6 @@ export const getReverseGeocoding = async (
     return placeDetails;
   } catch (error) {
     // console.error('Error getting reverse geocoding:', error);
-    // throw error;
+    throw error;
   }
 };

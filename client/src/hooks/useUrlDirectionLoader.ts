@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 import { useAppDispatch } from '../store/hooks';
 import { setShowDirections } from '../store/slices/uiSlice';
 import { setStartingPlace, setSelectedPlace, setLocationInfo } from '../store/slices/locationSlice';
-import { apiService } from '../services/apiService';
-import { getReverseGeocoding } from '../services/mapService';
 import { toast } from '../hooks/use-toast';
 import { DirectionRef } from '../components/Direction';
 import { MapViewRef } from '../components/MapView';
@@ -20,9 +18,11 @@ export const useUrlDirectionLoader = (
   directionRef: React.RefObject<DirectionRef>
 ) => {
   const dispatch = useAppDispatch();
-
+  
   useEffect(() => {
+
     const loadDirectionFromUrl = async () => {
+
       const urlParams = new URLSearchParams(window.location.search);
       const pointsParam = urlParams.get('points');
       const vehicleParam = urlParams.get('vehicle');
@@ -31,16 +31,15 @@ export const useUrlDirectionLoader = (
 
       try {
         // Parse points parameter: "lat1,lng1;lat2,lng2;lat3,lng3"
-        const pointStrings = pointsParam.split(';');
-        
+        const pointStrings = pointsParam.split('|');
         if (pointStrings.length < 2) {
           console.warn('Invalid route URL: need at least 2 points');
           return;
         }
 
-        // Parse each point
-        const waypoints: WayPoint[] = [];
-        const processedCoordinates = new Set<string>(); // Track processed coordinates to avoid duplicate calls
+        // Parse each point to coordinates only
+        const coordinates: Array<{lat: number, lng: number}> = [];
+        const processedCoordinates = new Set<string>(); // Track processed coordinates to avoid duplicates
         
         for (let i = 0; i < pointStrings.length; i++) {
           const pointString = pointStrings[i];
@@ -64,34 +63,16 @@ export const useUrlDirectionLoader = (
           
           processedCoordinates.add(coordKey);
           
-          // Add delay between reverse geocoding calls (500ms)
-          if (i > 0) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-          
-          // Get location details using reverse geocoding
-          try {
-            const locationDetails = await getReverseGeocoding(lng, lat);
-            waypoints.push({
-              name: locationDetails.display,
-              lat: locationDetails.lat,
-              lng: locationDetails.lng,
-              ref_id: locationDetails.ref_id
-            });
-          } catch (error) {
-            // If reverse geocoding fails, use coordinates as name
-            waypoints.push({
-              name: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-              lat,
-              lng
-            });
-          }
+          // Just add coordinates, no reverse geocoding
+          coordinates.push({ lat, lng });
         }
 
-        if (waypoints.length < 2) {
-          console.warn('Could not parse enough valid waypoints from URL');
+        if (coordinates.length < 2) {
+          console.warn('Could not parse enough valid coordinates from URL');
           return;
-        }        console.log('Loading route from URL with waypoints:', waypoints);
+        }
+
+        console.log('Loading route from URL with coordinates:', coordinates);
 
         // Clear any existing selections
         dispatch(setSelectedPlace(null));
@@ -100,11 +81,11 @@ export const useUrlDirectionLoader = (
         // Show directions panel
         dispatch(setShowDirections(true));
 
-        // Set up map view to show all waypoints
-        if (mapRef.current && waypoints.length > 0) {
-          // Calculate bounds for all waypoints
-          const lats = waypoints.map(wp => wp.lat);
-          const lngs = waypoints.map(wp => wp.lng);
+        // Set up map view to show all coordinates
+        if (mapRef.current && coordinates.length > 0) {
+          // Calculate bounds for all coordinates
+          const lats = coordinates.map(coord => coord.lat);
+          const lngs = coordinates.map(coord => coord.lng);
           const minLat = Math.min(...lats);
           const maxLat = Math.max(...lats);
           const minLng = Math.min(...lngs);
@@ -127,16 +108,16 @@ export const useUrlDirectionLoader = (
           });
         }
 
-        // Wait for Direction component to mount, then load waypoints
+        // Wait for Direction component to mount, then load coordinates
         setTimeout(() => {
           if (directionRef.current) {
-            // Load all waypoints at once into direction component
-            loadWaypointsIntoDirection(waypoints, directionRef, vehicleParam);
+            // Load coordinates into direction component (no reverse geocoding, just fill inputs)
+            loadCoordinatesIntoDirection(coordinates, directionRef, vehicleParam);
           } else {
             // Retry if component not ready
             setTimeout(() => {
               if (directionRef.current) {
-                loadWaypointsIntoDirection(waypoints, directionRef, vehicleParam);
+                loadCoordinatesIntoDirection(coordinates, directionRef, vehicleParam);
               }
             }, 500);
           }
@@ -150,7 +131,7 @@ export const useUrlDirectionLoader = (
 
         toast({
           title: "Route loaded from URL",
-          description: `Loaded route with ${waypoints.length} waypoints`,
+          description: `Loaded route with ${coordinates.length} waypoints`,
         });
 
       } catch (error) {
@@ -173,18 +154,17 @@ export const useUrlDirectionLoader = (
   }, [dispatch, mapRef, directionRef]);
 };
 
-// Helper function to load waypoints into the Direction component
-const loadWaypointsIntoDirection = (
-  waypoints: WayPoint[], 
+// Helper function to load coordinates into the Direction component
+const loadCoordinatesIntoDirection = (
+  coordinates: Array<{lat: number, lng: number}>, 
   directionRef: React.RefObject<DirectionRef>,
   vehicleParam: string | null
 ) => {
   if (!directionRef.current) return;
-
   try {
-    // Use the new setAllWaypoints method to set all waypoints at once
-    // This ensures the correct number of inputs (waypoints.length) is generated
-    directionRef.current.setAllWaypoints(waypoints);
+    // Use the new setWaypointsFromCoordinates method that handles sequential input filling
+    // This will create inputs and fill them with lat/lng coordinates with 500ms delays
+    directionRef.current.setWaypointsFromCoordinates(coordinates);
 
     // Set vehicle type if provided
     if (vehicleParam && ['car', 'bike', 'foot', 'motorcycle'].includes(vehicleParam) && directionRef.current?.setVehicle) {
@@ -192,8 +172,8 @@ const loadWaypointsIntoDirection = (
       console.log('Vehicle type set from URL:', vehicleParam);
     }
 
-    console.log('Successfully loaded waypoints into Direction component');
+    console.log('Successfully started loading coordinates into Direction component');
   } catch (error) {
-    console.error('Error loading waypoints into Direction component:', error);
+    console.error('Error loading coordinates into Direction component:', error);
   }
 };

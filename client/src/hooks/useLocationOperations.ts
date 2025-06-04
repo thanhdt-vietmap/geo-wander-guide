@@ -26,14 +26,13 @@ export const useLocationOperations = () => {
     }
   }, [dispatch]);
 
-  const handleSetAsStart = useCallback(async (lng: number, lat: number, mapRef: any) => {
+  const handleSetAsStart = useCallback(async (lng: number, lat: number, mapRef: any, ) => {
     try {
       const placeDetails = await getReverseGeocoding(lng, lat);
       dispatch(setStartingPlace(placeDetails));
       dispatch(setShowDirections(true));
       dispatch(setSelectedPlace(null));
       dispatch(setLocationInfo(null));
-      
       if (mapRef?.current) {
         mapRef.current.removeMarkers();
         mapRef.current.removeRoutes();
