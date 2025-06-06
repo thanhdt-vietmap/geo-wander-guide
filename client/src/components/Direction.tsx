@@ -1,21 +1,26 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
-import { ArrowUpDown, Plus, Navigation, Share2, Copy } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Separator } from '../components/ui/separator';
-import { toast } from '../hooks/use-toast';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, useCallback } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Separator } from './ui/separator';
+import { Badge } from './ui/badge';
+import { Navigation, Trash2, Plus, Copy, Share2, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 import SearchSuggestions from './SearchSuggestions';
-import RouteDetails from './RouteDetails';
 import DirectionHeader from './direction/DirectionHeader';
+import RouteList from './direction/RouteList';
 import VehicleSelector from './direction/VehicleSelector';
 import WaypointInput from './direction/WaypointInput';
-import RouteList from './direction/RouteList';
+import { useToast } from '../hooks/use-toast';
+import { toast } from 'sonner';
+import { useAppSelector } from '../store/hooks';
 import { SecureApiClient } from '../services/secureApiClient';
-import { getReverseGeocoding } from '../services/mapService';
 import { RouteShareService } from '../services/routeShareService';
-import { ENV } from '../config/environment';
-import { MapViewRef } from './MapView';
 import { useLocationOperations } from '../hooks/useLocationOperations';
-import { debug } from 'console';
+import { debounce } from '../utils/debounce';
+import { getReverseGeocoding } from '../services/mapService';
+import RouteDetails from './RouteDetails';
+import { MapViewRef } from './MapView';
+import { ENV } from '../config/environment';
 
 // Utility function to decode Google's polyline format
 function decodePolyline(polyline: string) {
@@ -146,6 +151,7 @@ const apiClient = SecureApiClient.getInstance();
 const DIRECTION_PANEL_WIDTH = 500;
 
 const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, startingPlace, onMapClick }, ref) => {
+  const { toast: toastHook } = useToast();
   const [animating, setAnimating] = useState(true);
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
     { name: startingPlace?.display || "", lat: startingPlace?.lat || 0, lng: startingPlace?.lng || 0 },
@@ -172,6 +178,48 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const reverseGeocodingCache = useRef<Map<string, any>>(new Map()); // Cache for reverse geocoding results
+  
+  // Create debounced callback for drag updates
+  const debouncedUpdateCoordinates = useRef(
+    debounce(async (index: number, lng: number, lat: number) => {
+      try {
+        // Create unique key for this coordinate pair
+        const coordKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+
+        // Check cache first to avoid duplicate reverse geocoding calls
+        if (reverseGeocodingCache.current.has(coordKey)) {
+          const cachedData = reverseGeocodingCache.current.get(coordKey);
+          setWaypoints(prev => prev.map((wp, i) =>
+            i === index
+              ? { ...wp, name: cachedData.display, ref_id: cachedData.ref_id }
+              : wp
+          ));
+          return;
+        }
+
+        // Get location details from coordinates using reverse geocoding
+        const apiClient = SecureApiClient.getInstance();
+        const data = await apiClient.get<any[]>('/reverse/v3', {
+          lng: lng.toString(),
+          lat: lat.toString()
+        });
+
+        if (data.length > 0) {
+          // Cache the result
+          reverseGeocodingCache.current.set(coordKey, data[0]);
+          
+          // Update the waypoint name with reverse geocoding result
+          setWaypoints(prev => prev.map((wp, i) =>
+            i === index
+              ? { ...wp, name: data[0].display, ref_id: data[0].ref_id }
+              : wp
+          ));
+        }
+      } catch (error) {
+        console.error('Error getting location details during drag:', error);
+      }
+    }, 500) // 500ms debounce delay
+  );
 
   // Add animation effect
   useEffect(() => {
@@ -268,7 +316,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       // // console.log('Reverse geocoding result for waypoint', index, ':', placeDetails);
     } catch (error) {
       // console.error('Reverse geocoding error:', error);
-      toast({
+      toastHook({
         title: "Lỗi tìm kiếm tọa độ",
         description: "Không thể tìm thấy thông tin vị trí cho tọa độ này",
         variant: "destructive"
@@ -416,83 +464,20 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       return validWaypoints.length >= 2;
     },
     updateWaypointCoordinates: async (index: number, lng: number, lat: number) => {
-      try {
-        // console.log(`Updating waypoint ${index} to coordinates: ${lng}, ${lat}`);
+      // Update coordinates immediately for responsive UI
+      setWaypoints(prev => prev.map((wp, i) =>
+        i === index
+          ? { ...wp, lat: lat, lng: lng }
+          : wp
+      ));
 
-        // Create unique key for this coordinate pair
-        const coordKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
-
-        // Update the waypoint coordinates immediately without removing the marker
-        setWaypoints(prev => {
-          const newWaypoints = prev.map((wp, i) =>
-            i === index
-              ? { ...wp, lat: lat, lng: lng }
-              : wp
-          );
-          // console.log('Updated waypoints with new coordinates:', newWaypoints);
-          return newWaypoints;
-        });
-
-        // Check cache first to avoid duplicate reverse geocoding calls
-        if (reverseGeocodingCache.current.has(coordKey)) {
-          const cachedData = reverseGeocodingCache.current.get(coordKey);
-          setWaypoints(prev => {
-            const newWaypoints = prev.map((wp, i) =>
-              i === index
-                ? { ...wp, name: cachedData.display, ref_id: cachedData.ref_id }
-                : wp
-            );
-            return newWaypoints;
-          });
-          return;
-        }
-
-        // Add 500ms delay before making reverse geocoding call
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Get location details from coordinates using reverse geocoding
-        const data = await apiClient.get<any[]>('/reverse/v3', {
-          lng: lng.toString(),
-          lat: lat.toString()
-        });
-
-        // console.log('Reverse geocoding response:', data);
-
-        if (data.length > 0) {
-          // Cache the result
-          reverseGeocodingCache.current.set(coordKey, data[0]);
-          
-          // Update the waypoint name with reverse geocoding result
-          // console.log('updating new waypoint', waypoints)
-          setWaypoints(prev => {
-            const newWaypoints = prev.map((wp, i) =>
-              i === index
-                ? { ...wp, name: data[0].display, ref_id: data[0].ref_id }
-                : wp
-            );
-            // console.log('Updated waypoints with location name:', newWaypoints);
-            return newWaypoints;
-          });
-          // console.log('Updated waypoint', waypoints);
-        }
-
-
-        // Auto-update route immediately if we have routes already calculated
-      } catch (error) {
-        // console.error('Error getting location details:', error);
-        // Still try to update route if reverse geocoding fails but we have coordinates
-        if (autoUpdateRoute && routeData) {
-          setTimeout(() => {
-            // console.log('Updated waypoint', waypoints);
-            handleGetDirections();
-          }, 100);
-        }
-      }
+      // Use debounced callback for reverse geocoding to prevent duplicate API calls
+      debouncedUpdateCoordinates.current(index, lng, lat);
     },
     setVehicle: (vehicleType: string) => {
       const allowedVehicleTypes = ['car', 'bike', 'foot', 'motorcycle'] as const;
       if (allowedVehicleTypes.includes(vehicleType as any)) {
-        setVehicle(vehicleType as 'car' | 'bike' | 'foot' | 'motorcycle');
+        handleVehicleChange(vehicleType as 'car' | 'bike' | 'foot' | 'motorcycle');
       }
     },
     setWaypointsFromCoordinates: (coordinates: Array<{lat: number, lng: number}>) => {
@@ -638,7 +623,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     } catch (error) {
       // console.error('Search error:', error);
       setSuggestions([]);
-      toast({
+      toastHook({
         title: "Search error",
         description: "An error occurred during search",
         variant: "destructive"
@@ -667,7 +652,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       return data;
     } catch (error) {
       // console.error('Place error:', error);
-      toast({
+      toastHook({
         title: "Error loading place",
         description: "An error occurred while loading place details",
         variant: "destructive"
@@ -817,12 +802,25 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     await RouteShareService.shareRoute(waypoints, vehicle);
   };
 
+  const handleVehicleChange = (newVehicle: 'car' | 'bike' | 'foot' | 'motorcycle') => {
+    setVehicle(newVehicle);
+    
+    // Auto-recalculate route if we have valid waypoints and existing route data
+    const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
+    if (validWaypoints.length >= 2 && routeData) {
+      // Use a small delay to ensure state has updated
+      setTimeout(() => {
+        handleGetDirections();
+      }, 100);
+    }
+  };
+
   const handleGetDirections = async () => {
     const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
     // console.log('waypoints:', waypoints);
     // console.log('Valid waypoints:', validWaypoints);
     if (validWaypoints.length < 2) {
-      toast({
+      toastHook({
         title: "Invalid route",
         description: "Please select valid start and end locations",
         variant: "destructive"
@@ -925,13 +923,13 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         setAutoUpdateRoute(true);
       }
 
-      toast({
+      toastHook({
         title: `${data.paths.length} route${data.paths.length > 1 ? 's' : ''} found`,
         description: "Select a route to see details",
       });
     } catch (error) {
       // console.error('Direction error:', error);
-      toast({
+      toastHook({
         title: "Error getting directions",
         description: "An error occurred while calculating the route",
         variant: "destructive"
@@ -951,7 +949,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         <div className="bg-white shadow-lg pt-0 w-full flex flex-col border-r">
           <DirectionHeader onClose={onClose} />
 
-          <VehicleSelector vehicle={vehicle} onVehicleChange={setVehicle} />
+          <VehicleSelector vehicle={vehicle} onVehicleChange={handleVehicleChange} />
 
           <div className="px-6 py-4 relative" ref={searchContainerRef}>
             {/* Waypoints inputs */}

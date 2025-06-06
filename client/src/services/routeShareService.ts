@@ -8,6 +8,9 @@ interface WayPoint {
 }
 
 export class RouteShareService {
+  private static shareUrlCache = new Map<string, string>();
+  private static readonly CACHE_DURATION = 30000; // 30 seconds
+
   /**
    * Generate a shareable URL with route waypoints and vehicle type (encrypted)
    */
@@ -18,11 +21,24 @@ export class RouteShareService {
       throw new Error('At least 2 valid waypoints are required to generate a share URL');
     }
 
+    // Create cache key
+    const cacheKey = `${JSON.stringify(validWaypoints)}_${vehicle}`;
+    
+    // Return cached URL if exists
+    if (this.shareUrlCache.has(cacheKey)) {
+      console.log('[RouteShareService] Using cached share URL');
+      return this.shareUrlCache.get(cacheKey)!;
+    }
+
+    console.log('[RouteShareService] Generating new share URL');
+
     // Create route data object
     const routeData = {
       points: validWaypoints.map(wp => [wp.lat.toFixed(6), wp.lng.toFixed(6)]),
       vehicle: vehicle
     };
+
+    let shareUrl: string;
 
     try {
       // Encrypt the route data
@@ -32,7 +48,7 @@ export class RouteShareService {
       const url = new URL(baseUrl);
       url.searchParams.set('r', encryptedData);
 
-      return url.toString();
+      shareUrl = url.toString();
     } catch (error) {
       console.error('Error generating encrypted share URL:', error);
       // Fallback to unencrypted format
@@ -45,8 +61,19 @@ export class RouteShareService {
       url.searchParams.set('points', pointsParam);
       url.searchParams.set('vehicle', vehicle);
 
-      return url.toString();
+      shareUrl = url.toString();
     }
+
+    // Cache the URL
+    this.shareUrlCache.set(cacheKey, shareUrl);
+    
+    // Clear cache after duration
+    setTimeout(() => {
+      this.shareUrlCache.delete(cacheKey);
+      console.log('[RouteShareService] Cache expired for share URL');
+    }, this.CACHE_DURATION);
+
+    return shareUrl;
   }
 
   /**

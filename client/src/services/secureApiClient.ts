@@ -2,6 +2,7 @@
 import { ENV } from '../config/environment';
 import { HMACService } from './hmacService';
 import {apiClient} from '../api/client';
+import { requestCache } from './requestCache';
 
 // Obfuscated class name mapping
 const _0x2f8a = {
@@ -23,6 +24,7 @@ export class SecureApiClient {
   private readonly _0x3b7e: string;
   private readonly _0x5c9a: string;
   private readonly _0x8d2f: HMACService;
+  private userInfoPromise: Promise<any> | null = null;
 
   private constructor() {
     // Enhanced obfuscation
@@ -122,23 +124,38 @@ export class SecureApiClient {
 
   // Convenience methods with obfuscated names internally
   public async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-    return this.makeApiClientRequest<T>('GET', endpoint, params);
+    // Create unique cache key for GET requests
+    const cacheKey = `GET:${endpoint}:${JSON.stringify(params || {})}`;
+    
+    return requestCache.getOrFetch(cacheKey, () => 
+      this.makeApiClientRequest<T>('GET', endpoint, params)
+    );
   }
 
   public async post<T>(endpoint: string, body?: any, params?: Record<string, string>): Promise<T> {
+    // Don't cache POST requests, just make the call
     return this.makeApiClientRequest<T>('POST', endpoint, params, body);
   }
   public getUserInfo = () => {
-    apiClient.get('/users')
+    // Return existing promise if already fetching
+    if (this.userInfoPromise) {
+      return this.userInfoPromise;
+    }
+
+    this.userInfoPromise = apiClient.get('/users')
       .then(response => {
-        // // console.log('User info fetched:', response);
-        // Handle user info as needed
-      }
-      )
+        // Reset promise after completion
+        this.userInfoPromise = null;
+        return response;
+      })
       .catch(error => {
-        // console.error('Error fetching user info:', error);
-      }
-    );
+        // Reset promise on error too
+        this.userInfoPromise = null;
+        console.error('Error fetching user info:', error);
+        throw error;
+      });
+
+    return this.userInfoPromise;
   }
 
   // Make request using apiClient
