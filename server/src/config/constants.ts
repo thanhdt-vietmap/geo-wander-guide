@@ -4,6 +4,9 @@ export const CONFIG = {
   RATE_LIMIT: {
     MAX_REQUESTS: 15,
     RESET_TIME: 15 * 1000, // 15 seconds
+    BLACKLIST_THRESHOLD: 5, // Number of rate limit violations before blacklisting
+    MAX_QUEUE_SIZE: 100, // Maximum number of queued requests per IP
+    REQUEST_TIMEOUT: 30 * 1000, // 30 seconds timeout for queued requests
   },
   TIMESTAMP_TOLERANCE: 30 * 1000, // 30 seconds
 };

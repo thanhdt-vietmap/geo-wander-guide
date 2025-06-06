@@ -1,0 +1,584 @@
+import express from "express";
+import { CONFIG } from "../config/constants";
+
+interface RateLimitData {
+  count: number;
+  lastRequestTime: number;
+  violations: number; // Number of times this IP hit the rate limit
+  lastAccess: number; // Track last access for cleanup
+}
+
+interface QueuedRequest {
+  req: express.Request;
+  res: express.Response;
+  next: express.NextFunction;
+  timestamp: number;
+  timeoutId: NodeJS.Timeout;
+  retryCount: number; // Track retry attempts
+}
+
+class AdvancedRateLimiter {
+  private static instance: AdvancedRateLimiter;
+  private rateLimitData: Map<string, RateLimitData> = new Map();
+  private blacklist: Set<string> = new Set();
+  private requestQueues: Map<string, QueuedRequest[]> = new Map();
+  private processingQueues: Set<string> = new Set();
+  private lastBlacklistReset: number = 0;
+  private cleanupInterval: NodeJS.Timeout | undefined;
+  
+  // Memory protection constants
+  private readonly MAX_TRACKED_IPS = 10000;
+  private readonly MAX_TOTAL_QUEUED_REQUESTS = 1000;
+  private readonly CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  private readonly DATA_TTL = 24 * 60 * 60 * 1000; // 24 hours
+  private readonly MAX_RETRY_COUNT = 3;
+
+  private constructor() {
+    this.initializeBlacklistReset();
+    this.initializeCleanup();
+  }
+
+  public static getInstance(): AdvancedRateLimiter {
+    if (!AdvancedRateLimiter.instance) {
+      AdvancedRateLimiter.instance = new AdvancedRateLimiter();
+    }
+    return AdvancedRateLimiter.instance;
+  }
+
+  private initializeCleanup(): void {
+    // Cleanup old data every 5 minutes
+    this.cleanupInterval = setInterval(() => {
+      this.performCleanup();
+    }, this.CLEANUP_INTERVAL);
+  }
+
+  private performCleanup(): void {
+    const now = Date.now();
+    const beforeCleanup = {
+      rateLimitData: this.rateLimitData.size,
+      queues: this.requestQueues.size,
+      blacklist: this.blacklist.size
+    };
+
+    // Check for memory pressure and trigger emergency cleanup if needed
+    if (this.checkMemoryPressure()) {
+      this.emergencyCleanup();
+      return;
+    }
+
+    // Clean up old rate limit data
+    for (const [ip, data] of this.rateLimitData.entries()) {
+      if (now - data.lastAccess > this.DATA_TTL) {
+        this.rateLimitData.delete(ip);
+      }
+    }
+
+    // Clean up empty or old queues
+    for (const [ip, queue] of this.requestQueues.entries()) {
+      // Remove expired requests from queue
+      const validRequests = queue.filter(req => {
+        if (now - req.timestamp > CONFIG.RATE_LIMIT.REQUEST_TIMEOUT) {
+          clearTimeout(req.timeoutId);
+          if (!req.res.headersSent && !req.res.destroyed) {
+            req.res.status(408).json({ error: "Request timeout during cleanup" });
+          }
+          return false;
+        }
+        return true;
+      });
+
+      if (validRequests.length === 0) {
+        this.requestQueues.delete(ip);
+        this.processingQueues.delete(ip);
+      } else {
+        this.requestQueues.set(ip, validRequests);
+      }
+    }
+
+    // Memory protection: If we have too many tracked IPs, remove oldest ones
+    if (this.rateLimitData.size > this.MAX_TRACKED_IPS) {
+      const sortedByLastAccess = Array.from(this.rateLimitData.entries())
+        .sort((a, b) => a[1].lastAccess - b[1].lastAccess);
+      
+      const toRemove = sortedByLastAccess.slice(0, this.rateLimitData.size - this.MAX_TRACKED_IPS);
+      toRemove.forEach(([ip]) => this.rateLimitData.delete(ip));
+    }
+
+    const afterCleanup = {
+      rateLimitData: this.rateLimitData.size,
+      queues: this.requestQueues.size,
+      blacklist: this.blacklist.size
+    };
+
+    console.log(`[${new Date().toISOString()}] Cleanup completed:`, {
+      before: beforeCleanup,
+      after: afterCleanup,
+      removed: {
+        rateLimitData: beforeCleanup.rateLimitData - afterCleanup.rateLimitData,
+        queues: beforeCleanup.queues - afterCleanup.queues
+      },
+      memoryUsage: {
+        heapUsed: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
+        rss: `${Math.round(process.memoryUsage().rss / 1024 / 1024)}MB`
+      }
+    });
+  }
+
+  private initializeBlacklistReset(): void {
+    // Check for blacklist reset every 6 hours
+    setInterval(() => {
+      this.checkAndResetBlacklist();
+    }, 6 * 60 * 60 * 1000); // 6 hours
+  }
+
+  private checkAndResetBlacklist(): void {
+    const now = Date.now();
+    const oneMonthInMs = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+    
+    // Auto-reset blacklist after 1 month
+    if (this.lastBlacklistReset === 0) {
+      // First time initialization
+      this.lastBlacklistReset = now;
+      return;
+    }
+    
+    const timeSinceLastReset = now - this.lastBlacklistReset;
+    
+    if (timeSinceLastReset >= oneMonthInMs) {
+      console.log(`[${new Date().toISOString()}] Auto-resetting blacklist after 1 month (${Math.floor(timeSinceLastReset / (24 * 60 * 60 * 1000))} days)`);
+      this.blacklist.clear();
+      // Reset violation counts
+      this.rateLimitData.forEach((data) => {
+        data.violations = 0;
+      });
+      this.lastBlacklistReset = now;
+      
+      console.log(`[${new Date().toISOString()}] Blacklist auto-reset completed. Next reset in 30 days.`);
+    }
+  }
+
+  private getClientIP(req: express.Request): string | null {
+    return req.ip || req.socket.remoteAddress || req.connection.remoteAddress || null;
+  }
+
+  private isBlacklisted(ip: string): boolean {
+    return this.blacklist.has(ip);
+  }
+
+  private addToBlacklist(ip: string): void {
+    this.blacklist.add(ip);
+    console.log(`[${new Date().toISOString()}] IP ${ip} added to blacklist`);
+  }
+
+  private shouldReset(data: RateLimitData, currentTime: number): boolean {
+    return (currentTime - data.lastRequestTime) > CONFIG.RATE_LIMIT.RESET_TIME;
+  }
+
+  private incrementViolation(ip: string): void {
+    const currentTime = Date.now();
+    const data = this.rateLimitData.get(ip) || {
+      count: 0,
+      lastRequestTime: currentTime,
+      violations: 0,
+      lastAccess: currentTime
+    };
+    
+    data.violations += 1;
+    data.lastAccess = currentTime; // Update last access time
+    this.rateLimitData.set(ip, data);
+    
+    console.log(`[${new Date().toISOString()}] IP ${ip} violation count: ${data.violations}`);
+    
+    if (data.violations >= CONFIG.RATE_LIMIT.BLACKLIST_THRESHOLD) {
+      this.addToBlacklist(ip);
+    }
+  }
+
+  private addToQueue(ip: string, req: express.Request, res: express.Response, next: express.NextFunction): boolean {
+    // Check total queued requests across all IPs for memory protection
+    const totalQueuedRequests = Array.from(this.requestQueues.values())
+      .reduce((total, queue) => total + queue.length, 0);
+    
+    if (totalQueuedRequests >= this.MAX_TOTAL_QUEUED_REQUESTS) {
+      console.log(`[${new Date().toISOString()}] Global queue limit reached (${totalQueuedRequests})`);
+      return false;
+    }
+
+    if (!this.requestQueues.has(ip)) {
+      this.requestQueues.set(ip, []);
+    }
+
+    const queue = this.requestQueues.get(ip)!;
+    
+    // Check queue size limit
+    if (queue.length >= CONFIG.RATE_LIMIT.MAX_QUEUE_SIZE) {
+      return false; // Queue is full
+    }
+
+    // Create timeout for this request
+    const timeoutId = setTimeout(() => {
+      this.removeFromQueue(ip, queuedRequest);
+      if (!res.headersSent && !res.destroyed) {
+        res.status(408).json({ error: "Request timeout" });
+      }
+    }, CONFIG.RATE_LIMIT.REQUEST_TIMEOUT);
+
+    const queuedRequest: QueuedRequest = {
+      req,
+      res,
+      next,
+      timestamp: Date.now(),
+      timeoutId,
+      retryCount: 0
+    };
+
+    queue.push(queuedRequest);
+    console.log(`[${new Date().toISOString()}] IP ${ip} added to queue. Queue size: ${queue.length}, Total queued: ${totalQueuedRequests + 1}`);
+
+    // Process queue if not already processing
+    if (!this.processingQueues.has(ip)) {
+      this.processQueue(ip);
+    }
+
+    return true;
+  }
+
+  private removeFromQueue(ip: string, requestToRemove: QueuedRequest): void {
+    const queue = this.requestQueues.get(ip);
+    if (queue) {
+      const index = queue.indexOf(requestToRemove);
+      if (index > -1) {
+        clearTimeout(requestToRemove.timeoutId);
+        queue.splice(index, 1);
+      }
+      
+      if (queue.length === 0) {
+        this.requestQueues.delete(ip);
+        this.processingQueues.delete(ip);
+      }
+    }
+  }
+
+  private async processQueue(ip: string): Promise<void> {
+    if (this.processingQueues.has(ip)) {
+      return; // Already processing this IP's queue
+    }
+    
+    this.processingQueues.add(ip);
+    let circuitBreakerCount = 0;
+    const MAX_CIRCUIT_BREAKER_ATTEMPTS = 10; // Prevent infinite loops
+
+    try {
+      while (this.requestQueues.has(ip) && this.requestQueues.get(ip)!.length > 0) {
+        // Circuit breaker to prevent infinite loops
+        circuitBreakerCount++;
+        if (circuitBreakerCount > MAX_CIRCUIT_BREAKER_ATTEMPTS) {
+          console.log(`[${new Date().toISOString()}] Circuit breaker triggered for IP ${ip}, clearing queue`);
+          this.clearIPQueue(ip);
+          break;
+        }
+
+        const queue = this.requestQueues.get(ip)!;
+        const queuedRequest = queue.shift();
+
+        if (!queuedRequest) break;
+
+        clearTimeout(queuedRequest.timeoutId);
+
+        // Check if response is still valid (not closed)
+        if (queuedRequest.res.headersSent || queuedRequest.res.destroyed) {
+          continue;
+        }
+
+        // Check for retry limit
+        if (queuedRequest.retryCount >= this.MAX_RETRY_COUNT) {
+          console.log(`[${new Date().toISOString()}] Max retry count reached for IP ${ip}, dropping request`);
+          if (!queuedRequest.res.headersSent && !queuedRequest.res.destroyed) {
+            queuedRequest.res.status(429).json({ 
+              error: "Too Many Requests", 
+              message: "Maximum retry attempts exceeded"
+            });
+          }
+          continue;
+        }
+
+        // Check rate limit again
+        const canProceed = this.checkRateLimit(ip);
+        
+        if (canProceed) {
+          // Process the request
+          console.log(`[${new Date().toISOString()}] Processing queued request for IP ${ip} (retry: ${queuedRequest.retryCount})`);
+          queuedRequest.next();
+          
+          // Add a small delay between processing requests
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Reset circuit breaker count on successful processing
+          circuitBreakerCount = 0;
+        } else {
+          // Still rate limited, increment retry count and put back in queue
+          queuedRequest.retryCount++;
+          
+          // Create new timeout for the retried request
+          queuedRequest.timeoutId = setTimeout(() => {
+            this.removeFromQueue(ip, queuedRequest);
+            if (!queuedRequest.res.headersSent && !queuedRequest.res.destroyed) {
+              queuedRequest.res.status(408).json({ error: "Request timeout after retry" });
+            }
+          }, CONFIG.RATE_LIMIT.REQUEST_TIMEOUT);
+          
+          queue.unshift(queuedRequest);
+          
+          // Wait for the rate limit window to reset, but use exponential backoff
+          const backoffTime = Math.min(CONFIG.RATE_LIMIT.RESET_TIME * Math.pow(2, queuedRequest.retryCount), 60000);
+          await new Promise(resolve => setTimeout(resolve, backoffTime));
+        }
+      }
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] Error processing queue for IP ${ip}:`, error);
+      this.clearIPQueue(ip);
+    } finally {
+      this.processingQueues.delete(ip);
+    }
+  }
+
+  private clearIPQueue(ip: string): void {
+    const queue = this.requestQueues.get(ip);
+    if (queue) {
+      // Clean up all timeouts and respond to any pending requests
+      queue.forEach(queuedRequest => {
+        clearTimeout(queuedRequest.timeoutId);
+        if (!queuedRequest.res.headersSent && !queuedRequest.res.destroyed) {
+          queuedRequest.res.status(503).json({ 
+            error: "Service Unavailable", 
+            message: "Queue processing failed"
+          });
+        }
+      });
+      this.requestQueues.delete(ip);
+    }
+    this.processingQueues.delete(ip);
+  }
+
+  private checkRateLimit(ip: string): boolean {
+    const currentTime = Date.now();
+    const data = this.rateLimitData.get(ip) || {
+      count: 0,
+      lastRequestTime: currentTime,
+      violations: 0,
+      lastAccess: currentTime
+    };
+
+    // Reset count if time window has passed
+    if (this.shouldReset(data, currentTime)) {
+      data.count = 0;
+      data.lastRequestTime = currentTime;
+    }
+
+    data.count += 1;
+    data.lastAccess = currentTime; // Update last access time
+    this.rateLimitData.set(ip, data);
+
+    return data.count <= CONFIG.RATE_LIMIT.MAX_REQUESTS;
+  }
+
+  public middleware = (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ): void => {
+    const ip = this.getClientIP(req);
+    
+    if (!ip) {
+      res.status(400).json({ error: "Unable to identify client IP" });
+      return;
+    }
+
+    // Check if IP is blacklisted
+    if (this.isBlacklisted(ip)) {
+      console.log(`[${new Date().toISOString()}] Blacklisted IP ${ip} attempted access`);
+      res.status(403).json({ 
+        error: "Access denied", 
+        message: "Your IP has been blacklisted due to excessive rate limit violations"
+      });
+      return;
+    }
+
+    // Check rate limit
+    const canProceed = this.checkRateLimit(ip);
+
+    if (canProceed) {
+      // Request can proceed immediately
+      next();
+    } else {
+      // Rate limit exceeded, increment violation and try to queue
+      this.incrementViolation(ip);
+      
+      const queued = this.addToQueue(ip, req, res, next);
+      
+      if (!queued) {
+        res.status(429).json({ 
+          error: "Too Many Requests", 
+          message: "Rate limit exceeded and queue is full"
+        });
+      }
+      // If queued successfully, the request will be processed when possible
+    }
+  };
+
+  // Public methods for monitoring
+  public getStats(): any {
+    const totalQueuedRequests = Array.from(this.requestQueues.values())
+      .reduce((total, queue) => total + queue.length, 0);
+    
+    const memoryUsage = process.memoryUsage();
+    const oneMonthInMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+    const nextBlacklistReset = this.lastBlacklistReset + oneMonthInMs;
+    const daysUntilReset = Math.ceil((nextBlacklistReset - Date.now()) / (24 * 60 * 60 * 1000));
+    
+    return {
+      blacklistedIPs: Array.from(this.blacklist),
+      totalTrackedIPs: this.rateLimitData.size,
+      totalQueues: this.requestQueues.size,
+      totalQueuedRequests,
+      queueSizes: Array.from(this.requestQueues.entries()).map(([ip, queue]) => ({
+        ip,
+        queueSize: queue.length
+      })),
+      processingQueues: Array.from(this.processingQueues),
+      blacklistInfo: {
+        lastReset: new Date(this.lastBlacklistReset).toISOString(),
+        nextReset: new Date(nextBlacklistReset).toISOString(),
+        daysUntilReset: Math.max(0, daysUntilReset),
+        autoResetEnabled: true,
+        resetInterval: "30 days"
+      },
+      memoryLimits: {
+        maxTrackedIPs: this.MAX_TRACKED_IPS,
+        maxTotalQueuedRequests: this.MAX_TOTAL_QUEUED_REQUESTS,
+        maxRetryCount: this.MAX_RETRY_COUNT
+      },
+      memoryUsage: {
+        rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
+        heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
+        heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
+        external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`
+      }
+    };
+  }
+
+  // Private method for internal emergency blacklist reset only
+  private clearBlacklistInternal(): void {
+    this.blacklist.clear();
+    this.rateLimitData.forEach((data) => {
+      data.violations = 0;
+    });
+    this.lastBlacklistReset = Date.now();
+    console.log(`[${new Date().toISOString()}] Blacklist cleared internally (emergency only)`);
+  }
+
+  // Emergency cleanup method for memory protection
+  public emergencyCleanup(): void {
+    console.log(`[${new Date().toISOString()}] Emergency cleanup initiated`);
+    
+    const beforeCleanup = {
+      rateLimitData: this.rateLimitData.size,
+      queues: this.requestQueues.size,
+      totalQueuedRequests: Array.from(this.requestQueues.values())
+        .reduce((total, queue) => total + queue.length, 0)
+    };
+
+    // Clear all queues and notify pending requests
+    for (const [ip, queue] of this.requestQueues.entries()) {
+      queue.forEach(queuedRequest => {
+        clearTimeout(queuedRequest.timeoutId);
+        if (!queuedRequest.res.headersSent && !queuedRequest.res.destroyed) {
+          queuedRequest.res.status(503).json({ 
+            error: "Service Unavailable", 
+            message: "Emergency cleanup - please retry your request"
+          });
+        }
+      });
+    }
+    
+    // Clear all data structures
+    this.requestQueues.clear();
+    this.processingQueues.clear();
+    
+    // Keep only recent rate limit data (last hour)
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    const recentData = new Map();
+    
+    for (const [ip, data] of this.rateLimitData.entries()) {
+      if (data.lastAccess > oneHourAgo) {
+        recentData.set(ip, data);
+      }
+    }
+    
+    this.rateLimitData = recentData;
+
+    const afterCleanup = {
+      rateLimitData: this.rateLimitData.size,
+      queues: this.requestQueues.size,
+      totalQueuedRequests: 0
+    };
+
+    console.log(`[${new Date().toISOString()}] Emergency cleanup completed:`, {
+      before: beforeCleanup,
+      after: afterCleanup,
+      memoryUsage: process.memoryUsage()
+    });
+
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+      console.log(`[${new Date().toISOString()}] Garbage collection forced`);
+    }
+  }
+
+  // Memory pressure detection
+  private checkMemoryPressure(): boolean {
+    const memoryUsage = process.memoryUsage();
+    const heapUsedMB = memoryUsage.heapUsed / 1024 / 1024;
+    const rssUsedMB = memoryUsage.rss / 1024 / 1024;
+    
+    // Trigger emergency cleanup if memory usage is high
+    const MEMORY_PRESSURE_THRESHOLD_MB = 500; // 500MB
+    
+    if (heapUsedMB > MEMORY_PRESSURE_THRESHOLD_MB || rssUsedMB > MEMORY_PRESSURE_THRESHOLD_MB) {
+      console.log(`[${new Date().toISOString()}] Memory pressure detected: heap=${heapUsedMB}MB, rss=${rssUsedMB}MB`);
+      return true;
+    }
+    
+    return false;
+  }
+
+  // Shutdown cleanup
+  public shutdown(): void {
+    console.log(`[${new Date().toISOString()}] Rate limiter shutting down`);
+    
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
+    
+    // Clean up all pending requests
+    for (const [ip, queue] of this.requestQueues.entries()) {
+      queue.forEach(queuedRequest => {
+        clearTimeout(queuedRequest.timeoutId);
+        if (!queuedRequest.res.headersSent && !queuedRequest.res.destroyed) {
+          queuedRequest.res.status(503).json({ 
+            error: "Service Unavailable", 
+            message: "Server is shutting down"
+          });
+        }
+      });
+    }
+    
+    this.requestQueues.clear();
+    this.processingQueues.clear();
+    this.rateLimitData.clear();
+    this.blacklist.clear();
+  }
+}
+
+export const advancedRateLimiter = AdvancedRateLimiter.getInstance();
