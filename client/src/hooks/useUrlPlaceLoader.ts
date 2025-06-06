@@ -6,6 +6,7 @@ import { setPlaceDetailCollapsed, setShowDirections } from '../store/slices/uiSl
 import { apiService } from '../services/apiService';
 import { PlaceDetails } from '../types';
 import { toast } from '../hooks/use-toast';
+import { AESEncrypt } from '../utils/AESEncrypt';
 
 export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDetails) => void) => {
   const dispatch = useAppDispatch();
@@ -13,6 +14,70 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
   useEffect(() => {
     const loadLatLngFromUrl = async () => {
       const urlParams = new URLSearchParams(window.location.search);
+      
+      // Try encrypted coordinate format first
+      const encryptedCoordParam = urlParams.get('c');
+      if (encryptedCoordParam) {
+        try {
+          const coordData = AESEncrypt.decryptObject<{
+            lat: number;
+            lng: number;
+            type: string;
+          }>(encryptedCoordParam);
+          
+          if (coordData.type === 'coordinates' && !isNaN(coordData.lat) && !isNaN(coordData.lng)) {
+            if (mapRef?.current) {
+              mapRef.current.flyTo(coordData.lng, coordData.lat);
+              mapRef.current.addMarker(coordData.lng, coordData.lat);
+              dispatch(setSelectedPlace(null));
+              dispatch(setPlaceDetailCollapsed(false));
+              dispatch(setShowDirections(false));
+              
+              // Load place details for the coordinates
+              const data = await apiService.get<any[]>('/reverse/v3', {
+                lng: coordData.lng.toString(),
+                lat: coordData.lat.toString()
+              });
+              
+              if (data && data.length > 0) {
+                const placeDetails: PlaceDetails = {
+                  display: data[0].display,
+                  name: data[0].name,
+                  hs_num: data[0].name.split(' ')[0] || '',
+                  street: data[0].name.split(' ').slice(1).join(' ') || '',
+                  address: data[0].address,
+                  city_id: data[0].boundaries.find(b => b.type === 0)?.id || 0,
+                  city: data[0].boundaries.find(b => b.type === 0)?.name || '',
+                  district_id: data[0].boundaries.find(b => b.type === 1)?.id || 0,
+                  district: data[0].boundaries.find(b => b.type === 1)?.name || '',
+                  ward_id: data[0].boundaries.find(b => b.type === 2)?.id || 0,
+                  ward: data[0].boundaries.find(b => b.type === 2)?.name || '',
+                  lat: data[0].lat,
+                  lng: data[0].lng,
+                  ref_id: data[0].ref_id || ''
+                };
+                
+                dispatch(setLocationInfo(placeDetails));
+                
+                if (onPlaceSelect) {
+                  onPlaceSelect(placeDetails);
+                }
+              }
+              
+              // Clear the URL parameter after loading
+              const newUrl = new URL(window.location.href);
+              newUrl.searchParams.delete('c');
+              window.history.replaceState({}, '', newUrl.toString());
+            }
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing encrypted coordinate data:', error);
+          // Fall through to legacy format
+        }
+      }
+
+      // Legacy format support
       const lat = parseFloat(urlParams.get('lat') || '');
       const lng = parseFloat(urlParams.get('lng') || '');
       if (isNaN(lat) || isNaN(lng)) return;
@@ -65,6 +130,53 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
     }
     const loadPlaceFromUrl = async () => {
       const urlParams = new URLSearchParams(window.location.search);
+      
+      // Try encrypted format first
+      const encryptedParam = urlParams.get('p');
+      if (encryptedParam) {
+        try {
+          const placeData = AESEncrypt.decryptObject<{
+            placeId: string;
+            lat: number;
+            lng: number;
+            name: string;
+          }>(encryptedParam);
+          
+          // Load place details using the decrypted place ID
+          const placeDetails: PlaceDetails = await apiService.get('/place/v3', {
+            refid: placeData.placeId
+          });
+          
+          // Set as location info instead of selected place to avoid conflicts
+          dispatch(setLocationInfo(placeDetails));
+          dispatch(setSelectedPlace(null));
+          dispatch(setPlaceDetailCollapsed(false));
+          dispatch(setShowDirections(false));
+          
+          // Update search bar if callback provided
+          if (onPlaceSelect) {
+            onPlaceSelect(placeDetails);
+          }
+          
+          // Fly to the location on map
+          if (mapRef?.current) {
+            mapRef.current.flyTo(placeDetails.lng, placeDetails.lat);
+            mapRef.current.addMarker(placeDetails.lng, placeDetails.lat);
+          }
+          
+          // Clear the URL parameter after loading
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('p');
+          window.history.replaceState({}, '', newUrl.toString());
+          
+          return;
+        } catch (error) {
+          console.error('Error parsing encrypted place data:', error);
+          // Fall through to legacy format
+        }
+      }
+
+      // Legacy format support
       const placeId = urlParams.get('placeId');
       
       if (!placeId) return;

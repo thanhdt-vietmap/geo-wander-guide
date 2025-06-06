@@ -202,9 +202,22 @@ class AdvancedRateLimiter {
       console.log(`[${new Date().toISOString()}] Daily limit reset for IP ${ip}`);
     }
 
+    // Apply stricter daily limits for suspicious bots
+    let dailyLimit = this.DAILY_REQUEST_LIMIT;
+    
+    if (data.isSuspiciousBot || (data.botSuspicionScore && data.botSuspicionScore >= 40)) {
+      // Reduce daily limit for suspicious bots by 75%
+      dailyLimit = Math.floor(this.DAILY_REQUEST_LIMIT * 0.25);
+      console.log(`[${new Date().toISOString()}] Applying stricter daily limit for suspicious bot IP ${ip}: ${dailyLimit} (suspicion score: ${data.botSuspicionScore || 0})`);
+    } else if (data.botSuspicionScore && data.botSuspicionScore >= 20) {
+      // Reduce daily limit for moderately suspicious IPs by 50%
+      dailyLimit = Math.floor(this.DAILY_REQUEST_LIMIT * 0.5);
+      console.log(`[${new Date().toISOString()}] Applying moderate daily limit for IP ${ip}: ${dailyLimit} (suspicion score: ${data.botSuspicionScore})`);
+    }
+
     // Check if adding one more request would exceed the daily limit
-    if (data.dailyCount >= this.DAILY_REQUEST_LIMIT) {
-      console.log(`[${new Date().toISOString()}] Daily limit exceeded for IP ${ip}: ${data.dailyCount}/${this.DAILY_REQUEST_LIMIT}`);
+    if (data.dailyCount >= dailyLimit) {
+      console.log(`[${new Date().toISOString()}] Daily limit exceeded for IP ${ip}: ${data.dailyCount}/${dailyLimit} (suspicion: ${data.botSuspicionScore || 0})`);
       return false;
     }
 

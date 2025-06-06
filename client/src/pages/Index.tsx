@@ -18,7 +18,6 @@ import PlaceDetails from '../components/PlaceDetails';
 import Direction, { DirectionRef } from '../components/Direction';
 import MapContextMenu from '../components/MapContextMenu';
 import LocationInfoCard from '../components/LocationInfoCard';
-import BotDetectionStatus from '../components/BotDetectionStatus';
 import { PlaceDetails as PlaceDetailsType } from '../types';
 import { MapLayerType } from '../components/MapLayerSelector';
 const Index = () => {

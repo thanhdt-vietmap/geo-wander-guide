@@ -1,3 +1,5 @@
+import { AESEncrypt } from '../utils/AESEncrypt';
+
 interface WayPoint {
   name: string;
   lat: number;
@@ -7,7 +9,7 @@ interface WayPoint {
 
 export class RouteShareService {
   /**
-   * Generate a shareable URL with route waypoints and vehicle type
+   * Generate a shareable URL with route waypoints and vehicle type (encrypted)
    */
   static generateShareUrl(waypoints: WayPoint[], vehicle: string): string {
     const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
@@ -16,17 +18,35 @@ export class RouteShareService {
       throw new Error('At least 2 valid waypoints are required to generate a share URL');
     }
 
-    // Format coordinates to 6 decimal places and create points parameter
-    const pointsParam = validWaypoints
-      .map(wp => `${wp.lat.toFixed(6)},${wp.lng.toFixed(6)}`)
-      .join('|');
+    // Create route data object
+    const routeData = {
+      points: validWaypoints.map(wp => [wp.lat.toFixed(6), wp.lng.toFixed(6)]),
+      vehicle: vehicle
+    };
 
-    const baseUrl = window.location.origin + window.location.pathname;
-    const url = new URL(baseUrl);
-    url.searchParams.set('points', pointsParam);
-    url.searchParams.set('vehicle', vehicle);
+    try {
+      // Encrypt the route data
+      const encryptedData = AESEncrypt.encryptObject(routeData);
+      
+      const baseUrl = window.location.origin + window.location.pathname;
+      const url = new URL(baseUrl);
+      url.searchParams.set('r', encryptedData);
 
-    return url.toString();
+      return url.toString();
+    } catch (error) {
+      console.error('Error generating encrypted share URL:', error);
+      // Fallback to unencrypted format
+      const pointsParam = validWaypoints
+        .map(wp => `${wp.lat.toFixed(6)},${wp.lng.toFixed(6)}`)
+        .join('|');
+
+      const baseUrl = window.location.origin + window.location.pathname;
+      const url = new URL(baseUrl);
+      url.searchParams.set('points', pointsParam);
+      url.searchParams.set('vehicle', vehicle);
+
+      return url.toString();
+    }
   }
 
   /**
@@ -67,10 +87,40 @@ export class RouteShareService {
   }
 
   /**
-   * Parse waypoints from URL parameters
+   * Parse waypoints from URL parameters (supports both encrypted and legacy formats)
    */
   static parseWaypointsFromUrl(): { waypoints: Array<{lat: number, lng: number}>, vehicle: string } | null {
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Try encrypted format first
+    const encryptedParam = urlParams.get('r');
+    if (encryptedParam) {
+      try {
+        const routeData = AESEncrypt.decryptObject<{
+          points: string[][];
+          vehicle: string;
+        }>(encryptedParam);
+        
+        const waypoints = routeData.points.map(point => {
+          const [lat, lng] = point.map(Number);
+          if (isNaN(lat) || isNaN(lng)) {
+            throw new Error('Invalid coordinates');
+          }
+          return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
+        });
+
+        if (waypoints.length < 2) {
+          throw new Error('At least 2 waypoints required');
+        }
+
+        return { waypoints, vehicle: routeData.vehicle || 'car' };
+      } catch (error) {
+        console.error('Error parsing encrypted route data:', error);
+        // Fall through to legacy format
+      }
+    }
+
+    // Legacy format support
     const pointsParam = urlParams.get('points');
     const vehicleParam = urlParams.get('vehicle') || 'car';
 
@@ -99,12 +149,13 @@ export class RouteShareService {
   }
 
   /**
-   * Clear route parameters from URL
+   * Clear route parameters from URL (supports both encrypted and legacy formats)
    */
   static clearRouteFromUrl(): void {
     const url = new URL(window.location.href);
-    url.searchParams.delete('points');
-    url.searchParams.delete('vehicle');
+    url.searchParams.delete('r'); // encrypted format
+    url.searchParams.delete('points'); // legacy format
+    url.searchParams.delete('vehicle'); // legacy format
     window.history.replaceState({}, '', url.toString());
   }
 }

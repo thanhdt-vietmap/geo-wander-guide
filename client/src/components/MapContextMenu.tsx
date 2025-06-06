@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Copy, MapPin, X, Navigation, Plus, Share } from 'lucide-react';
 import { toast } from 'sonner';
+import { AESEncrypt } from '../utils/AESEncrypt';
 
 interface MapContextMenuProps {
   x: number;
@@ -167,11 +168,32 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
         {/* Share this location */}
         <button
           onClick={() => {
-            const coordString = `lat=${lat.toFixed(6)}&lng=${lng.toFixed(6)}`;
-            const shareUrl = `${window.location.origin}${window.location.pathname}?${coordString}`;
-            navigator.clipboard.writeText(shareUrl)
-              .then(() => toast.success('Shared coordinates copied to clipboard'))
-              .catch(() => toast.error('Failed to copy shared coordinates'));
+            try {
+              // Create coordinate data object for encryption
+              const coordData = {
+                lat: lat,
+                lng: lng,
+                type: 'coordinates'
+              };
+              
+              try {
+                // Encrypt the coordinate data
+                const encryptedData = AESEncrypt.encryptObject(coordData);
+                const shareUrl = `${window.location.origin}${window.location.pathname}?c=${encryptedData}`;
+                navigator.clipboard.writeText(shareUrl)
+                  .then(() => toast.success('Shared coordinates copied to clipboard'))
+                  .catch(() => toast.error('Failed to copy shared coordinates'));
+              } catch (encryptError) {
+                // Fallback to legacy format
+                const coordString = `lat=${lat.toFixed(6)}&lng=${lng.toFixed(6)}`;
+                const shareUrl = `${window.location.origin}${window.location.pathname}?${coordString}`;
+                navigator.clipboard.writeText(shareUrl)
+                  .then(() => toast.success('Shared coordinates copied to clipboard'))
+                  .catch(() => toast.error('Failed to copy shared coordinates'));
+              }
+            } catch (error) {
+              toast.error('Failed to copy shared coordinates');
+            }
             onClose();
           }}
           className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"

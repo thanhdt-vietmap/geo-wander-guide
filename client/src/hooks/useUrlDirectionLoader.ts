@@ -5,6 +5,7 @@ import { setStartingPlace, setSelectedPlace, setLocationInfo } from '../store/sl
 import { toast } from '../hooks/use-toast';
 import { DirectionRef } from '../components/Direction';
 import { MapViewRef } from '../components/MapView';
+import { RouteShareService } from '../services/routeShareService';
 
 interface WayPoint {
   name: string;
@@ -22,57 +23,15 @@ export const useUrlDirectionLoader = (
   useEffect(() => {
 
     const loadDirectionFromUrl = async () => {
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const pointsParam = urlParams.get('points');
-      const vehicleParam = urlParams.get('vehicle');
-
-      if (!pointsParam) return;
+      // Use RouteShareService to parse waypoints (supports both encrypted and legacy formats)
+      const routeData = RouteShareService.parseWaypointsFromUrl();
+      
+      if (!routeData) return;
 
       try {
-        // Parse points parameter: "lat1,lng1;lat2,lng2;lat3,lng3"
-        const pointStrings = pointsParam.split('|');
-        if (pointStrings.length < 2) {
-          console.warn('Invalid route URL: need at least 2 points');
-          return;
-        }
-
-        // Parse each point to coordinates only
-        const coordinates: Array<{lat: number, lng: number}> = [];
-        const processedCoordinates = new Set<string>(); // Track processed coordinates to avoid duplicates
+        const { waypoints, vehicle } = routeData;
         
-        for (let i = 0; i < pointStrings.length; i++) {
-          const pointString = pointStrings[i];
-          const [latStr, lngStr] = pointString.split(',');
-          const lat = parseFloat(latStr);
-          const lng = parseFloat(lngStr);
-          
-          if (isNaN(lat) || isNaN(lng)) {
-            console.warn('Invalid coordinate in route URL:', pointString);
-            continue;
-          }
-          
-          // Create unique key for this coordinate pair
-          const coordKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
-          
-          // Check if we've already processed this coordinate
-          if (processedCoordinates.has(coordKey)) {
-            console.warn('Duplicate coordinate detected, skipping:', coordKey);
-            continue;
-          }
-          
-          processedCoordinates.add(coordKey);
-          
-          // Just add coordinates, no reverse geocoding
-          coordinates.push({ lat, lng });
-        }
-
-        if (coordinates.length < 2) {
-          console.warn('Could not parse enough valid coordinates from URL');
-          return;
-        }
-
-        console.log('Loading route from URL with coordinates:', coordinates);
+        console.log('Loading route from URL with coordinates:', waypoints);
 
         // Clear any existing selections
         dispatch(setSelectedPlace(null));
@@ -82,10 +41,10 @@ export const useUrlDirectionLoader = (
         dispatch(setShowDirections(true));
 
         // Set up map view to show all coordinates
-        if (mapRef.current && coordinates.length > 0) {
+        if (mapRef.current && waypoints.length > 0) {
           // Calculate bounds for all coordinates
-          const lats = coordinates.map(coord => coord.lat);
-          const lngs = coordinates.map(coord => coord.lng);
+          const lats = waypoints.map(coord => coord.lat);
+          const lngs = waypoints.map(coord => coord.lng);
           const minLat = Math.min(...lats);
           const maxLat = Math.max(...lats);
           const minLng = Math.min(...lngs);
@@ -112,26 +71,23 @@ export const useUrlDirectionLoader = (
         setTimeout(() => {
           if (directionRef.current) {
             // Load coordinates into direction component (no reverse geocoding, just fill inputs)
-            loadCoordinatesIntoDirection(coordinates, directionRef, vehicleParam);
+            loadCoordinatesIntoDirection(waypoints, directionRef, vehicle);
           } else {
             // Retry if component not ready
             setTimeout(() => {
               if (directionRef.current) {
-                loadCoordinatesIntoDirection(coordinates, directionRef, vehicleParam);
+                loadCoordinatesIntoDirection(waypoints, directionRef, vehicle);
               }
             }, 500);
           }
         }, 200);
 
-        // Clear URL parameters after loading
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('points');
-        newUrl.searchParams.delete('vehicle');
-        window.history.replaceState({}, '', newUrl.toString());
+        // Clear URL parameters after loading using RouteShareService
+        RouteShareService.clearRouteFromUrl();
 
         toast({
           title: "Route loaded from URL",
-          description: `Loaded route with ${coordinates.length} waypoints`,
+          description: `Loaded route with ${waypoints.length} waypoints`,
         });
 
       } catch (error) {
@@ -142,11 +98,8 @@ export const useUrlDirectionLoader = (
           variant: "destructive"
         });
         
-        // Clear invalid parameters
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('points');
-        newUrl.searchParams.delete('vehicle');
-        window.history.replaceState({}, '', newUrl.toString());
+        // Clear invalid parameters using RouteShareService
+        RouteShareService.clearRouteFromUrl();
       }
     };
 
@@ -158,7 +111,7 @@ export const useUrlDirectionLoader = (
 const loadCoordinatesIntoDirection = (
   coordinates: Array<{lat: number, lng: number}>, 
   directionRef: React.RefObject<DirectionRef>,
-  vehicleParam: string | null
+  vehicle: string
 ) => {
   if (!directionRef.current) return;
   try {
@@ -167,9 +120,9 @@ const loadCoordinatesIntoDirection = (
     directionRef.current.setWaypointsFromCoordinates(coordinates);
 
     // Set vehicle type if provided
-    if (vehicleParam && ['car', 'bike', 'foot', 'motorcycle'].includes(vehicleParam) && directionRef.current?.setVehicle) {
-      directionRef.current.setVehicle(vehicleParam);
-      console.log('Vehicle type set from URL:', vehicleParam);
+    if (vehicle && ['car', 'bike', 'foot', 'motorcycle'].includes(vehicle) && directionRef.current?.setVehicle) {
+      directionRef.current.setVehicle(vehicle);
+      console.log('Vehicle type set from URL:', vehicle);
     }
 
     console.log('Successfully started loading coordinates into Direction component');

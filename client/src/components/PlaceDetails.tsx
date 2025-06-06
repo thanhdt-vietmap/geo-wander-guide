@@ -10,6 +10,7 @@ import {
   DrawerTitle,
 } from "../components/ui/drawer";
 import { toast } from '../hooks/use-toast';
+import { AESEncrypt } from '../utils/AESEncrypt';
 
 interface PlaceDetailsProps {
   place: {
@@ -58,22 +59,51 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
       return;
     }
 
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('placeId', place.ref_id);
-    
     try {
+      // Create place data object for encryption
+      const placeData = {
+        placeId: place.ref_id,
+        lat: place.lat,
+        lng: place.lng,
+        name: place.name || place.display
+      };
+
+      // Encrypt the place data
+      const encryptedData = AESEncrypt.encryptObject(placeData);
+      
+      const currentUrl = new URL(window.location.href);
+      // Clear any existing place parameters
+      currentUrl.searchParams.delete('placeId');
+      currentUrl.searchParams.delete('lat');
+      currentUrl.searchParams.delete('lng');
+      // Set encrypted parameter
+      currentUrl.searchParams.set('p', encryptedData);
+      
       await navigator.clipboard.writeText(currentUrl.toString());
       toast({
         title: "Đã sao chép liên kết",
         description: "Liên kết địa điểm đã được sao chép vào clipboard",
       });
     } catch (error) {
-      // console.error('Failed to copy to clipboard:', error);
-      toast({
-        title: "Lỗi sao chép",
-        description: "Không thể sao chép liên kết",
-        variant: "destructive"
-      });
+      console.error('Error sharing place:', error);
+      // Fallback to legacy format
+      try {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('placeId', place.ref_id);
+        
+        await navigator.clipboard.writeText(currentUrl.toString());
+        toast({
+          title: "Đã sao chép liên kết",
+          description: "Liên kết địa điểm đã được sao chép vào clipboard",
+        });
+      } catch (fallbackError) {
+        // console.error('Failed to copy to clipboard:', fallbackError);
+        toast({
+          title: "Lỗi sao chép",
+          description: "Không thể sao chép liên kết",
+          variant: "destructive"
+        });
+      }
     }
   };
 

@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { PlaceDetails } from '../types';
 import { X, Navigation, Share } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
+import { AESEncrypt } from '../utils/AESEncrypt';
 
 interface LocationInfoCardProps {
   place: PlaceDetails;
@@ -32,8 +33,24 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
         return;
       }
 
-      const shareUrl = `${window.location.origin}${window.location.pathname}?placeId=${place.ref_id}`;
-      await navigator.clipboard.writeText(shareUrl);
+      // Create place data object for encryption
+      const placeData = {
+        placeId: place.ref_id,
+        lat: place.lat,
+        lng: place.lng,
+        name: place.name || place.display
+      };
+
+      try {
+        // Encrypt the place data
+        const encryptedData = AESEncrypt.encryptObject(placeData);
+        const shareUrl = `${window.location.origin}${window.location.pathname}?p=${encryptedData}`;
+        await navigator.clipboard.writeText(shareUrl);
+      } catch (encryptError) {
+        // Fallback to legacy format
+        const shareUrl = `${window.location.origin}${window.location.pathname}?placeId=${place.ref_id}`;
+        await navigator.clipboard.writeText(shareUrl);
+      }
       
       toast({
         title: "Đã sao chép liên kết",
