@@ -1,7 +1,6 @@
 
 import { PlaceDetails } from '../types';
 import { apiService } from './apiService';
-import { debounce } from '../utils/debounce';
 
 export interface ReverseGeocodingResponse {
   lat: number;
@@ -21,13 +20,11 @@ export interface ReverseGeocodingResponse {
   categories: any[];
 }
 
-// Internal function for actual reverse geocoding
-const getReverseGeocodingInternal = async (
+export const getReverseGeocoding = async (
   lng: number,
   lat: number
 ): Promise<PlaceDetails> => {
   try {
-    console.log(`[MapService] Making reverse geocoding request for: ${lat}, ${lng}`);
     const data: ReverseGeocodingResponse[] = await apiService.get('/reverse/v3', {
       lng: lng.toString(),
       lat: lat.toString()
@@ -57,49 +54,7 @@ const getReverseGeocodingInternal = async (
     
     return placeDetails;
   } catch (error) {
-    console.error('Error getting reverse geocoding:', error);
+    // console.error('Error getting reverse geocoding:', error);
     throw error;
   }
-};
-
-// Debounced version to prevent excessive API calls during drag
-const debouncedReverseGeocoding = debounce(getReverseGeocodingInternal, 300);
-
-// Promise cache for debounced calls
-let lastPromise: Promise<PlaceDetails> | null = null;
-let lastCoordinates: { lat: number; lng: number } | null = null;
-
-export const getReverseGeocoding = async (
-  lng: number,
-  lat: number
-): Promise<PlaceDetails> => {
-  // Check if this is the same coordinates as last call
-  if (lastCoordinates && lastCoordinates.lat === lat && lastCoordinates.lng === lng && lastPromise) {
-    console.log(`[MapService] Returning cached promise for: ${lat}, ${lng}`);
-    return lastPromise;
-  }
-
-  // Update last coordinates
-  lastCoordinates = { lat, lng };
-
-  // Create new promise
-  lastPromise = new Promise<PlaceDetails>((resolve, reject) => {
-    // Use debounced function
-    const debouncedCall = debounce(async () => {
-      try {
-        const result = await getReverseGeocodingInternal(lng, lat);
-        resolve(result);
-      } catch (error) {
-        reject(error);
-      } finally {
-        // Clear cache after completion
-        lastPromise = null;
-        lastCoordinates = null;
-      }
-    }, 300);
-
-    debouncedCall();
-  });
-
-  return lastPromise;
 };

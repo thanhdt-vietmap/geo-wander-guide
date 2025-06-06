@@ -12,23 +12,32 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5005;
 
+// Initialize request counts for rate limiting
+(app as any).requestCounts = {};
+
 // Setup common middleware
 setupMiddleware(app);
 
 // Setup routes
 app.use("/api", apiRoutes);
 app.use("/admin", adminRoutes);
-app.use("/", proxyRoutes);
+app.use("/proxy", proxyRoutes);
 
 // Serve static files from React build
 app.use(express.static(path.join(__dirname, "../../client/dist")));
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../../client/dist/index.html"));
+  const filePath = path.join(__dirname, "../../client/dist/index.html");
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      res.status(500).send('Internal Server Error');
+    }
+  });
 });
 
 app.listen(PORT, () => {
-  // console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 // Graceful shutdown handling
@@ -48,29 +57,11 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
   console.error(`[${new Date().toISOString()}] Uncaught Exception:`, error);
-  // Trigger emergency cleanup before exit
   advancedRateLimiter.emergencyCleanup();
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error(`[${new Date().toISOString()}] Unhandled Rejection at:`, promise, 'reason:', reason);
-  // Trigger emergency cleanup
   advancedRateLimiter.emergencyCleanup();
 });
-
-// Memory monitoring
-setInterval(() => {
-  const memoryUsage = process.memoryUsage();
-  const heapUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
-  const rssMB = Math.round(memoryUsage.rss / 1024 / 1024);
-  
-  // Log memory usage every 10 minutes
-  console.log(`[${new Date().toISOString()}] Memory usage: heap=${heapUsedMB}MB, rss=${rssMB}MB`);
-  
-  // Trigger emergency cleanup if memory usage is critically high
-  if (heapUsedMB > 800 || rssMB > 1000) {
-    console.log(`[${new Date().toISOString()}] Critical memory usage detected, triggering emergency cleanup`);
-    advancedRateLimiter.emergencyCleanup();
-  }
-}, 10 * 60 * 1000); // Every 10 minutes
