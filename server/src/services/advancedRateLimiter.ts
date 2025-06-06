@@ -729,6 +729,28 @@ class AdvancedRateLimiter {
     return false;
   }
 
+  // Direct method to add IP to blacklist (for auto-disabling bots)
+  public addToBlacklistDirect(ip: string): void {
+    this.blacklist.add(ip);
+    console.log(`[${new Date().toISOString()}] IP ${ip} directly added to blacklist (auto-disable)`);
+    
+    // Clear any pending requests for this IP
+    const queue = this.requestQueues.get(ip);
+    if (queue) {
+      queue.forEach(queuedRequest => {
+        clearTimeout(queuedRequest.timeoutId);
+        if (!queuedRequest.res.headersSent && !queuedRequest.res.destroyed) {
+          queuedRequest.res.status(403).json({ 
+            error: "Access denied", 
+            message: "Your IP has been blocked due to automated behavior detection"
+          });
+        }
+      });
+      this.requestQueues.delete(ip);
+      this.processingQueues.delete(ip);
+    }
+  }
+
   // Shutdown cleanup
   public shutdown(): void {
     console.log(`[${new Date().toISOString()}] Rate limiter shutting down`);

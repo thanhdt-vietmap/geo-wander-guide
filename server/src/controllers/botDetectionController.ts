@@ -32,8 +32,9 @@ interface BotDetectionStats {
 class BotDetectionController {
   private static instance: BotDetectionController;
   private stats: BotDetectionStats;
-  private readonly SUSPICION_THRESHOLD = 50;
-  private readonly HIGH_SUSPICION_THRESHOLD = 80;
+  private readonly SUSPICION_THRESHOLD = 40; // Lowered from 50 for more aggressive detection
+  private readonly HIGH_SUSPICION_THRESHOLD = 70; // Lowered from 80 for faster auto-disable
+  private readonly AUTO_DISABLE_THRESHOLD = 60; // New threshold for immediate blocking
 
   private constructor() {
     this.stats = {
@@ -95,6 +96,7 @@ class BotDetectionController {
       // Determine if this is a bot
       const isBot = metrics.suspicionScore >= this.SUSPICION_THRESHOLD;
       const isHighSuspicion = metrics.suspicionScore >= this.HIGH_SUSPICION_THRESHOLD;
+      const shouldAutoDisable = metrics.suspicionScore >= this.AUTO_DISABLE_THRESHOLD;
 
       if (isBot) {
         this.stats.botSessions++;
@@ -102,22 +104,27 @@ class BotDetectionController {
         console.warn(`[BotDetection] Bot detected from IP ${clientIP}:`, {
           score: metrics.suspicionScore,
           flags: metrics.flags,
-          severity: isHighSuspicion ? 'HIGH' : 'MEDIUM'
+          severity: isHighSuspicion ? 'HIGH' : 'MEDIUM',
+          autoDisable: shouldAutoDisable
         });
 
         // Integrate with rate limiter - update bot suspicion score
         try {
           const { advancedRateLimiter } = require('../services/advancedRateLimiter');
           advancedRateLimiter.updateBotSuspicionScore(clientIP, metrics.suspicionScore, metrics.flags);
+          
+          // Auto-disable functionality: Immediately blacklist suspicious IPs
+          if (shouldAutoDisable) {
+            console.error(`[BotDetection] AUTO-DISABLE: Blacklisting IP ${clientIP} (score: ${metrics.suspicionScore})`);
+            advancedRateLimiter.addToBlacklistDirect(clientIP);
+          }
         } catch (error) {
           console.error('[BotDetection] Failed to update rate limiter bot score:', error);
         }
 
-        // For high suspicion scores, we might want to take additional action
+        // For high suspicion scores, take immediate action
         if (isHighSuspicion) {
-          console.error(`[BotDetection] HIGH SUSPICION bot detected from IP ${clientIP}`);
-          // Could integrate with rate limiter to blacklist IP immediately
-          // advancedRateLimiter.addToBlacklistDirect(clientIP);
+          console.error(`[BotDetection] HIGH SUSPICION bot detected from IP ${clientIP} - Enhanced monitoring`);
         }
       }
 
@@ -189,7 +196,8 @@ class BotDetectionController {
           suspiciousIPs,
           thresholds: {
             suspicion: this.SUSPICION_THRESHOLD,
-            highSuspicion: this.HIGH_SUSPICION_THRESHOLD
+            highSuspicion: this.HIGH_SUSPICION_THRESHOLD,
+            autoDisable: this.AUTO_DISABLE_THRESHOLD
           }
         }
       });
