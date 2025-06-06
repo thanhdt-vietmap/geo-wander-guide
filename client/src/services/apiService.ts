@@ -14,7 +14,7 @@ export class ApiService {
     this.secureClient = SecureApiClient.getInstance();
     this.config = {
       useProxy: false,
-      proxyBaseUrl: '/proxy',
+      proxyBaseUrl: '',
       ...config
     };
   }
@@ -38,7 +38,7 @@ export class ApiService {
     params?: Record<string, string>,
     body?: any
   ): Promise<T> {
-    const proxyUrl = `${this.config.proxyBaseUrl}/proxy`;
+    const proxyUrl = `${this.config.proxyBaseUrl}`;
     
     const requestBody = {
       method,

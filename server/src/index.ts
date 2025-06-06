@@ -17,8 +17,8 @@ const PORT = process.env.PORT || 5005;
 setupMiddleware(app);
 
 // Setup routes
-app.use("/api", apiRoutes);
-app.use("/proxy", proxyRoutes);
+// app.use("/api", apiRoutes);
+app.use("/", proxyRoutes);
 
 // Serve static files from React build
 app.use(express.static(path.join(__dirname, "../../client/dist")));
