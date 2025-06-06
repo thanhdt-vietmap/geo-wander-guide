@@ -1,5 +1,6 @@
 import express from "express";
 import { advancedRateLimiter } from "../services/advancedRateLimiter";
+import { botDetectionController } from "../controllers/botDetectionController";
 
 const router = express.Router();
 
@@ -20,6 +21,37 @@ router.get("/rate-limiter/stats", (req, res) => {
     });
   }
 });
+
+// Bot detection statistics
+router.get("/bot-detection/stats", botDetectionController.getBotStats);
+
+// Daily usage statistics
+router.get("/daily-usage", (req, res) => {
+  try {
+    const stats = advancedRateLimiter.getStats();
+    res.json({
+      success: true,
+      data: {
+        dailyLimits: stats.dailyLimits,
+        overview: {
+          totalTrackedIPs: stats.totalTrackedIPs,
+          dailyRequestLimit: stats.memoryLimits.dailyRequestLimit,
+          activeUsers: stats.dailyLimits.totalActiveUsers
+        },
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to get daily usage stats",
+      message: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Clear bot detection stats
+router.post("/bot-detection/clear-stats", botDetectionController.clearStats);
 
 // Emergency cleanup (only for critical memory issues)
 router.post("/rate-limiter/emergency-cleanup", (req, res) => {

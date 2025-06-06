@@ -9,6 +9,7 @@ import { useDirectionOperations } from '../hooks/useDirectionOperations';
 import { usePlaceOperations } from '../hooks/usePlaceOperations';
 import { useUrlPlaceLoader } from '../hooks/useUrlPlaceLoader';
 import { useUrlDirectionLoader } from '../hooks/useUrlDirectionLoader';
+import { useBotDetection } from '../hooks/useBotDetection';
 import MapView, { MapViewRef } from '../components/MapView';
 import SearchBar from '../components/SearchBar';
 import Sidebar from '../components/Sidebar';
@@ -17,10 +18,14 @@ import PlaceDetails from '../components/PlaceDetails';
 import Direction, { DirectionRef } from '../components/Direction';
 import MapContextMenu from '../components/MapContextMenu';
 import LocationInfoCard from '../components/LocationInfoCard';
+import BotDetectionStatus from '../components/BotDetectionStatus';
 import { PlaceDetails as PlaceDetailsType } from '../types';
 import { MapLayerType } from '../components/MapLayerSelector';
 const Index = () => {
   const dispatch = useAppDispatch();
+  
+  // Bot detection integration
+  const { isBot, suspicionScore, flags } = useBotDetection(true);
   
   // Redux state
   const { isSidebarOpen, showDirections } = useAppSelector((state) => state.ui);
@@ -204,6 +209,14 @@ const Index = () => {
       onClick={() => dispatch(setSidebarOpen(false))}
     />
   )}
+
+  {/* Bot Detection Status */}
+  {/* <BotDetectionStatus 
+    isBot={isBot}
+    suspicionScore={suspicionScore}
+    flags={flags}
+    showDetails={false}
+  /> */}
 </div>
   );
 };

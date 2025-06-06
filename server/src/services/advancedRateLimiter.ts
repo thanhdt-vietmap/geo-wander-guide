@@ -6,6 +6,10 @@ interface RateLimitData {
   lastRequestTime: number;
   violations: number; // Number of times this IP hit the rate limit
   lastAccess: number; // Track last access for cleanup
+  botSuspicionScore?: number; // Bot detection score
+  isSuspiciousBot?: boolean; // Flag for bot behavior
+  dailyCount: number; // Daily request count
+  dailyResetTime: number; // Timestamp of last daily reset
 }
 
 interface QueuedRequest {
@@ -32,6 +36,7 @@ class AdvancedRateLimiter {
   private readonly CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
   private readonly DATA_TTL = 24 * 60 * 60 * 1000; // 24 hours
   private readonly MAX_RETRY_COUNT = 3;
+  private readonly DAILY_REQUEST_LIMIT = 200; // Maximum requests per IP per day
 
   private constructor() {
     this.initializeBlacklistReset();
@@ -174,13 +179,57 @@ class AdvancedRateLimiter {
     return (currentTime - data.lastRequestTime) > CONFIG.RATE_LIMIT.RESET_TIME;
   }
 
+  private shouldResetDailyCount(data: RateLimitData, currentTime: number): boolean {
+    const oneDayInMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    return (currentTime - (data.dailyResetTime || 0)) > oneDayInMs;
+  }
+
+  private checkDailyLimit(ip: string): boolean {
+    const currentTime = Date.now();
+    const data = this.rateLimitData.get(ip) || {
+      count: 0,
+      lastRequestTime: currentTime,
+      violations: 0,
+      lastAccess: currentTime,
+      dailyCount: 0,
+      dailyResetTime: currentTime
+    };
+
+    // Reset daily count if 24 hours have passed
+    if (this.shouldResetDailyCount(data, currentTime)) {
+      data.dailyCount = 0;
+      data.dailyResetTime = currentTime;
+      console.log(`[${new Date().toISOString()}] Daily limit reset for IP ${ip}`);
+    }
+
+    // Check if adding one more request would exceed the daily limit
+    if (data.dailyCount >= this.DAILY_REQUEST_LIMIT) {
+      console.log(`[${new Date().toISOString()}] Daily limit exceeded for IP ${ip}: ${data.dailyCount}/${this.DAILY_REQUEST_LIMIT}`);
+      return false;
+    }
+
+    return true;
+  }
+
+  private incrementDailyCount(ip: string): void {
+    const currentTime = Date.now();
+    const data = this.rateLimitData.get(ip);
+    if (data) {
+      data.dailyCount += 1;
+      data.lastAccess = currentTime;
+      this.rateLimitData.set(ip, data);
+    }
+  }
+
   private incrementViolation(ip: string): void {
     const currentTime = Date.now();
     const data = this.rateLimitData.get(ip) || {
       count: 0,
       lastRequestTime: currentTime,
       violations: 0,
-      lastAccess: currentTime
+      lastAccess: currentTime,
+      dailyCount: 0,
+      dailyResetTime: currentTime
     };
     
     data.violations += 1;
@@ -366,8 +415,15 @@ class AdvancedRateLimiter {
       count: 0,
       lastRequestTime: currentTime,
       violations: 0,
-      lastAccess: currentTime
+      lastAccess: currentTime,
+      dailyCount: 0,
+      dailyResetTime: currentTime
     };
+
+    // Check daily limit first
+    if (!this.checkDailyLimit(ip)) {
+      return false; // Daily limit exceeded
+    }
 
     // Reset count if time window has passed
     if (this.shouldReset(data, currentTime)) {
@@ -379,7 +435,14 @@ class AdvancedRateLimiter {
     data.lastAccess = currentTime; // Update last access time
     this.rateLimitData.set(ip, data);
 
-    return data.count <= CONFIG.RATE_LIMIT.MAX_REQUESTS;
+    const withinRateLimit = data.count <= CONFIG.RATE_LIMIT.MAX_REQUESTS;
+
+    // If request passes both daily and rate limits, increment daily count
+    if (withinRateLimit) {
+      this.incrementDailyCount(ip);
+    }
+
+    return withinRateLimit;
   }
 
   public middleware = (
@@ -404,6 +467,32 @@ class AdvancedRateLimiter {
       return;
     }
 
+    // Check for bot behavior indicators in request headers
+    const userAgent = req.get('User-Agent') || '';
+    const isHeadlessBrowser = this.detectHeadlessBrowser(userAgent);
+    const isSuspiciousHeaders = this.analyzeSuspiciousHeaders(req);
+    
+    if (isHeadlessBrowser || isSuspiciousHeaders) {
+      console.log(`[${new Date().toISOString()}] Suspicious bot indicators detected for IP ${ip}:`, {
+        userAgent,
+        isHeadlessBrowser,
+        isSuspiciousHeaders
+      });
+      
+      // Mark IP as suspicious bot
+      const data = this.rateLimitData.get(ip) || {
+        count: 0,
+        lastRequestTime: Date.now(),
+        violations: 0,
+        lastAccess: Date.now(),
+        dailyCount: 0,
+        dailyResetTime: Date.now()
+      };
+      data.isSuspiciousBot = true;
+      data.botSuspicionScore = (data.botSuspicionScore || 0) + 30;
+      this.rateLimitData.set(ip, data);
+    }
+
     // Check rate limit
     const canProceed = this.checkRateLimit(ip);
 
@@ -426,6 +515,72 @@ class AdvancedRateLimiter {
     }
   };
 
+  private detectHeadlessBrowser(userAgent: string): boolean {
+    const headlessIndicators = [
+      'headless',
+      'phantom',
+      'selenium',
+      'webdriver',
+      'puppeteer',
+      'playwright',
+      'chrome-headless',
+      'htmlunit',
+      'jsdom'
+    ];
+    
+    const lowerUserAgent = userAgent.toLowerCase();
+    return headlessIndicators.some(indicator => lowerUserAgent.includes(indicator));
+  }
+
+  private analyzeSuspiciousHeaders(req: express.Request): boolean {
+    // Check for missing common headers
+    const commonHeaders = ['accept', 'accept-language', 'accept-encoding'];
+    const missingHeaders = commonHeaders.filter(header => !req.get(header));
+    
+    if (missingHeaders.length > 1) {
+      return true;
+    }
+
+    // Check for suspicious header values
+    const acceptLanguage = req.get('accept-language');
+    if (!acceptLanguage || acceptLanguage === 'en-US' || acceptLanguage.length < 5) {
+      return true;
+    }
+
+    // Check for automation-specific headers
+    const automationHeaders = [
+      'x-requested-with',
+      'x-automation',
+      'webdriver',
+      'selenium'
+    ];
+    
+    return automationHeaders.some(header => req.get(header));
+  }
+
+  // Method to update bot suspicion score from client-side detection
+  public updateBotSuspicionScore(ip: string, score: number, flags: string[]): void {
+    const data = this.rateLimitData.get(ip) || {
+      count: 0,
+      lastRequestTime: Date.now(),
+      violations: 0,
+      lastAccess: Date.now(),
+      dailyCount: 0,
+      dailyResetTime: Date.now()
+    };
+    
+    data.botSuspicionScore = Math.max(data.botSuspicionScore || 0, score);
+    data.lastAccess = Date.now();
+    
+    // If high suspicion score, mark as suspicious bot
+    if (score >= 80) {
+      data.isSuspiciousBot = true;
+      console.warn(`[${new Date().toISOString()}] High bot suspicion score (${score}) for IP ${ip}:`, flags);
+    }
+    
+    this.rateLimitData.set(ip, data);
+  }
+
   // Public methods for monitoring
   public getStats(): any {
     const totalQueuedRequests = Array.from(this.requestQueues.values())
@@ -436,11 +591,31 @@ class AdvancedRateLimiter {
     const nextBlacklistReset = this.lastBlacklistReset + oneMonthInMs;
     const daysUntilReset = Math.ceil((nextBlacklistReset - Date.now()) / (24 * 60 * 60 * 1000));
     
+    // Calculate daily usage statistics
+    const currentTime = Date.now();
+    const dailyStats = Array.from(this.rateLimitData.entries())
+      .map(([ip, data]) => ({
+        ip,
+        dailyCount: data.dailyCount || 0,
+        dailyLimit: this.DAILY_REQUEST_LIMIT,
+        dailyUsagePercent: Math.round(((data.dailyCount || 0) / this.DAILY_REQUEST_LIMIT) * 100),
+        nextReset: data.dailyResetTime ? new Date(data.dailyResetTime + 24 * 60 * 60 * 1000).toISOString() : null,
+        violations: data.violations || 0
+      }))
+      .filter(stat => stat.dailyCount > 0)
+      .sort((a, b) => b.dailyCount - a.dailyCount)
+      .slice(0, 20); // Top 20 IPs by daily usage
+    
     return {
       blacklistedIPs: Array.from(this.blacklist),
       totalTrackedIPs: this.rateLimitData.size,
       totalQueues: this.requestQueues.size,
       totalQueuedRequests,
+      dailyLimits: {
+        requestsPerIP: this.DAILY_REQUEST_LIMIT,
+        topUsers: dailyStats,
+        totalActiveUsers: dailyStats.length
+      },
       queueSizes: Array.from(this.requestQueues.entries()).map(([ip, queue]) => ({
         ip,
         queueSize: queue.length
@@ -456,7 +631,8 @@ class AdvancedRateLimiter {
       memoryLimits: {
         maxTrackedIPs: this.MAX_TRACKED_IPS,
         maxTotalQueuedRequests: this.MAX_TOTAL_QUEUED_REQUESTS,
-        maxRetryCount: this.MAX_RETRY_COUNT
+        maxRetryCount: this.MAX_RETRY_COUNT,
+        dailyRequestLimit: this.DAILY_REQUEST_LIMIT
       },
       memoryUsage: {
         rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
