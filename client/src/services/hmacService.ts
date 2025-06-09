@@ -11,7 +11,7 @@ export class HMACService {
 
   private constructor() {
     // Runtime string construction to avoid static strings in build
-    const secretKey = ENV.HMAC_SECRET || this._0x2c8f();
+    const secretKey =  this._0x2c8f();
     this._0x3f8d = this._0x7b2a(this._0x9d4e(secretKey));
     
     // Runtime cleanup to remove traces
