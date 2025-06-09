@@ -144,7 +144,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       // focus: lat,lng: 21.0285,105.8342
       const focus = mapRef?.current?.getCenter();
       const focusCoordinates = focus ? `${focus[1]},${focus[0]}` : ENV.FOCUS_COORDINATES;
-      const data = await apiClient.get<SearchResult[]>('/autocomplete/v3', {
+      const data = await apiClient.get<SearchResult[]>('/proxy/autocomplete/v3', {
         text: query,
         focus: focusCoordinates
       });
@@ -167,7 +167,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const fetchPlaceDetails = async (refId: string) => {
     setIsPlaceLoading(true);
     try {
-      const data: PlaceDetails = await apiClient.get('/place/v3', {
+      const data: PlaceDetails = await apiClient.get('/proxy/place/v3', {
         refid: refId
       });
       data.ref_id = refId; // Ensure ref_id is set

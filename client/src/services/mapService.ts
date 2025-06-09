@@ -25,7 +25,7 @@ export const getReverseGeocoding = async (
   lat: number
 ): Promise<PlaceDetails> => {
   try {
-    const data: ReverseGeocodingResponse[] = await apiService.get('/reverse/v3', {
+    const data: ReverseGeocodingResponse[] = await apiService.get('/proxy/reverse/v3', {
       lng: lng.toString(),
       lat: lat.toString()
     });

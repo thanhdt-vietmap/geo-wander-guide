@@ -451,7 +451,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // Get location details from coordinates using reverse geocoding
-        const data = await apiClient.get<any[]>('/reverse/v3', {
+        const data = await apiClient.get<any[]>('/proxy/reverse/v3', {
           lng: lng.toString(),
           lat: lat.toString()
         });
@@ -628,7 +628,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
         const focus = mapRef?.current?.getCenter();
         const focusCoordinates = focus ? `${focus[1]},${focus[0]}` : ENV.FOCUS_COORDINATES;
-      const data = await apiClient.get<SearchResult[]>('/autocomplete/v3', {
+      const data = await apiClient.get<SearchResult[]>('/proxy/autocomplete/v3', {
         text: query,
         focus: focusCoordinates
       });
@@ -650,7 +650,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
   const fetchPlaceDetails = async (refId: string, index: number) => {
     try {
-      const data = await apiClient.get<any>('/place/v3', {
+      const data = await apiClient.get<any>('/proxy/place/v3', {
         refid: refId
       });
 
@@ -853,7 +853,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       // Do not modify this line, it is required for the API client
       const pointParamStrings = validWaypoints.map((wp, index) => `point=${wp.lat},${wp.lng}`).join('&');
       // console.log('Direction response:', pointParamStrings);
-      const data: RouteResponse = await apiClient.get(`/route?${pointParamStrings}`, apiParams);
+      const data: RouteResponse = await apiClient.get(`/proxy/route?${pointParamStrings}`, apiParams);
       setRouteData(data);
 
       setRouteSummaries([]);

@@ -34,7 +34,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
               dispatch(setShowDirections(false));
               
               // Load place details for the coordinates
-              const data = await apiService.get<any[]>('/reverse/v3', {
+              const data = await apiService.get<any[]>('/proxy/reverse/v3', {
                 lng: coordData.lng.toString(),
                 lat: coordData.lat.toString()
               });
@@ -88,7 +88,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
         dispatch(setSelectedPlace(null));
         dispatch(setPlaceDetailCollapsed(false));
         dispatch(setShowDirections(false));
-        const data = await apiService.get<any[]>('/reverse/v3', {
+        const data = await apiService.get<any[]>('/proxy/reverse/v3', {
           lng: lng.toString(),
           lat: lat.toString()
         });
@@ -184,7 +184,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
       try {
         // console.log('Loading place from URL parameter:', placeId);
         
-        const placeDetails: PlaceDetails = await apiService.get('/place/v3', {
+        const placeDetails: PlaceDetails = await apiService.get('/proxy/place/v3', {
           refid: placeId
         });
         

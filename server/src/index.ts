@@ -23,10 +23,24 @@ app.use("/api", apiRoutes);
 app.use("/admin", adminRoutes);
 app.use("/proxy", proxyRoutes);
 
+// Add direct API routes (without /proxy prefix) for backward compatibility
+
 // Serve static files from React build
 app.use(express.static(path.join(__dirname, "../../client/dist")));
 
 app.get("*", (req, res) => {
+  // Skip API routes - let them return 404 if not found
+  console.log(req.path);
+  if (req.path.startsWith('/api/') || 
+      req.path.startsWith('/proxy/') || 
+      req.path.startsWith('/admin/') ||
+      req.path.startsWith('/autocomplete/') ||
+      req.path.startsWith('/place/') ||
+      req.path.startsWith('/route') ||
+      req.path.startsWith('/reverse/')) {
+
+  }else{
+  // Serve React app for all other routes
   const filePath = path.join(__dirname, "../../client/dist/index.html");
   res.sendFile(filePath, (err) => {
     if (err) {
@@ -34,6 +48,8 @@ app.get("*", (req, res) => {
       res.status(500).send('Internal Server Error');
     }
   });
+  }
+
 });
 
 app.listen(PORT, () => {
