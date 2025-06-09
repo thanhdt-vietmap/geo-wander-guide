@@ -98,10 +98,10 @@ export class SecureApiClient {
     // await new Promise(resolve => setTimeout(resolve, 500));
     // // Anti-debugging check
 
-    // if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
-    //     window.outerWidth - window.innerWidth > 160)) {
-    //   return Promise.reject();
-    // }
+    if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
+        window.outerWidth - window.innerWidth > 160)) {
+      return Promise.reject();
+    }
     this.getUserInfo();
     try {
       const response = await fetch(url, {
@@ -169,10 +169,10 @@ export class SecureApiClient {
     // await new Promise(resolve => setTimeout(resolve, 500));
     // Anti-debugging check
     
-    // if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
-    //     window.outerWidth - window.innerWidth > 160)) {
-    //   return Promise.reject();
-    // }
+    if (this.isDesktop()&&( window.outerHeight - window.innerHeight > 160 ||
+        window.outerWidth - window.innerWidth > 160)) {
+      return Promise.reject();
+    }
     // const url = this._0x2d8f(endpoint, params);
     const bodyString = body ? JSON.stringify(body) : undefined;
 
