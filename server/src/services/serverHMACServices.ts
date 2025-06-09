@@ -50,7 +50,12 @@ export class ServerHMACService {
       String.fromCharCode(c.charCodeAt(0) ^ (i + 42))
     ).join(''));
   }
+  public verifyHMAC(method: string, url: string, timestamp: number, receivedSignature: string, body?:string): boolean {
+    // console.log(`Verifying HMAC for method: ${method}, url: ${url}, timestamp: ${timestamp}`);
 
+    const expectedSignature = this.generateHMAC(method, 'maps.vietmap.vn', timestamp, body);
+    return expectedSignature === receivedSignature;
+}
   // Enhanced decoding with XOR
   private _0x7b2a(str: string): string {
     return atob(str).split('').map((c, i) => 

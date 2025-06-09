@@ -14,19 +14,41 @@ const advancedRateLimiter_1 = require("./services/advancedRateLimiter");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5005;
+// Initialize request counts for rate limiting
+app.requestCounts = {};
 // Setup common middleware
 (0, common_1.setupMiddleware)(app);
 // Setup routes
 app.use("/api", api_1.default);
 app.use("/admin", admin_1.default);
-app.use("/", proxy_1.default);
+app.use("/proxy", proxy_1.default);
+// Add direct API routes (without /proxy prefix) for backward compatibility
 // Serve static files from React build
 app.use(express_1.default.static(path_1.default.join(__dirname, "../../client/dist")));
 app.get("*", (req, res) => {
-    res.sendFile(path_1.default.join(__dirname, "../../client/dist/index.html"));
+    // Skip API routes - let them return 404 if not found
+    console.log(req.path);
+    if (req.path.startsWith('/api/') ||
+        req.path.startsWith('/proxy/') ||
+        req.path.startsWith('/admin/') ||
+        req.path.startsWith('/autocomplete/') ||
+        req.path.startsWith('/place/') ||
+        req.path.startsWith('/route') ||
+        req.path.startsWith('/reverse/')) {
+    }
+    else {
+        // Serve React app for all other routes
+        const filePath = path_1.default.join(__dirname, "../../client/dist/index.html");
+        res.sendFile(filePath, (err) => {
+            if (err) {
+                console.error('Error serving index.html:', err);
+                res.status(500).send('Internal Server Error');
+            }
+        });
+    }
 });
 app.listen(PORT, () => {
-    // console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
 // Graceful shutdown handling
 const gracefulShutdown = (signal) => {
@@ -41,26 +63,11 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
     console.error(`[${new Date().toISOString()}] Uncaught Exception:`, error);
-    // Trigger emergency cleanup before exit
     advancedRateLimiter_1.advancedRateLimiter.emergencyCleanup();
     process.exit(1);
 });
 process.on('unhandledRejection', (reason, promise) => {
     console.error(`[${new Date().toISOString()}] Unhandled Rejection at:`, promise, 'reason:', reason);
-    // Trigger emergency cleanup
     advancedRateLimiter_1.advancedRateLimiter.emergencyCleanup();
 });
-// Memory monitoring
-setInterval(() => {
-    const memoryUsage = process.memoryUsage();
-    const heapUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
-    const rssMB = Math.round(memoryUsage.rss / 1024 / 1024);
-    // Log memory usage every 10 minutes
-    console.log(`[${new Date().toISOString()}] Memory usage: heap=${heapUsedMB}MB, rss=${rssMB}MB`);
-    // Trigger emergency cleanup if memory usage is critically high
-    if (heapUsedMB > 800 || rssMB > 1000) {
-        console.log(`[${new Date().toISOString()}] Critical memory usage detected, triggering emergency cleanup`);
-        advancedRateLimiter_1.advancedRateLimiter.emergencyCleanup();
-    }
-}, 10 * 60 * 1000); // Every 10 minutes
 //# sourceMappingURL=index.js.map
