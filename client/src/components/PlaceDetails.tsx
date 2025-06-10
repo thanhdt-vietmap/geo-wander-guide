@@ -111,8 +111,8 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
       } catch (fallbackError) {
         // console.error('Failed to copy to clipboard:', fallbackError);
         toast({
-          title: "Lỗi sao chép",
-          description: "Không thể sao chép liên kết",
+          title: t('share.copyErrorTitle'),
+          description: t('share.copyErrorDesc'),
           variant: "destructive"
         });
       }
@@ -163,7 +163,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
 
                 <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
                   <Edit className="h-4 w-4" />
-                  <button className="hover:underline">Suggest an edit on {place.name}</button>
+                  <button className="hover:underline">{t('placeDetails.suggestEdit')} {place.name}</button>
                 </div>
               </div>
 
@@ -199,14 +199,14 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                   >
                     <Share2 className="h-6 w-6 text-gray-600" />
                   </Button>
-                  <span className="text-xs mt-1">Share</span>
+                  <span className="text-xs mt-1">{t('placeDetails.actions.share')}</span>
                 </div>
 
                 <div className="flex flex-col items-center">
                   <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
                     <Building className="h-6 w-6 text-gray-600" />
                   </Button>
-                  <span className="text-xs mt-1">Nearby</span>
+                  <span className="text-xs mt-1">{t('placeDetails.actions.nearby')}</span>
                 </div>
               </div>
 
@@ -217,31 +217,31 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                 <div className="px-6 py-2">
                   <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
                     <Tag className="h-5 w-5 text-gray-500" />
-                    <span>Add a missing place</span>
+                    <span>{t('placeDetails.addMissingPlace')}</span>
                   </Button>
                   
                   <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
                     <Building className="h-5 w-5 text-gray-500" />
-                    <span>Add your business</span>
+                    <span>{t('placeDetails.addBusiness')}</span>
                   </Button>
                   
                   <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
                     <Tag className="h-5 w-5 text-gray-500" />
-                    <span>Add a label</span>
+                    <span>{t('placeDetails.addLabel')}</span>
                   </Button>
                   
                   <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
                     <Clock className="h-5 w-5 text-gray-500" />
-                    <span>Your Maps activity</span>
+                    <span>{t('placeDetails.yourActivity')}</span>
                   </Button>
                 </div>
 
                 <Separator className="my-2" />
                 
                 <div className="px-6 py-2">
-                  <h3 className="text-base font-medium mb-4">At this place</h3>
+                  <h3 className="text-base font-medium mb-4">{t('placeDetails.atThisPlace')}</h3>
                   {/* We would add content here if there was any business info to show */}
-                  <p className="text-sm text-gray-500">No additional information available</p>
+                  <p className="text-sm text-gray-500">{t('placeDetails.noInfo')}</p>
                 </div>
               </div>
             </div>
@@ -302,14 +302,14 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                   >
                     <Navigation className="h-6 w-6" />
                   </Button>
-                  <span className="text-xs mt-1">Directions</span>
+                  <span className="text-xs mt-1">{t('placeDetails.actions.directions')}</span>
                 </div>
                 
                 <div className="flex flex-col items-center">
                   <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
                     <BookmarkIcon className="h-6 w-6 text-gray-600" />
                   </Button>
-                  <span className="text-xs mt-1">Save</span>
+                  <span className="text-xs mt-1">{t('placeDetails.actions.save')}</span>
                 </div>
                 
                 <div className="flex flex-col items-center">
@@ -321,7 +321,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                   >
                     <Share2 className="h-6 w-6 text-gray-600" />
                   </Button>
-                  <span className="text-xs mt-1">Share</span>
+                  <span className="text-xs mt-1">{t('placeDetails.actions.share')}</span>
                 </div>
               </div>
 
@@ -339,7 +339,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
 
                 <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
                   <Edit className="h-4 w-4" />
-                  <button className="hover:underline">Suggest an edit on {place.name}</button>
+                  <button className="hover:underline">{t('placeDetails.suggestEdit')} {place.name}</button>
                 </div>
               </div>
 
@@ -350,31 +350,31 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                 <div className="px-6 py-2">
                   <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
                     <Tag className="h-5 w-5 text-gray-500" />
-                    <span>Add a missing place</span>
+                    <span>{t('placeDetails.addMissingPlace')}</span>
                   </Button>
                   
                   <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
                     <Building className="h-5 w-5 text-gray-500" />
-                    <span>Add your business</span>
+                    <span>{t('placeDetails.addBusiness')}</span>
                   </Button>
                   
                   <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
                     <Tag className="h-5 w-5 text-gray-500" />
-                    <span>Add a label</span>
+                    <span>{t('placeDetails.addLabel')}</span>
                   </Button>
                   
                   <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
                     <Clock className="h-5 w-5 text-gray-500" />
-                    <span>Your Maps activity</span>
+                    <span>{t('placeDetails.yourActivity')}</span>
                   </Button>
                 </div>
 
                 <Separator className="my-2" />
                 
                 <div className="px-6 py-2">
-                  <h3 className="text-base font-medium mb-4">At this place</h3>
+                  <h3 className="text-base font-medium mb-4">{t('placeDetails.atThisPlace')}</h3>
                   {/* We would add content here if there was any business info to show */}
-                  <p className="text-sm text-gray-500">No additional information available</p>
+                  <p className="text-sm text-gray-500">{t('placeDetails.noInfo')}</p>
                 </div>
               </div>
             </div>
