@@ -1,5 +1,6 @@
 import express from "express";
 import { CONFIG } from "../config/constants";
+import { getValidClientIP, validateIP, logIPValidation } from "../utils/ipValidation";
 
 interface RateLimitData {
   count: number;
@@ -163,7 +164,13 @@ class AdvancedRateLimiter {
   }
 
   private getClientIP(req: express.Request): string | null {
-    return req.ip || req.socket.remoteAddress || req.connection.remoteAddress || null;
+    const validIP = getValidClientIP(req);
+    
+    if (process.env.NODE_ENV === 'development') {
+      logIPValidation(validIP, 'RateLimiter');
+    }
+    
+    return validIP;
   }
 
   private isBlacklisted(ip: string): boolean {
@@ -466,7 +473,10 @@ class AdvancedRateLimiter {
     const ip = this.getClientIP(req);
     
     if (!ip) {
-      res.status(400).json({ error: "Unable to identify client IP" });
+      // Skip rate limiting for invalid/private IPs but allow request to proceed
+      // This prevents blocking localhost during development
+      console.log(`[${new Date().toISOString()}] Skipping rate limiting - no valid public IP found`);
+      next();
       return;
     }
 

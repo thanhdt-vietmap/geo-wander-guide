@@ -5,6 +5,7 @@ import path from "path";
 import dotenv from "dotenv";
 import { ApiService } from "./services/apiService";
 import { ServerHMACService } from "./services/serverHMACServices";
+import { getValidClientIP, logIPValidation } from "./utils/ipValidation";
 dotenv.config();
 let service = new ApiService();
 
@@ -79,9 +80,18 @@ const limitReqByIp = (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const ip = req.ip || req.connection.remoteAddress;
+  const ip = getValidClientIP(req);
   const currentTime = Date.now();
-  if (!ip) return res.status(400).json({ error: "Unauthorized" });
+  
+  // Skip rate limiting for invalid/private IPs but allow request to proceed
+  if (!ip) {
+    if (process.env.NODE_ENV === 'development') {
+      logIPValidation(req.ip || req.socket?.remoteAddress || 'unknown', 'OldRateLimiter');
+    }
+    console.log(`[${new Date().toISOString()}] Skipping rate limiting - no valid public IP found`);
+    next();
+    return;
+  }
 
   const requestCount = (req.app as any).requestCounts[ip] || {
     count: 0,

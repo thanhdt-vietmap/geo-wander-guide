@@ -1,4 +1,5 @@
 import express from "express";
+import { getValidClientIP, validateIP, logIPValidation } from "../utils/ipValidation";
 
 interface BotDetectionData {
   metrics: {
@@ -54,7 +55,26 @@ class BotDetectionController {
 
   public recordBotDetection = (req: express.Request, res: express.Response): void => {
     try {
-      const clientIP = req.ip || req.socket.remoteAddress || 'unknown';
+      const clientIP = getValidClientIP(req);
+      
+      // Skip bot detection for invalid/private IPs (like localhost during development)
+      if (!clientIP) {
+        if (process.env.NODE_ENV === 'development') {
+          logIPValidation(req.ip || req.socket?.remoteAddress || 'unknown', 'BotDetection');
+        }
+        res.json({
+          success: true,
+          result: {
+            isBot: false,
+            suspicionScore: 0,
+            severity: 'low',
+            timestamp: new Date().toISOString(),
+            skipped: 'Invalid or private IP address'
+          }
+        });
+        return;
+      }
+      
       const data: BotDetectionData = req.body;
       const { metrics } = data;
 
