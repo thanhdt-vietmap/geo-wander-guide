@@ -16,7 +16,12 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && npm run build",
     "build:server": "cd server && npm run build",
-    "start": "cd server && npm start"
+    "start": "cd server && npm start",
+    "deploy:chmod": "chmod +x build-and-deploy.sh deploy-on-vps.sh",
+    "deploy:build": "./build-and-deploy.sh",
+    "deploy:vps": "./deploy-on-vps.sh",
+    "deploy:all": "npm run deploy:build && npm run deploy:vps",
+    "deploy": "npm run deploy:chmod && npm run deploy:all"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
