@@ -180,14 +180,14 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                   >
                     <Navigation className="h-6 w-6" />
                   </Button>
-                  <span className="text-xs mt-1">Directions</span>
+                  <span className="text-xs mt-1">{t('placeDetails.actions.directions')}</span>
                 </div>
                 
                 <div className="flex flex-col items-center">
                   <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
                     <BookmarkIcon className="h-6 w-6 text-gray-600" />
                   </Button>
-                  <span className="text-xs mt-1">Save</span>
+                  <span className="text-xs mt-1">{t('placeDetails.actions.save')}</span>
                 </div>
                 
                 <div className="flex flex-col items-center">

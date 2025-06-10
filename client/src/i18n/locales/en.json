@@ -47,7 +47,17 @@
   "placeDetails": {
     "suggestEdit": "Suggest an edit on",
     "addMissingPlace": "Add a missing place",
-    "addBusiness": "Add your business"
+    "addBusiness": "Add your business",
+    "addLabel": "Add a label",
+    "yourActivity": "Your Maps activity",
+    "atThisPlace": "At this place",
+    "noInfo": "No additional information available",
+    "actions": {
+      "directions": "Directions",
+      "save": "Save",
+      "share": "Share",
+      "nearby": "Nearby"
+    }
   },
   "direction": {
     "startPoint": "Start point or coordinates (e.g: 21.0285, 105.8342)",

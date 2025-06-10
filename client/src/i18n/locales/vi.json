@@ -47,7 +47,17 @@
   "placeDetails": {
     "suggestEdit": "Đề xuất chỉnh sửa trên",
     "addMissingPlace": "Thêm địa điểm bị thiếu",
-    "addBusiness": "Thêm doanh nghiệp của bạn"
+    "addBusiness": "Thêm doanh nghiệp của bạn",
+    "addLabel": "Thêm nhãn",
+    "yourActivity": "Hoạt động bản đồ của bạn",
+    "atThisPlace": "Tại địa điểm này",
+    "noInfo": "Không có thông tin bổ sung",
+    "actions": {
+      "directions": "Chỉ đường",
+      "save": "Lưu",
+      "share": "Chia sẻ",
+      "nearby": "Gần đây"
+    }
   },
   "direction": {
     "startPoint": "Điểm bắt đầu hoặc tọa độ (vd: 21.0285, 105.8342)",
