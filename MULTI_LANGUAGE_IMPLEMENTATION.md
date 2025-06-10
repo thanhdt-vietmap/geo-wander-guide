@@ -32,8 +32,11 @@ This document outlines the comprehensive multi-language support (Vietnamese and 
 - `Sidebar`: Menu items and links
 - `PlaceDetails`: Action buttons and messages
 - `LocationInfoCard`: Share and direction buttons
-- `Direction`: Error messages and placeholders
+- `Direction`: Complete translation including error messages, placeholders, and all UI text
 - `WaypointInput`: Dynamic placeholders based on input type
+- `VehicleSelector`: Travel mode selection and vehicle labels
+- `RouteList`: Available routes listing and route details
+- `RouteDetails`: Route details view with street information
 - `MapContextMenu`: Context menu options
 - All hooks: Error and success messages
 
@@ -104,9 +107,11 @@ Users can switch languages using the language switcher in the top-right corner:
 - ✅ Map control tooltips
 - ✅ Error message translations
 - ✅ Sidebar menu translations
-- ✅ Direction system translations
+- ✅ Direction system translations (complete)
 - ✅ Share functionality messages
 - ✅ PlaceDetails component translations
+- ✅ MapContextMenu translations (complete)
+- ✅ Time unit translations (mins → phút)
 - ✅ Keyboard shortcuts (Ctrl+Shift+L, V, E)
 - ✅ Browser refresh persistence
 - ✅ Initial language detection

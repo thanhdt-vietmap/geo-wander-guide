@@ -641,8 +641,8 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       // console.error('Search error:', error);
       setSuggestions([]);
       toast({
-        title: "Search error",
-        description: "An error occurred during search",
+        title: t('direction.searchError'),
+        description: t('direction.searchErrorDesc'),
         variant: "destructive"
       });
     } finally {
@@ -670,8 +670,8 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     } catch (error) {
       // console.error('Place error:', error);
       toast({
-        title: "Error loading place",
-        description: "An error occurred while loading place details",
+        title: t('direction.placeLoadError'),
+        description: t('direction.placeLoadErrorDesc'),
         variant: "destructive"
       });
       return null;
@@ -825,8 +825,8 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     // console.log('Valid waypoints:', validWaypoints);
     if (validWaypoints.length < 2) {
       toast({
-        title: "Invalid route",
-        description: "Please select valid start and end locations",
+        title: t('direction.invalidRoute'),
+        description: t('direction.invalidRouteDesc'),
         variant: "destructive"
       });
       return;
@@ -928,14 +928,14 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       }
 
       toast({
-        title: `${data.paths.length} route${data.paths.length > 1 ? 's' : ''} found`,
-        description: "Select a route to see details",
+        title: `${data.paths.length} ${data.paths.length > 1 ? t('direction.routesFound') : t('direction.singleRouteFound')}`,
+        description: t('direction.selectRouteDesc'),
       });
     } catch (error) {
       // console.error('Direction error:', error);
       toast({
-        title: "Error getting directions",
-        description: "An error occurred while calculating the route",
+        title: t('direction.directionsError'),
+        description: t('direction.directionsErrorDesc'),
         variant: "destructive"
       });
     }
@@ -999,7 +999,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
               onClick={handleAddDirectionWaypoint}
             >
               <Plus className="h-4 w-4" />
-              Add stop
+              {t('direction.addStop')}
             </Button>
 
             <Separator className="my-4" />
@@ -1011,7 +1011,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
               disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
             >
               <Navigation className="h-4 w-4 mr-2" />
-              Get directions
+              {t('direction.getDirections')}
             </Button>
 
             {/* Share route buttons */}
@@ -1023,7 +1023,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
                 disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
               >
                 <Copy className="h-4 w-4 mr-2" />
-                Copy URL
+                {t('direction.copyUrl')}
               </Button>
               <Button
                 variant="outline"
@@ -1032,7 +1032,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
                 disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
               >
                 <Share2 className="h-4 w-4 mr-2" />
-                Share
+                {t('direction.share')}
               </Button>
             </div>
           </div>

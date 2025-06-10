@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/button';
 
 interface VehicleSelectorProps {
@@ -8,16 +9,18 @@ interface VehicleSelectorProps {
 }
 
 const VehicleSelector = ({ vehicle, onVehicleChange }: VehicleSelectorProps) => {
+  const { t } = useTranslation();
+  
   const modes = [
-    { id: 'car', icon: <span>🚗</span>, label: 'Car' },
-    { id: 'motorcycle', icon: <span>🏍️</span>, label: 'Motorcycle' },
-    { id: 'bike', icon: <span>🚲</span>, label: 'Bike' },
-    { id: 'foot', icon: <span>🚶</span>, label: 'Walk' }
+    { id: 'car', icon: <span>🚗</span>, label: t('direction.vehicle.car') },
+    { id: 'motorcycle', icon: <span>🏍️</span>, label: t('direction.vehicle.motorcycle') },
+    { id: 'bike', icon: <span>🚲</span>, label: t('direction.vehicle.bike') },
+    { id: 'foot', icon: <span>🚶</span>, label: t('direction.vehicle.foot') }
   ] as const;
 
   return (
     <div className="mb-4">
-      <h3 className="text-sm font-medium mb-2 mt-[10px] ml-[10px]">Travel mode</h3>
+      <h3 className="text-sm font-medium mb-2 mt-[10px] ml-[10px]">{t('direction.travelMode')}</h3>
       <div className="flex gap-2 px-[30px]">
         {modes.map(mode => (
           <Button

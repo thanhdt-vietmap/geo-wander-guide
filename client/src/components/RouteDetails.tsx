@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
@@ -27,6 +28,7 @@ interface RouteDetailsProps {
 }
 
 const RouteDetails: React.FC<RouteDetailsProps> = ({ path, onBack }) => {
+  const { t } = useTranslation();
   return (
     <div className="fixed top-0 left-0 h-full z-40 transition-all duration-300 w-[500px] bg-white shadow-lg flex flex-col">
       {/* Header */}
@@ -47,10 +49,10 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({ path, onBack }) => {
       {/* Route Summary */}
       <div className="px-6 py-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Route Details</h2>
+          <h2 className="text-xl font-semibold">{t('direction.routeDetails')}</h2>
           <div className="text-right">
             <p className="text-sm font-medium">{(path.distance / 1000).toFixed(2)} km</p>
-            <p className="text-sm text-gray-500">{Math.round(path.time / 60000)} mins</p>
+            <p className="text-sm text-gray-500">{Math.round(path.time / 60000)} {t('direction.mins')}</p>
           </div>
         </div>
         
@@ -68,11 +70,11 @@ const RouteDetails: React.FC<RouteDetailsProps> = ({ path, onBack }) => {
               <p className="font-medium">{instruction.text}</p>
               <div className="flex justify-between text-sm text-gray-500 mt-1">
                 <span>{(instruction.distance / 1000).toFixed(2)} km</span>
-                <span>{Math.round(instruction.time / 60000)} mins</span>
+                <span>{Math.round(instruction.time / 60000)} {t('direction.mins')}</span>
               </div>
               {instruction.street_name && (
                 <p className="text-sm text-gray-600 mt-1">
-                  <span className="font-medium">Street: </span> 
+                  <span className="font-medium">{t('direction.street')}: </span> 
                   {instruction.street_name}
                 </p>
               )}

@@ -75,8 +75,8 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   const copyCoordinates = () => {
     const coordString = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
     navigator.clipboard.writeText(coordString)
-      .then(() => toast.success('Coordinates copied to clipboard'))
-      .catch(() => toast.error('Failed to copy coordinates'));
+      .then(() => toast.success(t('contextMenu.coordinatesCopied')))
+      .catch(() => toast.error(t('contextMenu.coordinatesCopyFailed')));
     onClose();
   };
 
@@ -142,7 +142,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
       >
         {/* Header */}
         <div className="px-2 py-1.5 text-sm font-semibold text-gray-700 border-b">
-          Location
+          {t('contextMenu.location')}
         </div>
 
         {/* Copy Coordinates */}
@@ -163,7 +163,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
           className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
         >
           <MapPin className="mr-2 h-4 w-4" />
-          <span>Get location details</span>
+          <span>{t('contextMenu.getLocationDetails')}</span>
         </button>
 
 
@@ -183,18 +183,18 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
                 const encryptedData = AESEncrypt.encryptObject(coordData);
                 const shareUrl = `${window.location.origin}${window.location.pathname}?c=${encryptedData}`;
                 navigator.clipboard.writeText(shareUrl)
-                  .then(() => toast.success('Shared coordinates copied to clipboard'))
-                  .catch(() => toast.error('Failed to copy shared coordinates'));
+                  .then(() => toast.success(t('contextMenu.sharedCoordinatesCopied')))
+                  .catch(() => toast.error(t('contextMenu.sharedCoordinatesCopyFailed')));
               } catch (encryptError) {
                 // Fallback to legacy format
                 const coordString = `lat=${lat.toFixed(6)}&lng=${lng.toFixed(6)}`;
                 const shareUrl = `${window.location.origin}${window.location.pathname}?${coordString}`;
                 navigator.clipboard.writeText(shareUrl)
-                  .then(() => toast.success('Shared coordinates copied to clipboard'))
-                  .catch(() => toast.error('Failed to copy shared coordinates'));
+                  .then(() => toast.success(t('contextMenu.sharedCoordinatesCopied')))
+                  .catch(() => toast.error(t('contextMenu.sharedCoordinatesCopyFailed')));
               }
             } catch (error) {
-              toast.error('Failed to copy shared coordinates');
+              toast.error(t('contextMenu.sharedCoordinatesCopyFailed'));
             }
             onClose();
           }}
@@ -216,7 +216,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
               className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
             >
               <Navigation className="mr-2 h-4 w-4 text-green-600" />
-              <span>Direction from here</span>
+              <span>{t('contextMenu.directionFromHere')}</span>
             </button>
 
             {/* Set as End Point */}
@@ -225,7 +225,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
               className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
             >
               <Navigation className="mr-2 h-4 w-4 text-red-600 rotate-180" />
-              <span>Direction to here</span>
+              <span>{t('contextMenu.directionToHere')}</span>
             </button>
 
             {/* Add Waypoint (only if Direction is open and inputs have values) */}
@@ -235,7 +235,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
                 className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
               >
                 <Plus className="mr-2 h-4 w-4 text-blue-600" />
-                <span>Add stop</span>
+                <span>{t('contextMenu.addStop')}</span>
               </button>
             )}
           </>
@@ -250,7 +250,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
           className="flex w-full items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded cursor-pointer transition-colors"
         >
           <X className="mr-2 h-4 w-4" />
-          <span>Close</span>
+          <span>{t('contextMenu.close')}</span>
         </button>
       </div>
     </>

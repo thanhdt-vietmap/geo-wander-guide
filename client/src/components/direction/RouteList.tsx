@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/button';
 import { Map as MapIcon } from 'lucide-react';
 
@@ -18,11 +19,13 @@ interface RouteListProps {
 }
 
 const RouteList = ({ routeSummaries, selectedRouteId, onSelectRoute, onShowRouteDetails }: RouteListProps) => {
+  const { t } = useTranslation();
+  
   if (routeSummaries.length === 0) return null;
 
   return (
     <div className="flex-1 overflow-auto px-4 py-2">
-      <h3 className="font-medium mb-3">Available routes</h3>
+      <h3 className="font-medium mb-3">{t('direction.availableRoutes')}</h3>
       <div className="space-y-2">
         {routeSummaries.map((route) => (
           <div
@@ -42,7 +45,7 @@ const RouteList = ({ routeSummaries, selectedRouteId, onSelectRoute, onShowRoute
               <div className="flex-1">
                 <div className="flex justify-between">
                   <span className="font-medium">{(route.distance / 1000).toFixed(2)} km</span>
-                  <span className="text-gray-600">{Math.round(route.time / 60000)} mins</span>
+                  <span className="text-gray-600">{Math.round(route.time / 60000)} {t('direction.mins')}</span>
                 </div>
               </div>
             </div>
@@ -56,7 +59,7 @@ const RouteList = ({ routeSummaries, selectedRouteId, onSelectRoute, onShowRoute
                   onClick={onShowRouteDetails}
                 >
                   <MapIcon className="h-4 w-4" />
-                  View details
+                  {t('direction.viewDetails')}
                 </Button>
               </div>
             )}

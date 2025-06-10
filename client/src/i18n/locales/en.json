@@ -42,7 +42,17 @@
   "contextMenu": {
     "shareCoordinates": "Share coordinates",
     "directions": "Directions to here",
-    "searchHere": "Search around here"
+    "searchHere": "Search around here",
+    "location": "Location",
+    "getLocationDetails": "Get location details",
+    "directionFromHere": "Direction from here", 
+    "directionToHere": "Direction to here",
+    "addStop": "Add stop",
+    "close": "Close",
+    "coordinatesCopied": "Coordinates copied to clipboard",
+    "coordinatesCopyFailed": "Failed to copy coordinates",
+    "sharedCoordinatesCopied": "Shared coordinates copied to clipboard",
+    "sharedCoordinatesCopyFailed": "Failed to copy shared coordinates"
   },
   "placeDetails": {
     "suggestEdit": "Suggest an edit on",
@@ -74,11 +84,32 @@
     "shareRoute": "Share route",
     "distance": "Distance",
     "duration": "Duration",
+    "searchError": "Search error",
+    "searchErrorDesc": "An error occurred during search",
+    "placeLoadError": "Error loading place",
+    "placeLoadErrorDesc": "An error occurred while loading place details",
+    "invalidRoute": "Invalid route",
+    "invalidRouteDesc": "Please select valid start and end locations",
+    "routesFound": "routes found",
+    "singleRouteFound": "route found",
+    "selectRouteDesc": "Select a route to see details",
+    "directionsError": "Error getting directions",
+    "directionsErrorDesc": "An error occurred while calculating the route",
+    "travelMode": "Travel mode",
+    "availableRoutes": "Available routes",
+    "viewDetails": "View details",
+    "routeDetails": "Route Details",
+    "street": "Street",
+    "addStop": "Add stop",
+    "getDirections": "Get directions",
+    "copyUrl": "Copy URL",
+    "share": "Share",
+    "mins": "mins",
     "vehicle": {
       "car": "Car",
       "motorcycle": "Motorcycle",
-      "bicycle": "Bicycle",
-      "foot": "Walking"
+      "bike": "Bike",
+      "foot": "Walk"
     }
   },
   "share": {
