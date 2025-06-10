@@ -29,7 +29,7 @@ export class SecureApiClient {
   private constructor() {
     // Enhanced obfuscation
     this._0x3b7e = this._0x6e1b(ENV.VIETMAP_BASE_URL);
-    this._0x5c9a = this._0x4a8c(ENV.VIETMAP_API_KEY);
+    this._0x5c9a = this._0x4a8c(ENV.LM);
     this._0x8d2f = HMACService.getInstance();
   }
 
@@ -42,11 +42,13 @@ export class SecureApiClient {
 
   // Multiple layers of obfuscation
   private _0x6e1b(url: string): string {
+    const _0x9f2a = String;
+    const _0x7e1d = 'fromCharCode';
     const _0x9f2c = url.split('').map((c, i) => 
-      String.fromCharCode(c.charCodeAt(0) ^ (i % 7))
+      (_0x9f2a as any)[_0x7e1d](c.charCodeAt(0) ^ (i % 7))
     ).join('');
     return _0x9f2c.split('').map((c, i) => 
-      String.fromCharCode(c.charCodeAt(0) ^ (i % 7))
+      (_0x9f2a as any)[_0x7e1d](c.charCodeAt(0) ^ (i % 7))
     ).join('');
   }
 
@@ -88,7 +90,7 @@ export class SecureApiClient {
     const bodyString = body ? JSON.stringify(body) : undefined;
     
     // Generate HMAC headers
-    const authHeaders = this._0x8d2f.generateAuthHeaders(method, 'maps.vietmap.vn', bodyString);
+    const authHeaders = this._0x8d2f.gah(method, 'maps.vietmap.vn', bodyString);
     
     const headers: HeadersInit = {
       [atob('Q29udGVudC1UeXBl')]: atob('YXBwbGljYXRpb24vanNvbg=='),
@@ -177,7 +179,7 @@ export class SecureApiClient {
     const bodyString = body ? JSON.stringify(body) : undefined;
 
     // Generate HMAC headers
-    const authHeaders = this._0x8d2f.generateAuthHeaders(method, 'maps.vietmap.vn', bodyString);
+    const authHeaders = this._0x8d2f.gah(method, 'maps.vietmap.vn', bodyString);
 
     const headers: HeadersInit = {
       [atob('Q29udGVudC1UeXBl')]: atob('YXBwbGljYXRpb24vanNvbg=='),

@@ -27,7 +27,7 @@ import { ENV } from '../config/environment';
  */
 class MapUtils {
   private getApiKey(): string {
-    const apiKey = ENV.VIETMAP_API_KEY;
+    const apiKey = ENV.LM;
     // console.log('MapUtils using API key:', apiKey ? 'Present' : 'Missing');
     return apiKey;
   }

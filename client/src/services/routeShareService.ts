@@ -98,7 +98,7 @@ export class RouteShareService {
       try {
         await navigator.share({
           title: 'Chia sẻ tuyến đường',
-          text: 'Xem tuyến đường này trên Geo Wander Guide',
+          text: 'Xem tuyến đường này trên VietMap Live Map',
           url: shareUrl,
         });
       } catch (error) {

@@ -48,28 +48,25 @@ const _0x7d3c = (key: string, fallback: string, index: number): string => {
 
 // Dynamic fallback generator to avoid static strings
 const _0x8f1d = (): string => {
+  // Obfuscated character generator
+  const _0x9f2a = String;
+  const _0x7e1d = 'fromCharCode';
+  
   // Construct the fallback key dynamically
   const parts = [
-    String.fromCharCode(97, 87, 53, 122),      // aW5z
-    String.fromCharCode(100, 71, 70, 117),     // dGFu
-    String.fromCharCode(89, 50, 85, 61)        // Y2U=
+    (_0x9f2a as any)[_0x7e1d](97, 87, 53, 122),      // aW5z
+    (_0x9f2a as any)[_0x7e1d](100, 71, 70, 117),     // dGFu
+    (_0x9f2a as any)[_0x7e1d](89, 50, 85, 61)        // Y2U=
   ];
   return parts.join('');
 };
 
 export const ENV = {
-  VIETMAP_API_KEY: _0x7d3c('VITE_VIETMAP_API_KEY', '506862bb03a3d71632bdeb7674a3625328cb7e5a9b011841', 1),
-  VIETMAP_BASE_URL: _0x7d3c('VITE_VIETMAP_BASE_URL', 'https://maps.vietmap.vn/api', 0),
-  HMAC_SECRET: _0x7d3c('VITE_HMAC_SECRET', _0x8f1d(), 2),
-  FOCUS_COORDINATES: _0x7d3c('VITE_FOCUS_COORDINATES', '21.0285,105.8342', 3)
+  LM: _0x7d3c('LM', '95f852d9f8c38e08ceacfd456b59059d0618254a50d3854c', 1),
+  VIETMAP_BASE_URL: _0x7d3c('VIETMAP_BASE_URL', 'https://maps.vietmap.vn/api', 0),
+  FOCUS_COORDINATES: _0x7d3c('FOCUS_COORDINATES', '21.0285,105.8342', 3)
 };
 
-// console.log('Final ENV configuration:', {
-//   VIETMAP_API_KEY: ENV.VIETMAP_API_KEY ? 'Present' : 'Missing',
-//   VIETMAP_BASE_URL: ENV.VIETMAP_BASE_URL ? 'Present' : 'Missing',
-//   HMAC_SECRET: ENV.HMAC_SECRET ? 'Present' : 'Missing',
-//   FOCUS_COORDINATES: ENV.FOCUS_COORDINATES ? 'Present' : 'Missing'
-// });
 
 // Add runtime protection
 if (_0x9c8e()) {

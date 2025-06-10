@@ -21,8 +21,8 @@ export class HMACService {
   // Fallback key generator - constructs the key dynamically
   private _0x2c8f(): string {
     const chunks = [
-      String.fromCharCode(97, 87, 53, 122, 100, 71, 70, 117),  // aW5zdGFu
-      String.fromCharCode(89, 50, 85, 61)                      // Y2U=
+      this._0x4b8c([97, 87, 53, 122, 100, 71, 70, 117]),  // aW5zdGFu
+      this._0x4b8c([89, 50, 85, 61])                      // Y2U=
     ];
     return chunks.join('');
   }
@@ -37,6 +37,59 @@ export class HMACService {
     } catch {}
   }
 
+  // Obfuscated character code generator
+  private _0x4b8c(codes: number[]): string {
+    const _0x9f2a = String;
+    const _0x7e1d = 'fromCharCode';
+    return (_0x9f2a as any)[_0x7e1d](...codes);
+  }
+
+  // Alternative character builder with bit manipulation
+  private _0x3a9e(nums: number[]): string {
+    let result = '';
+    const _0x9f2a = String;
+    const _0x7e1d = 'fromCharCode';
+    for (let i = 0; i < nums.length; i++) {
+      result += (_0x9f2a as any)[_0x7e1d](nums[i] ^ 0);
+    }
+    return result;
+  }
+
+  // Dynamic method name construction for HMAC algorithm
+  private _0x8f3b(): string {
+    const parts = [
+      this._0x4b8c([72, 109, 97, 99]),     // Hmac
+      this._0x4b8c([83, 72, 65, 50, 53, 54]) // SHA256
+    ];
+    return parts.join('');
+  }
+
+  // Dynamic function name obfuscation
+  private _0x6e2d(): string {
+    // generateHMAC
+    return this._0x3a9e([103, 101, 110, 101, 114, 97, 116, 101, 72, 77, 65, 67]);
+  }
+
+  private _0x7f4c(): string {
+    // generateAuthHeaders  
+    return this._0x3a9e([103, 101, 110, 101, 114, 97, 116, 101, 65, 117, 116, 104, 72, 101, 97, 100, 101, 114, 115]);
+  }
+
+  private _0x9a1b(): string {
+    // validateResponse
+    return this._0x3a9e([118, 97, 108, 105, 100, 97, 116, 101, 82, 101, 115, 112, 111, 110, 115, 101]);
+  }
+
+  // Dynamic method invocation to hide method names
+  private _0x2e8f(methodType: number, ...args: any[]): any {
+    switch (methodType) {
+      case 1: return this._0x4d8a(args[0], args[1], args[2], args[3]); // HMAC generation
+      case 2: return this._0x5c7e(args[0], args[1], args[2]); // Auth headers
+      case 3: return this._0x8b9f(args[0], args[1]); // Response validation
+      default: return null;
+    }
+  }
+
   public static getInstance(): HMACService {
     if (!HMACService._0x1e9c) {
       HMACService._0x1e9c = new HMACService();
@@ -47,25 +100,28 @@ export class HMACService {
   // Enhanced encoding with XOR
   private _0x9d4e(str: string): string {
     return btoa(str.split('').map((c, i) => 
-      String.fromCharCode(c.charCodeAt(0) ^ (i + 42))
+      this._0x4b8c([c.charCodeAt(0) ^ (i + 42)])
     ).join(''));
   }
 
   // Enhanced decoding with XOR
   private _0x7b2a(str: string): string {
     return atob(str).split('').map((c, i) => 
-      String.fromCharCode(c.charCodeAt(0) ^ (i + 42))
+      this._0x4b8c([c.charCodeAt(0) ^ (i + 42)])
     ).join('');
   }
 
-  public generateHMAC(method: string, url: string, timestamp: number, body?: string): string {
+  // Obfuscated HMAC generation method
+  private _0x4d8a(method: string, url: string, timestamp: number, body?: string): string {
     const _0x6c5f = `${method.toUpperCase()}|${url}|${timestamp}`;
-    return CryptoJS.HmacSHA256(_0x6c5f, this._0x3f8d).toString(CryptoJS.enc.Hex);
+    const _0x9b2f = this._0x8f3b(); // Get obfuscated method name
+    return (CryptoJS as any)[_0x9b2f](_0x6c5f, this._0x3f8d).toString(CryptoJS.enc.Hex);
   }
 
-  public generateAuthHeaders(method: string, url: string, body?: string): Record<string, string> {
+  // Obfuscated auth headers generation method
+  private _0x5c7e(method: string, url: string, body?: string): Record<string, string> {
     const _0x8a3c = Date.now();
-    const _0x2f7e = this.generateHMAC(method, url, _0x8a3c, body);
+    const _0x2f7e = this._0x4d8a(method, url, _0x8a3c, body);
     
     return {
       [atob('WC1UaW1lc3RhbXA=')]: _0x8a3c.toString(),
@@ -74,7 +130,29 @@ export class HMACService {
     };
   }
 
-  public validateResponse(expectedSignature: string, receivedSignature: string): boolean {
+  // Obfuscated response validation method
+  private _0x8b9f(expectedSignature: string, receivedSignature: string): boolean {
     return expectedSignature === receivedSignature;
   }
+
+  // Public wrappers with obfuscated method names to maintain API compatibility
+  // generate HMAC signature
+  public ghm(method: string, url: string, timestamp: number, body?: string): string {
+    return this._0x2e8f(1, method, url, timestamp, body);
+  }
+
+  // generate auth headers
+  public gah(method: string, url: string, body?: string): Record<string, string> {
+    return this._0x2e8f(2, method, url, body);
+  }
+
+  // validate response  
+  public vr(expectedSignature: string, receivedSignature: string): boolean {
+    return this._0x2e8f(3, expectedSignature, receivedSignature);
+  }
+
+  // Alternative access methods with obfuscated names
+  public _0x3m8q = this.ghm.bind(this);
+  public _0x7h2w = this.gah.bind(this);  
+  public _0x9k5r = this.vr.bind(this);
 }

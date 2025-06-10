@@ -16,7 +16,7 @@ const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
   return (
     <img
       src="/lovable-uploads/bda1bfc3-7681-48ab-8eed-7a3f7ea24c43.png"
-      alt="VietMap Logo"
+      alt="VietMap Live Map Logo"
       className={`${sizeClasses[size]} ${className}`}
     />
   );
