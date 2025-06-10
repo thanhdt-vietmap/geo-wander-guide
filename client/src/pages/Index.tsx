@@ -18,6 +18,7 @@ import PlaceDetails from '../components/PlaceDetails';
 import Direction, { DirectionRef } from '../components/Direction';
 import MapContextMenu from '../components/MapContextMenu';
 import LocationInfoCard from '../components/LocationInfoCard';
+import MapLayerSelector from '../components/MapLayerSelector';
 import { PlaceDetails as PlaceDetailsType } from '../types';
 import { MapLayerType } from '../components/MapLayerSelector';
 const Index = () => {
@@ -180,6 +181,14 @@ const Index = () => {
   <MapControls 
     mapRef={mapRef} 
     onLayerChange={handleMapLayerChange}
+    currentLayer={currentLayer}
+  />
+
+  {/* Map Layer Selector - Bottom Left */}
+  <MapLayerSelector
+    isOpen={true}
+    onClose={() => {}}
+    onLayerSelect={handleMapLayerChange}
     currentLayer={currentLayer}
   />
   

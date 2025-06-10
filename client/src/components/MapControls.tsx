@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { Layers, ZoomIn, ZoomOut, Navigation, RotateCcw, Compass, MapPin, Rotate3d } from 'lucide-react';
+import { ZoomIn, ZoomOut, Navigation, RotateCcw, Compass, MapPin, Rotate3d } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import type { MapViewRef } from './MapView';
-import MapLayerSelector, { MapLayerType } from './MapLayerSelector';
+import { MapLayerType } from './MapLayerSelector';
 
 interface MapControlsProps {
   mapRef?: React.RefObject<MapViewRef>;
@@ -17,7 +17,6 @@ const MapControls: React.FC<MapControlsProps> = ({
   onLayerChange,
   currentLayer = 'vector'
 }) => {
-  const [isLayerSelectorOpen, setIsLayerSelectorOpen] = useState(false);
   const [is3DMode, setIs3DMode] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   
@@ -33,17 +32,6 @@ const MapControls: React.FC<MapControlsProps> = ({
     if (map) {
       map.zoomOut();
     }
-  };
-
-  const handleLayerToggle = () => {
-    setIsLayerSelectorOpen(prev => !prev);
-  };
-
-  const handleLayerSelect = (layerType: MapLayerType) => {
-    if (onLayerChange) {
-      onLayerChange(layerType);
-    }
-    setIsLayerSelectorOpen(false);
   };
 
   const handleRotate = () => {
@@ -86,14 +74,6 @@ const MapControls: React.FC<MapControlsProps> = ({
 
   return (
     <div className="absolute bottom-12 right-6 z-10 flex flex-col gap-3">
-      {/* Layer Selector */}
-      <MapLayerSelector 
-        isOpen={isLayerSelectorOpen}
-        onClose={() => setIsLayerSelectorOpen(false)}
-        onLayerSelect={handleLayerSelect}
-        currentLayer={currentLayer}
-      />
-      
       {/* Main Controls Group */}
       <div className="flex flex-col gap-2">
         {/* Location Button */}
@@ -119,17 +99,6 @@ const MapControls: React.FC<MapControlsProps> = ({
           title="Toggle 3D view"
         >
           <Rotate3d className="h-4 w-4" />
-        </Button>
-        
-        {/* Layer Toggle Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleLayerToggle}
-          className="bg-white shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200"
-          title="Map layers"
-        >
-          <Layers className="h-4 w-4" />
         </Button>
         
         {/* Rotate Button */}
