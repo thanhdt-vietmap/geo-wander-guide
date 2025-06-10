@@ -45,6 +45,21 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   const [is3DMode, setIs3DMode] = useState(false);
   const locationMarker = useRef<any>(null);
   const markerDragCallback = useRef<((index: number, lng: number, lat: number) => void) | null>(null);
+  
+  // Store route and marker data for restoration after style change
+  const savedRoutes = useRef<Array<{
+    id: string;
+    coordinates: [number, number][];
+    color: string;
+    isHighlighted: boolean;
+  }>>([]);
+  const savedMarkers = useRef<Array<{
+    lng: number;
+    lat: number;
+    type: 'default' | 'start' | 'end' | 'waypoint';
+    draggable: boolean;
+    index?: number;
+  }>>([]);
 
   // Pre-defined colors for multiple routes
   const routeColors = [
@@ -215,6 +230,18 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     },
     addMarker: (lng: number, lat: number, type: 'default' | 'start' | 'end' | 'waypoint' = 'default', draggable: boolean = false, index?: number) => {
       if (map.current) {
+        // Save marker data for restoration after style change
+        const markerData = { lng, lat, type, draggable, index };
+        const existingIndex = savedMarkers.current.findIndex(m => 
+          m.lng === lng && m.lat === lat && m.type === type && m.index === index
+        );
+        
+        if (existingIndex >= 0) {
+          savedMarkers.current[existingIndex] = markerData;
+        } else {
+          savedMarkers.current.push(markerData);
+        }
+
         // Create marker with different colors based on type
         const colors = {
           default: '#FF0000',
@@ -247,11 +274,28 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     removeMarkers: () => {
       markers.current.forEach(({ marker }) => marker.remove());
       markers.current = [];
+      // Also clear saved markers data
+      savedMarkers.current = [];
     },
     addRoute: (coordinates: [number, number][], routeId: string = 'route', color?: string) => {
       if (map.current) {
         // Use provided color or get one from the predefined colors
         const routeColor = color || routeColors[routes.current.length % routeColors.length];
+
+        // Save route data for restoration after style change
+        const routeData = {
+          id: routeId,
+          coordinates,
+          color: routeColor,
+          isHighlighted: false
+        };
+        
+        const existingIndex = savedRoutes.current.findIndex(r => r.id === routeId);
+        if (existingIndex >= 0) {
+          savedRoutes.current[existingIndex] = routeData;
+        } else {
+          savedRoutes.current.push(routeData);
+        }
 
         // Check if the source already exists
         if (!map.current.getSource(routeId)) {
@@ -267,6 +311,9 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
             }
           });
 
+          // Check if boundary_province layer exists before using it as beforeId
+          const beforeId = map.current.getLayer("boundary_province") ? "boundary_province" : undefined;
+          
           map.current.addLayer({
             id: routeId,
             type: 'line',
@@ -279,7 +326,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
               'line-color': routeColor,
               'line-width': 4
             }
-          }, "boundary_province");
+          }, beforeId);
 
           routes.current.push(routeId);
         } else {
@@ -317,6 +364,8 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
           }
         });
         routes.current = [];
+        // Also clear saved routes data
+        savedRoutes.current = [];
       }
     },
     fitBounds: (bounds: [[number, number], [number, number]], options?: { padding?: number | { top?: number; bottom?: number; left?: number; right?: number } }) => {
@@ -345,6 +394,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     },
     highlightRoute: (routeId: string) => {
       if (map.current) {
+        // Update saved routes highlight status
+        savedRoutes.current.forEach(route => {
+          route.isHighlighted = route.id === routeId;
+        });
+
         // First set all routes to less opacity
         routes.current.forEach((id) => {
           if (map.current?.getLayer(id)) {
@@ -368,6 +422,87 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         if (onMapStyleChange) {
           onMapStyleChange(styleType);
         }
+        
+        // Set up listener for when the new style is loaded to restore routes and markers
+        const handleStyleLoad = () => {
+          // Restore all saved routes
+          savedRoutes.current.forEach(routeData => {
+            if (map.current) {
+              // Add the route source and layer
+              map.current.addSource(routeData.id, {
+                type: 'geojson',
+                data: {
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: routeData.coordinates
+                  }
+                }
+              });
+
+              // Check if boundary_province layer exists before using it as beforeId
+              const beforeId = map.current.getLayer("boundary_province") ? "boundary_province" : undefined;
+
+              map.current.addLayer({
+                id: routeData.id,
+                type: 'line',
+                source: routeData.id,
+                layout: {
+                  'line-join': 'round',
+                  'line-cap': 'round'
+                },
+                paint: {
+                  'line-color': routeData.color,
+                  'line-width': routeData.isHighlighted ? 5 : 4,
+                  'line-opacity': routeData.isHighlighted ? 1 : 0.5
+                }
+              }, beforeId);
+
+              // Add to routes tracking
+              if (!routes.current.includes(routeData.id)) {
+                routes.current.push(routeData.id);
+              }
+            }
+          });
+
+          // Restore all saved markers
+          savedMarkers.current.forEach(markerData => {
+            if (map.current) {
+              const colors = {
+                default: '#FF0000',
+                start: '#00FF00',
+                end: '#0000FF',
+                waypoint: '#FFA500'
+              };
+
+              const marker = new vietmapgl.Marker({
+                color: colors[markerData.type],
+                draggable: markerData.draggable
+              })
+              .setLngLat([markerData.lng, markerData.lat])
+              .addTo(map.current);
+
+              // Add drag event listener if draggable
+              if (markerData.draggable && typeof markerData.index === 'number') {
+                marker.on('dragend', () => {
+                  const lngLat = marker.getLngLat();
+                  if (markerDragCallback.current) {
+                    markerDragCallback.current(markerData.index!, lngLat.lng, lngLat.lat);
+                  }
+                });
+              }
+
+              markers.current.push({ marker, index: markerData.index });
+            }
+          });
+
+          // Remove the event listener after restoration
+          map.current?.off('style.load', handleStyleLoad);
+        };
+
+        // Add event listener for when the style finishes loading
+        map.current.once('style.load', handleStyleLoad);
       }
     },
     rotateMap: (degrees: number) => {
