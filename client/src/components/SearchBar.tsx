@@ -266,7 +266,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
           <Input
             type="text"
-            placeholder="Tìm kiếm địa điểm hoặc nhập tọa độ (vd: 21.0285, 105.8342)"
+            placeholder="Tìm địa điểm/tọa độ (21.0285, 105.8342)"
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={handleInputFocus}
