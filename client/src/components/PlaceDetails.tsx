@@ -11,6 +11,8 @@ import {
 } from "../components/ui/drawer";
 import { toast } from '../hooks/use-toast';
 import { AESEncrypt } from '../utils/AESEncrypt';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { setPlaceDetailCollapsed } from '../store/slices/uiSlice';
 
 interface PlaceDetailsProps {
   place: {
@@ -29,7 +31,8 @@ interface PlaceDetailsProps {
 }
 
 const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirectionClick }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const dispatch = useAppDispatch();
+  const { isPlaceDetailCollapsed } = useAppSelector((state) => state.ui);
   const [animating, setAnimating] = useState(false);
 
   // Add animation effect when component mounts
@@ -39,13 +42,20 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
     return () => clearTimeout(timer);
   }, []);
 
+  // Reset collapse state when a new place is selected
+  useEffect(() => {
+    if (place) {
+      dispatch(setPlaceDetailCollapsed(false));
+    }
+  }, [place, dispatch]);
+
   if (!place) return null;
 
   const addressParts = place.display?.split(',') || [];
   const fullAddress = addressParts.slice(1).join(',').trim();
 
   const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+    dispatch(setPlaceDetailCollapsed(!isPlaceDetailCollapsed));
   };
 
   const handleShare = async () => {
@@ -115,7 +125,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
       {/* Desktop sidebar-style drawer - only show on desktop */}
       {!isMobile && (
         <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-100 ${
-          isCollapsed 
+          isPlaceDetailCollapsed 
             ? '-translate-x-full' 
             : 'translate-x-0'} ${
           animating ? 'animate-in fade-in slide-in-from-left duration-100' : ''
@@ -240,7 +250,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
       {/* Toggle button - only show on desktop */}
       {!isMobile && (
         <div 
-          className={`fixed top-1/2 transform -translate-y-1/2 z-40 transition-all duration-100 ${isCollapsed ? 'left-0' : 'left-[500px]'}`}
+          className={`fixed top-1/2 transform -translate-y-1/2 z-40 transition-all duration-100 ${isPlaceDetailCollapsed ? 'left-0' : 'left-[500px]'}`}
         >
           <Button 
             variant="ghost" 
@@ -248,7 +258,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
             className="h-12 bg-white border border-gray-200 rounded-r-full rounded-l-none shadow-md"
             onClick={toggleCollapse}
           >
-            {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            {isPlaceDetailCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </Button>
         </div>
       )}
