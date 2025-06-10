@@ -177,6 +177,13 @@ const Index = () => {
   {/* Sidebar */}
   <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarClose} />
   
+  {/* Sidebar overlay */}
+  {isSidebarOpen && (
+    <div 
+      className="absolute inset-0 z-20 bg-black bg-opacity-10"
+      onClick={() => dispatch(setSidebarOpen(false))}
+    />
+  )}
   {/* MapControls */}
   <MapControls 
     mapRef={mapRef} 
@@ -210,13 +217,6 @@ const Index = () => {
     />
   )}
   
-  {/* Sidebar overlay */}
-  {isSidebarOpen && (
-    <div 
-      className="absolute inset-0 z-20 bg-black bg-opacity-10"
-      onClick={() => dispatch(setSidebarOpen(false))}
-    />
-  )}
 
   {/* Bot Detection Status */}
   {/* <BotDetectionStatus 
