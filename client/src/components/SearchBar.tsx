@@ -3,7 +3,9 @@ import { Search, Menu, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import SearchSuggestions from './SearchSuggestions';
+import LanguageSwitcher from './LanguageSwitcher';
 import { toast } from '../hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { SecureApiClient } from '../services/secureApiClient';
 import { getReverseGeocoding } from '../services/mapService';
 import { ENV } from '../config/environment';
@@ -61,6 +63,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onClose,
   mapRef
 }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -116,8 +119,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
     } catch (error) {
       // console.error('Reverse geocoding error:', error);
       toast({
-        title: "Lỗi tìm kiếm tọa độ",
-        description: "Không thể tìm thấy thông tin vị trí cho tọa độ này",
+        title: t('search.coordError'),
+        description: t('search.coordErrorDesc'),
         variant: "destructive"
       });
     } finally {
@@ -266,7 +269,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 h-5 w-5" />
           <Input
             type="text"
-            placeholder="Tìm địa điểm/tọa độ (21.0285, 105.8342)"
+            placeholder={t('search.placeholder')}
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={handleInputFocus}

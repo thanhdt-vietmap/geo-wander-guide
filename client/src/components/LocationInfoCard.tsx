@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { PlaceDetails } from '../types';
 import { X, Navigation, Share } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { AESEncrypt } from '../utils/AESEncrypt';
 
 interface LocationInfoCardProps {
@@ -14,6 +15,7 @@ interface LocationInfoCardProps {
 }
 
 const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onDirectionClick }) => {
+  const { t } = useTranslation();
   const [animating, setAnimating] = useState(true);
 
   useEffect(() => {
@@ -26,8 +28,8 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
     try {
       if (!place.ref_id) {
         toast({
-          title: "Lỗi chia sẻ",
-          description: "Không thể chia sẻ địa điểm này",
+          title: t('share.errorTitle'),
+          description: t('share.errorDesc'),
           variant: "destructive"
         });
         return;
@@ -53,14 +55,14 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
       }
       
       toast({
-        title: "Đã sao chép liên kết",
-        description: "Liên kết chia sẻ đã được sao chép vào clipboard"
+        title: t('share.successTitle'),
+        description: t('share.routeSuccessDesc')
       });
     } catch (error) {
       // console.error('Error sharing place:', error);
       toast({
-        title: "Lỗi chia sẻ",
-        description: "Không thể sao chép liên kết chia sẻ",
+        title: t('share.errorTitle'),
+        description: t('share.copyErrorDesc'),
         variant: "destructive"
       });
     }
@@ -97,7 +99,7 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
                   onClick={handleShare}
                 >
                   <Share className="h-4 w-4" />
-                  Chia sẻ
+                  {t('common.share')}
                 </Button>
                 
                 {onDirectionClick && (
@@ -108,7 +110,7 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
                     onClick={onDirectionClick}
                   >
                     <Navigation className="h-4 w-4" />
-                    Chỉ đường
+                    {t('common.directions')}
                   </Button>
                 )}
               </div>

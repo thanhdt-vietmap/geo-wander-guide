@@ -10,6 +10,7 @@ import {
   DrawerTitle,
 } from "../components/ui/drawer";
 import { toast } from '../hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { AESEncrypt } from '../utils/AESEncrypt';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { setPlaceDetailCollapsed } from '../store/slices/uiSlice';
@@ -31,6 +32,7 @@ interface PlaceDetailsProps {
 }
 
 const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirectionClick }) => {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { isPlaceDetailCollapsed } = useAppSelector((state) => state.ui);
   const [animating, setAnimating] = useState(false);
@@ -62,8 +64,8 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
     // console.log('Sharing place:', place);
     if (!place.ref_id) {
       toast({
-        title: "Lỗi chia sẻ",
-        description: "Không thể chia sẻ địa điểm này",
+        title: t('share.errorTitle'),
+        description: t('share.errorDesc'),
         variant: "destructive"
       });
       return;
@@ -91,8 +93,8 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
       
       await navigator.clipboard.writeText(currentUrl.toString());
       toast({
-        title: "Đã sao chép liên kết",
-        description: "Liên kết địa điểm đã được sao chép vào clipboard",
+        title: t('share.successTitle'),
+        description: t('share.successDesc'),
       });
     } catch (error) {
       console.error('Error sharing place:', error);
@@ -103,8 +105,8 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
         
         await navigator.clipboard.writeText(currentUrl.toString());
         toast({
-          title: "Đã sao chép liên kết",
-          description: "Liên kết địa điểm đã được sao chép vào clipboard",
+          title: t('share.successTitle'),
+          description: t('share.successDesc'),
         });
       } catch (fallbackError) {
         // console.error('Failed to copy to clipboard:', fallbackError);

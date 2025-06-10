@@ -3,6 +3,7 @@ import React from 'react';
 import { MapPin, Route, Clock, Star, Settings, Info, Home, BookOpen, Code, FileText, DollarSign, LogIn } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -10,17 +11,18 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const mainMenuItems = [
-    { icon: Home, label: 'Trang chủ', url: 'https://maps.vietmap.vn/web', color: 'text-blue-600' },
-    { icon: BookOpen, label: 'Tài liệu tích hợp', url: 'https://maps.vietmap.vn/docs/', color: 'text-green-600' },
-    { icon: Code, label: 'API Playground', url: 'https://maps.vietmap.vn/playground/', color: 'text-purple-600' },
-    { icon: FileText, label: 'Blog', url: 'https://maps.vietmap.vn/web/blog', color: 'text-orange-600' },
-    { icon: DollarSign, label: 'Bảng giá', url: 'https://maps.vietmap.vn/web#pricingSection', color: 'text-yellow-600' },
+    { icon: Home, label: t('sidebar.products'), url: 'https://maps.vietmap.vn/web', color: 'text-blue-600' },
+    { icon: BookOpen, label: t('sidebar.docs'), url: 'https://maps.vietmap.vn/docs/', color: 'text-green-600' },
+    { icon: Code, label: t('sidebar.playground'), url: 'https://maps.vietmap.vn/playground/', color: 'text-purple-600' },
+    { icon: FileText, label: t('sidebar.blog'), url: 'https://maps.vietmap.vn/web/blog', color: 'text-orange-600' },
+    { icon: DollarSign, label: t('sidebar.pricing'), url: 'https://maps.vietmap.vn/web#pricingSection', color: 'text-yellow-600' },
   ];
 
   const accountItems = [
-    { icon: LogIn, label: 'Đăng nhập', url: 'https://maps.vietmap.vn/console/' },
-    { icon: Info, label: 'Trợ giúp & phản hồi', url: 'https://maps.vietmap.vn/web#contact-section' },
+    { icon: LogIn, label: t('sidebar.login'), url: 'https://maps.vietmap.vn/console/' },
+    { icon: Info, label: t('sidebar.help'), url: 'https://maps.vietmap.vn/web#contact-section' },
   ];
 
   const handleItemClick = () => {

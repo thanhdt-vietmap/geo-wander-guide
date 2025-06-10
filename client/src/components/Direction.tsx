@@ -3,6 +3,7 @@ import { ArrowUpDown, Plus, Navigation, Share2, Copy } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { toast } from '../hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import SearchSuggestions from './SearchSuggestions';
 import RouteDetails from './RouteDetails';
 import DirectionHeader from './direction/DirectionHeader';
@@ -146,6 +147,7 @@ const apiClient = SecureApiClient.getInstance();
 const DIRECTION_PANEL_WIDTH = 500;
 
 const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, startingPlace, onMapClick }, ref) => {
+  const { t } = useTranslation();
   const [animating, setAnimating] = useState(true);
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
     { name: startingPlace?.display || "", lat: startingPlace?.lat || 0, lng: startingPlace?.lng || 0 },
@@ -269,8 +271,8 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     } catch (error) {
       // console.error('Reverse geocoding error:', error);
       toast({
-        title: "Lỗi tìm kiếm tọa độ",
-        description: "Không thể tìm thấy thông tin vị trí cho tọa độ này",
+        title: t('search.coordError'),
+        description: t('search.coordErrorDesc'),
         variant: "destructive"
       });
     } finally {

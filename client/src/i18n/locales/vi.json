@@ -1,0 +1,92 @@
+{
+  "common": {
+    "search": "Tìm kiếm",
+    "close": "Đóng",
+    "share": "Chia sẻ",
+    "directions": "Chỉ đường",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "save": "Lưu",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "coordinates": "Tọa độ",
+    "location": "Vị trí",
+    "place": "Địa điểm",
+    "address": "Địa chỉ"
+  },
+  "search": {
+    "placeholder": "Tìm địa điểm/tọa độ (21.0285, 105.8342)",
+    "noResults": "Không tìm thấy kết quả",
+    "coordError": "Lỗi tìm kiếm tọa độ",
+    "coordErrorDesc": "Không thể tìm thấy thông tin vị trí cho tọa độ này"
+  },
+  "sidebar": {
+    "products": "Trang chủ",
+    "pricing": "Bảng giá",
+    "blog": "Blog",
+    "login": "Đăng nhập",
+    "help": "Trợ giúp & phản hồi",
+    "docs": "Tài liệu tích hợp",
+    "playground": "API Playground"
+  },
+  "mapControls": {
+    "toggle3D": "Bật/tắt chế độ 3D",
+    "rotate": "Xoay bản đồ",
+    "resetNorth": "Về hướng bắc",
+    "zoomIn": "Phóng to",
+    "zoomOut": "Thu nhỏ"
+  },
+  "contextMenu": {
+    "shareCoordinates": "Chia sẻ tọa độ",
+    "directions": "Chỉ đường đến đây",
+    "searchHere": "Tìm kiếm quanh đây"
+  },
+  "placeDetails": {
+    "suggestEdit": "Đề xuất chỉnh sửa trên",
+    "addMissingPlace": "Thêm địa điểm bị thiếu",
+    "addBusiness": "Thêm doanh nghiệp của bạn"
+  },
+  "direction": {
+    "startPoint": "Điểm bắt đầu hoặc tọa độ (vd: 21.0285, 105.8342)",
+    "destination": "Điểm đến hoặc tọa độ (vd: 21.0285, 105.8342)",
+    "waypoint": "Điểm dừng hoặc tọa độ (vd: 21.0285, 105.8342)",
+    "addWaypoint": "Thêm điểm dừng",
+    "removeWaypoint": "Xóa điểm dừng",
+    "swapWaypoints": "Hoán đổi điểm đi và đến",
+    "findRoute": "Tìm đường",
+    "routeFound": "Đã tìm thấy tuyến đường",
+    "routeError": "Lỗi tìm đường",
+    "routeErrorDesc": "Không thể tìm thấy tuyến đường",
+    "clearRoute": "Xóa tuyến đường",
+    "shareRoute": "Chia sẻ tuyến đường",
+    "distance": "Khoảng cách",
+    "duration": "Thời gian",
+    "vehicle": {
+      "car": "Ô tô",
+      "motorcycle": "Xe máy",
+      "bicycle": "Xe đạp",
+      "foot": "Đi bộ"
+    }
+  },
+  "share": {
+    "errorTitle": "Lỗi chia sẻ",
+    "errorDesc": "Không thể chia sẻ địa điểm này",
+    "successTitle": "Đã sao chép liên kết",
+    "successDesc": "Liên kết địa điểm đã được sao chép vào clipboard",
+    "routeSuccessDesc": "Liên kết chia sẻ đã được sao chép vào clipboard",
+    "copyErrorTitle": "Lỗi sao chép",
+    "copyErrorDesc": "Không thể sao chép liên kết"
+  },
+  "load": {
+    "placeErrorTitle": "Lỗi tải địa điểm",
+    "placeErrorDesc": "Không thể tải thông tin địa điểm từ liên kết"
+  },
+  "language": {
+    "vietnamese": "Tiếng Việt",
+    "english": "English",
+    "switch": "Đổi ngôn ngữ"
+  }
+}

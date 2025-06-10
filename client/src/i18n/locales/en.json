@@ -1,0 +1,92 @@
+{
+  "common": {
+    "search": "Search",
+    "close": "Close",
+    "share": "Share",
+    "directions": "Directions",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "coordinates": "Coordinates",
+    "location": "Location",
+    "place": "Place",
+    "address": "Address"
+  },
+  "search": {
+    "placeholder": "Search places/coordinates (21.0285, 105.8342)",
+    "noResults": "No results found",
+    "coordError": "Coordinate search error",
+    "coordErrorDesc": "Could not find location information for these coordinates"
+  },
+  "sidebar": {
+    "products": "Home",
+    "pricing": "Pricing",
+    "blog": "Blog",
+    "login": "Login",
+    "help": "Help & Feedback",
+    "docs": "Integration docs",
+    "playground": "API Playground"
+  },
+  "mapControls": {
+    "toggle3D": "Toggle 3D mode",
+    "rotate": "Rotate map",
+    "resetNorth": "Reset to north",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out"
+  },
+  "contextMenu": {
+    "shareCoordinates": "Share coordinates",
+    "directions": "Directions to here",
+    "searchHere": "Search around here"
+  },
+  "placeDetails": {
+    "suggestEdit": "Suggest an edit on",
+    "addMissingPlace": "Add a missing place",
+    "addBusiness": "Add your business"
+  },
+  "direction": {
+    "startPoint": "Start point or coordinates (e.g: 21.0285, 105.8342)",
+    "destination": "Destination or coordinates (e.g: 21.0285, 105.8342)",
+    "waypoint": "Waypoint or coordinates (e.g: 21.0285, 105.8342)",
+    "addWaypoint": "Add waypoint",
+    "removeWaypoint": "Remove waypoint",
+    "swapWaypoints": "Swap start and destination",
+    "findRoute": "Find route",
+    "routeFound": "Route found",
+    "routeError": "Route error",
+    "routeErrorDesc": "Could not find route",
+    "clearRoute": "Clear route",
+    "shareRoute": "Share route",
+    "distance": "Distance",
+    "duration": "Duration",
+    "vehicle": {
+      "car": "Car",
+      "motorcycle": "Motorcycle",
+      "bicycle": "Bicycle",
+      "foot": "Walking"
+    }
+  },
+  "share": {
+    "errorTitle": "Share error",
+    "errorDesc": "Cannot share this place",
+    "successTitle": "Link copied",
+    "successDesc": "Place link has been copied to clipboard",
+    "routeSuccessDesc": "Share link has been copied to clipboard",
+    "copyErrorTitle": "Copy error",
+    "copyErrorDesc": "Cannot copy link"
+  },
+  "load": {
+    "placeErrorTitle": "Place load error",
+    "placeErrorDesc": "Cannot load place information from link"
+  },
+  "language": {
+    "vietnamese": "Tiếng Việt",
+    "english": "English",
+    "switch": "Switch language"
+  }
+}

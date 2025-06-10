@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Copy, MapPin, X, Navigation, Plus, Share } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { AESEncrypt } from '../utils/AESEncrypt';
 
 interface MapContextMenuProps {
@@ -33,6 +34,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
   showDirectionOptions = false,
   canAddWaypoint = false
 }) => {
+  const { t } = useTranslation();
   const [animating, setAnimating] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -199,7 +201,7 @@ const MapContextMenu: React.FC<MapContextMenuProps> = ({
           className="flex w-full items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded cursor-pointer transition-colors"
         >
           <Share className="mr-2 h-4 w-4" />
-          <span>Chia sẻ tọa độ</span>
+          <span>{t('contextMenu.shareCoordinates')}</span>
         </button>
 
         {/* Direction Options */}

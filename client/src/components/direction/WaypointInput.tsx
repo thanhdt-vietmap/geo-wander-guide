@@ -3,6 +3,7 @@ import React from 'react';
 import { Search, X, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface WayPoint {
   name: string;
@@ -44,10 +45,12 @@ const WaypointInput = ({
   onSwapWaypoints,
   inputRef
 }: WaypointInputProps) => {
+  const { t } = useTranslation();
+  
   const getPlaceholder = () => {
-    if (index === 0) return "Điểm bắt đầu hoặc tọa độ (vd: 21.0285, 105.8342)";
-    if (index === totalWaypoints - 1) return "Điểm đến hoặc tọa độ (vd: 21.0285, 105.8342)";
-    return "Điểm dừng hoặc tọa độ (vd: 21.0285, 105.8342)";
+    if (index === 0) return t('direction.startPoint');
+    if (index === totalWaypoints - 1) return t('direction.destination');
+    return t('direction.waypoint');
   };
 
   const canRemove = totalWaypoints > 2;

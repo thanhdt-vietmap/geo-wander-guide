@@ -1,5 +1,6 @@
 
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch } from '../store/hooks';
 import { setSelectedPlace, setLocationInfo } from '../store/slices/locationSlice';
 import { setPlaceDetailCollapsed, setShowDirections } from '../store/slices/uiSlice';
@@ -9,6 +10,7 @@ import { toast } from '../hooks/use-toast';
 import { AESEncrypt } from '../utils/AESEncrypt';
 
 export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDetails) => void) => {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -215,8 +217,8 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
       } catch (error) {
         // console.error('Error loading place from URL:', error);
         toast({
-          title: "Lỗi tải địa điểm",
-          description: "Không thể tải thông tin địa điểm từ liên kết",
+          title: t('load.placeErrorTitle'),
+          description: t('load.placeErrorDesc'),
           variant: "destructive"
         });
         

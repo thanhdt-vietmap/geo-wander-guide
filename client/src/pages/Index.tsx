@@ -19,6 +19,7 @@ import Direction, { DirectionRef } from '../components/Direction';
 import MapContextMenu from '../components/MapContextMenu';
 import LocationInfoCard from '../components/LocationInfoCard';
 import MapLayerSelector from '../components/MapLayerSelector';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { PlaceDetails as PlaceDetailsType } from '../types';
 import { MapLayerType } from '../components/MapLayerSelector';
 const Index = () => {
@@ -139,6 +140,11 @@ const Index = () => {
       onPlaceSelect={handlePlaceSelectWrapper}
       onClose={handleClosePlaceDetailsWrapper}
     />)}
+  </div>
+
+  {/* Language switcher in top-right corner */}
+  <div className="absolute top-6 right-6 z-50">
+    <LanguageSwitcher />
   </div>
   
   {/* PlaceDetails với z-index thấp hơn SearchBar */}

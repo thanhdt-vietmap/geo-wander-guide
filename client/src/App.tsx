@@ -8,6 +8,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SecurityManager } from "./utils/securityManager";
+import LanguageSyncProvider from "./components/LanguageSyncProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import FontTest from "./components/FontTest";
@@ -21,16 +22,18 @@ const App = () => (
   <Provider store={store}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/font-test" element={<FontTest />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <LanguageSyncProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/font-test" element={<FontTest />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </LanguageSyncProvider>
       </TooltipProvider>
     </QueryClientProvider>
   </Provider>

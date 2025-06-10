@@ -4,6 +4,7 @@ import { ZoomIn, ZoomOut, Navigation, RotateCcw, Compass, MapPin, Rotate3d } fro
 import { Button } from '../components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { MapViewRef } from './MapView';
 import { MapLayerType } from './MapLayerSelector';
 
@@ -18,6 +19,7 @@ const MapControls: React.FC<MapControlsProps> = ({
   onLayerChange,
   currentLayer = 'vector'
 }) => {
+  const { t } = useTranslation();
   const [is3DMode, setIs3DMode] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   
@@ -111,7 +113,7 @@ const MapControls: React.FC<MapControlsProps> = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Toggle 3D view</p>
+              <p>{t('mapControls.toggle3D')}</p>
             </TooltipContent>
           </Tooltip>
           
@@ -128,7 +130,7 @@ const MapControls: React.FC<MapControlsProps> = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Rotate map</p>
+              <p>{t('mapControls.rotate')}</p>
             </TooltipContent>
           </Tooltip>
 
@@ -145,7 +147,7 @@ const MapControls: React.FC<MapControlsProps> = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Reset bearing to north</p>
+              <p>{t('mapControls.resetNorth')}</p>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -164,7 +166,7 @@ const MapControls: React.FC<MapControlsProps> = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Zoom in</p>
+              <p>{t('mapControls.zoomIn')}</p>
             </TooltipContent>
           </Tooltip>
           
@@ -180,7 +182,7 @@ const MapControls: React.FC<MapControlsProps> = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <p>Zoom out</p>
+              <p>{t('mapControls.zoomOut')}</p>
             </TooltipContent>
           </Tooltip>
         </div>

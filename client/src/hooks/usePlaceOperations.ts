@@ -1,5 +1,6 @@
 
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch } from '../store/hooks';
 import { setSelectedPlace, setLocationInfo } from '../store/slices/locationSlice';
 import { setPlaceDetailCollapsed, setShowDirections } from '../store/slices/uiSlice';
@@ -9,6 +10,7 @@ import { toast } from '../hooks/use-toast';
 import { AESEncrypt } from '../utils/AESEncrypt';
 
 export const usePlaceOperations = () => {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
 
   const handlePlaceSelect = useCallback((place: PlaceDetails, mapRef: React.RefObject<MapViewRef>) => {
@@ -42,8 +44,8 @@ export const usePlaceOperations = () => {
       // console.log('Sharing place:', place);
       if (!place.ref_id) {
         toast({
-          title: "Lỗi chia sẻ",
-          description: "Không thể chia sẻ địa điểm này",
+          title: t('share.errorTitle'),
+          description: t('share.errorDesc'),
           variant: "destructive"
         });
         return;
@@ -69,14 +71,14 @@ export const usePlaceOperations = () => {
       }
       
       toast({
-        title: "Đã sao chép liên kết",
-        description: "Liên kết chia sẻ đã được sao chép vào clipboard"
+        title: t('share.successTitle'),
+        description: t('share.routeSuccessDesc')
       });
     } catch (error) {
       // console.error('Error sharing place:', error);
       toast({
-        title: "Lỗi chia sẻ",
-        description: "Không thể sao chép liên kết chia sẻ",
+        title: t('share.errorTitle'),
+        description: t('share.copyErrorDesc'),
         variant: "destructive"
       });
     }

@@ -5,12 +5,14 @@ interface UIState {
   isSidebarOpen: boolean;
   isPlaceDetailCollapsed: boolean;
   showDirections: boolean;
+  language: 'vi' | 'en';
 }
 
 const initialState: UIState = {
   isSidebarOpen: false,
   isPlaceDetailCollapsed: false,
   showDirections: false,
+  language: 'vi',
 };
 
 const uiSlice = createSlice({
@@ -29,8 +31,11 @@ const uiSlice = createSlice({
     setShowDirections: (state, action: PayloadAction<boolean>) => {
       state.showDirections = action.payload;
     },
+    setLanguage: (state, action: PayloadAction<'vi' | 'en'>) => {
+      state.language = action.payload;
+    },
   },
 });
 
-export const { setSidebarOpen, toggleSidebar, setPlaceDetailCollapsed, setShowDirections } = uiSlice.actions;
+export const { setSidebarOpen, toggleSidebar, setPlaceDetailCollapsed, setShowDirections, setLanguage } = uiSlice.actions;
 export default uiSlice.reducer;
