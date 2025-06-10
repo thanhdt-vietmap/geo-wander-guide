@@ -4,6 +4,8 @@ import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { toast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { setDirectionCollapsed } from '../store/slices/uiSlice';
 import SearchSuggestions from './SearchSuggestions';
 import RouteDetails from './RouteDetails';
 import DirectionHeader from './direction/DirectionHeader';
@@ -148,8 +150,10 @@ const DIRECTION_PANEL_WIDTH = 500;
 
 const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, startingPlace, onMapClick }, ref) => {
   const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const { isDirectionCollapsed } = useAppSelector((state) => state.ui);
+  
   const [animating, setAnimating] = useState(true);
-  const [isDirectionCollapsed, setIsDirectionCollapsed] = useState(false);
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
     { name: startingPlace?.display || "", lat: startingPlace?.lat || 0, lng: startingPlace?.lng || 0 },
     { name: "", lat: 0, lng: 0 }
@@ -821,7 +825,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   };
 
   const toggleCollapse = () => {
-    setIsDirectionCollapsed(!isDirectionCollapsed);
+    dispatch(setDirectionCollapsed(!isDirectionCollapsed));
   };
 
   const handleGetDirections = async () => {

@@ -417,6 +417,12 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     setMapStyle: (styleType: string) => {
       if (map.current) {
         const newStyle = getMapStyle(styleType);
+        
+        // Clear current markers and routes visually (but keep saved data)
+        markers.current.forEach(({ marker }) => marker.remove());
+        markers.current = [];
+        
+        // Set the new style
         map.current.setStyle(newStyle as any);
         setCurrentMapStyle(styleType);
         if (onMapStyleChange) {
@@ -425,84 +431,121 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         
         // Set up listener for when the new style is loaded to restore routes and markers
         const handleStyleLoad = () => {
-          // Restore all saved routes
-          savedRoutes.current.forEach(routeData => {
-            if (map.current) {
-              // Add the route source and layer
-              map.current.addSource(routeData.id, {
-                type: 'geojson',
-                data: {
-                  type: 'Feature',
-                  properties: {},
-                  geometry: {
-                    type: 'LineString',
-                    coordinates: routeData.coordinates
+          // Add additional delay to ensure style is fully loaded
+          setTimeout(() => {
+            if (!map.current) return;
+            
+            // Restore all saved routes
+            savedRoutes.current.forEach(routeData => {
+              if (map.current) {
+                try {
+                  // Add the route source and layer
+                  map.current.addSource(routeData.id, {
+                    type: 'geojson',
+                    data: {
+                      type: 'Feature',
+                      properties: {},
+                      geometry: {
+                        type: 'LineString',
+                        coordinates: routeData.coordinates
+                      }
+                    }
+                  });
+
+                  // Check if boundary_province layer exists before using it as beforeId
+                  const beforeId = map.current.getLayer("boundary_province") ? "boundary_province" : undefined;
+
+                  map.current.addLayer({
+                    id: routeData.id,
+                    type: 'line',
+                    source: routeData.id,
+                    layout: {
+                      'line-join': 'round',
+                      'line-cap': 'round'
+                    },
+                    paint: {
+                      'line-color': routeData.color,
+                      'line-width': routeData.isHighlighted ? 5 : 4,
+                      'line-opacity': routeData.isHighlighted ? 1 : 0.5
+                    }
+                  }, beforeId);
+
+                  // Add to routes tracking
+                  if (!routes.current.includes(routeData.id)) {
+                    routes.current.push(routeData.id);
                   }
+                } catch (error) {
+                  console.warn('Error restoring route:', routeData.id, error);
                 }
-              });
-
-              // Check if boundary_province layer exists before using it as beforeId
-              const beforeId = map.current.getLayer("boundary_province") ? "boundary_province" : undefined;
-
-              map.current.addLayer({
-                id: routeData.id,
-                type: 'line',
-                source: routeData.id,
-                layout: {
-                  'line-join': 'round',
-                  'line-cap': 'round'
-                },
-                paint: {
-                  'line-color': routeData.color,
-                  'line-width': routeData.isHighlighted ? 5 : 4,
-                  'line-opacity': routeData.isHighlighted ? 1 : 0.5
-                }
-              }, beforeId);
-
-              // Add to routes tracking
-              if (!routes.current.includes(routeData.id)) {
-                routes.current.push(routeData.id);
               }
-            }
-          });
+            });
 
-          // Restore all saved markers
-          savedMarkers.current.forEach(markerData => {
-            if (map.current) {
-              const colors = {
-                default: '#FF0000',
-                start: '#00FF00',
-                end: '#0000FF',
-                waypoint: '#FFA500'
-              };
+            // Restore all saved markers
+            savedMarkers.current.forEach(markerData => {
+              if (map.current) {
+                try {
+                  const colors = {
+                    default: '#FF0000',
+                    start: '#00FF00',
+                    end: '#0000FF',
+                    waypoint: '#FFA500'
+                  };
 
-              const marker = new vietmapgl.Marker({
-                color: colors[markerData.type],
-                draggable: markerData.draggable
-              })
-              .setLngLat([markerData.lng, markerData.lat])
-              .addTo(map.current);
+                  const marker = new vietmapgl.Marker({
+                    color: colors[markerData.type],
+                    draggable: markerData.draggable
+                  })
+                  .setLngLat([markerData.lng, markerData.lat])
+                  .addTo(map.current);
 
-              // Add drag event listener if draggable
-              if (markerData.draggable && typeof markerData.index === 'number') {
-                marker.on('dragend', () => {
-                  const lngLat = marker.getLngLat();
-                  if (markerDragCallback.current) {
-                    markerDragCallback.current(markerData.index!, lngLat.lng, lngLat.lat);
+                  // Add drag event listener if draggable
+                  if (markerData.draggable && typeof markerData.index === 'number') {
+                    marker.on('dragend', () => {
+                      const lngLat = marker.getLngLat();
+                      if (markerDragCallback.current) {
+                        markerDragCallback.current(markerData.index!, lngLat.lng, lngLat.lat);
+                      }
+                    });
                   }
-                });
+
+                  markers.current.push({ marker, index: markerData.index });
+                } catch (error) {
+                  console.warn('Error restoring marker:', markerData, error);
+                }
               }
+            });
 
-              markers.current.push({ marker, index: markerData.index });
-            }
-          });
-
-          // Remove the event listener after restoration
-          map.current?.off('style.load', handleStyleLoad);
+            console.log('Routes and markers restored after style change');
+          }, 500); // 500ms delay to ensure style is fully loaded
         };
 
-        // Add event listener for when the style finishes loading
+        // Use both 'style.load' and 'styledata' events for better reliability
         map.current.once('style.load', handleStyleLoad);
+        
+        // Fallback: also listen for styledata event
+        const handleStyleData = (e: any) => {
+          if (e.dataType === 'style') {
+            // Remove the style.load listener since we're handling it here
+            map.current?.off('style.load', handleStyleLoad);
+            handleStyleLoad();
+            map.current?.off('styledata', handleStyleData);
+          }
+        };
+        
+        map.current.on('styledata', handleStyleData);
+        
+        // Fallback timeout in case events don't fire
+        setTimeout(() => {
+          if (map.current) {
+            map.current.off('style.load', handleStyleLoad);
+            map.current.off('styledata', handleStyleData);
+            // Only call handleStyleLoad if routes haven't been restored yet
+            if (savedRoutes.current.length > 0 && routes.current.length === 0) {
+              console.log('Fallback: restoring routes after timeout');
+              handleStyleLoad();
+            }
+          }
+        }, 2000);
       }
     },
     rotateMap: (degrees: number) => {

@@ -19,13 +19,15 @@ interface MapLayerSelectorProps {
   onClose: () => void;
   onLayerSelect: (layerType: MapLayerType) => void;
   currentLayer: MapLayerType;
+  marginLeft?: number; // Add margin left prop
 }
 
 const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
   isOpen,
   onClose,
   onLayerSelect,
-  currentLayer
+  currentLayer,
+  marginLeft = 0
 }) => {
   const selectorRef = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -220,7 +222,8 @@ const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
   return (
     <div 
       ref={selectorRef}
-      className="fixed bottom-6 left-6 z-30"
+      className="fixed bottom-6 z-30 transition-all duration-300"
+      style={{ left: `${24 + marginLeft}px` }}
     >
       {/* Always Visible Active Item */}
       <div 

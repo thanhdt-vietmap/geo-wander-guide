@@ -29,9 +29,25 @@ const Index = () => {
   const { isBot, suspicionScore, flags } = useBotDetection(true);
   
   // Redux state
-  const { isSidebarOpen, showDirections } = useAppSelector((state) => state.ui);
+  const { isSidebarOpen, showDirections, isPlaceDetailCollapsed, isDirectionCollapsed } = useAppSelector((state) => state.ui);
   const { selectedPlace, locationInfo, startingPlace } = useAppSelector((state) => state.location);
   const { currentLayer, contextMenu } = useAppSelector((state) => state.map);
+  
+  // Calculate margin left for MapLayerSelector
+  const calculateMapLayerMarginLeft = () => {
+    let marginLeft = 0;
+    
+    // PlaceDetails is visible and not collapsed
+    if (selectedPlace && !isPlaceDetailCollapsed) {
+      marginLeft = 500; // PlaceDetails width
+    }
+    // Direction is visible and not collapsed
+    else if (showDirections && !isDirectionCollapsed) {
+      marginLeft = 500; // Direction width
+    }
+    
+    return marginLeft;
+  };
   
   // Refs
   const mapRef = useRef<MapViewRef>(null);
@@ -203,6 +219,7 @@ const Index = () => {
     onClose={() => {}}
     onLayerSelect={handleMapLayerChange}
     currentLayer={currentLayer}
+    marginLeft={calculateMapLayerMarginLeft()}
   />
   
   {/* Context Menu */}
