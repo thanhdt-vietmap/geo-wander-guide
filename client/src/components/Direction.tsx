@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
-import { ArrowUpDown, Plus, Navigation, Share2, Copy } from 'lucide-react';
+import { ArrowUpDown, Plus, Navigation, Share2, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { toast } from '../hooks/use-toast';
@@ -149,6 +149,7 @@ const DIRECTION_PANEL_WIDTH = 500;
 const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, startingPlace, onMapClick }, ref) => {
   const { t } = useTranslation();
   const [animating, setAnimating] = useState(true);
+  const [isDirectionCollapsed, setIsDirectionCollapsed] = useState(false);
   const [waypoints, setWaypoints] = useState<WayPoint[]>([
     { name: startingPlace?.display || "", lat: startingPlace?.lat || 0, lng: startingPlace?.lng || 0 },
     { name: "", lat: 0, lng: 0 }
@@ -819,6 +820,10 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
     await RouteShareService.shareRoute(waypoints, vehicle);
   };
 
+  const toggleCollapse = () => {
+    setIsDirectionCollapsed(!isDirectionCollapsed);
+  };
+
   const handleGetDirections = async () => {
     const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
     // console.log('waypoints:', waypoints);
@@ -947,107 +952,131 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   }
 
   return (
-    <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-100 w-[500px] overflow-auto ${animating ? 'animate-in fade-in slide-in-from-left duration-100' : ''
-      }`}>
-      <div className="flex h-full">
-        <div className="bg-white shadow-lg pt-0 w-full flex flex-col border-r">
-          <DirectionHeader onClose={onClose} />
+    <>
+      {/* Direction Panel */}
+      <div className={`fixed top-0 left-0 h-full z-40 transition-all duration-300 w-[500px] overflow-auto ${
+        isDirectionCollapsed ? '-translate-x-full' : 'translate-x-0'
+      } ${animating ? 'animate-in fade-in slide-in-from-left duration-100' : ''}`}>
+        <div className="flex h-full">
+          <div className="bg-white shadow-lg pt-0 w-full flex flex-col border-r">
+            <DirectionHeader onClose={onClose} />
 
-          <VehicleSelector vehicle={vehicle} onVehicleChange={setVehicle} />
+            <VehicleSelector vehicle={vehicle} onVehicleChange={setVehicle} />
 
-          <div className="px-6 py-4 relative" ref={searchContainerRef}>
-            {/* Waypoints inputs */}
-            <div className="space-y-3 mb-4">
-              {waypoints.map((waypoint, index) => (
-                <div key={index}>
-                  <WaypointInput
-                    waypoint={waypoint}
-                    index={index}
-                    totalWaypoints={waypoints.length}
-                    draggedIndex={draggedIndex}
-                    activeInputIndex={activeInputIndex}
-                    onInputChange={handleInputChange}
-                    onInputFocus={handleInputFocus}
-                    onMoveWaypoint={handleMoveWaypoint}
-                    onRemoveWaypoint={handleRemoveWaypoint}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={handleDragOver}
-                    onSwapWaypoints={waypoints.length === 2 ? handleSwapWaypoints : undefined}
-                    inputRef={el => inputRefs.current[index] = el}
-                  />
+            <div className="px-6 py-4 relative" ref={searchContainerRef}>
+              {/* Waypoints inputs */}
+              <div className="space-y-3 mb-4">
+                {waypoints.map((waypoint, index) => (
+                  <div key={index}>
+                    <WaypointInput
+                      waypoint={waypoint}
+                      index={index}
+                      totalWaypoints={waypoints.length}
+                      draggedIndex={draggedIndex}
+                      activeInputIndex={activeInputIndex}
+                      onInputChange={handleInputChange}
+                      onInputFocus={handleInputFocus}
+                      onMoveWaypoint={handleMoveWaypoint}
+                      onRemoveWaypoint={handleRemoveWaypoint}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={handleDragOver}
+                      onSwapWaypoints={waypoints.length === 2 ? handleSwapWaypoints : undefined}
+                      inputRef={el => inputRefs.current[index] = el}
+                    />
 
-                  {/* Render suggestions for the active input directly below it */}
-                  {showSuggestions && activeInputIndex === index && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-50">
-                      <SearchSuggestions
-                        suggestions={suggestions}
-                        onSelect={handleSuggestionSelect}
-                        isVisible={true}
-                        isLoading={isSearchLoading}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    {/* Render suggestions for the active input directly below it */}
+                    {showSuggestions && activeInputIndex === index && (
+                      <div className="absolute left-0 right-0 top-full mt-1 z-50">
+                        <SearchSuggestions
+                          suggestions={suggestions}
+                          onSelect={handleSuggestionSelect}
+                          isVisible={true}
+                          isLoading={isSearchLoading}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-            {/* Add waypoint button */}
-            <Button
-              variant="outline"
-              className="w-full flex items-center justify-center gap-2"
-              onClick={handleAddDirectionWaypoint}
-            >
-              <Plus className="h-4 w-4" />
-              {t('direction.addStop')}
-            </Button>
-
-            <Separator className="my-4" />
-
-            {/* Get directions button */}
-            <Button
-              className="w-full mb-2"
-              onClick={handleGetDirections}
-              disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
-            >
-              <Navigation className="h-4 w-4 mr-2" />
-              {t('direction.getDirections')}
-            </Button>
-
-            {/* Share route buttons */}
-            <div className="flex gap-2 mb-4">
+              {/* Add waypoint button */}
               <Button
                 variant="outline"
-                className="flex-1"
-                onClick={handleCopyRoute}
-                disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
+                className="w-full flex items-center justify-center gap-2"
+                onClick={handleAddDirectionWaypoint}
               >
-                <Copy className="h-4 w-4 mr-2" />
-                {t('direction.copyUrl')}
+                <Plus className="h-4 w-4" />
+                {t('direction.addStop')}
               </Button>
+
+              <Separator className="my-4" />
+
+              {/* Get directions button */}
               <Button
-                variant="outline"
-                className="flex-1"
-                onClick={handleShareRoute}
+                className="w-full mb-2"
+                onClick={handleGetDirections}
                 disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
               >
-                <Share2 className="h-4 w-4 mr-2" />
-                {t('direction.share')}
+                <Navigation className="h-4 w-4 mr-2" />
+                {t('direction.getDirections')}
               </Button>
+
+              {/* Share route buttons */}
+              <div className="flex gap-2 mb-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleCopyRoute}
+                  disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  {t('direction.copyUrl')}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleShareRoute}
+                  disabled={waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0).length < 2}
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  {t('direction.share')}
+                </Button>
+              </div>
             </div>
+
+            <Separator />
+
+            <RouteList
+              routeSummaries={routeSummaries}
+              selectedRouteId={selectedRouteId}
+              onSelectRoute={handleSelectRoute}
+              onShowRouteDetails={handleShowRouteDetails}
+            />
           </div>
-
-          <Separator />
-
-          <RouteList
-            routeSummaries={routeSummaries}
-            selectedRouteId={selectedRouteId}
-            onSelectRoute={handleSelectRoute}
-            onShowRouteDetails={handleShowRouteDetails}
-          />
         </div>
       </div>
-    </div>
+      
+      {/* Collapse button - positioned at the right edge of the panel */}
+      <div 
+        className={`fixed top-1/2 transform -translate-y-1/2 z-50 transition-all duration-300 ${
+          isDirectionCollapsed ? 'left-0' : 'left-[500px]'
+        }`}
+      >
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-12 w-8 bg-white border border-gray-200 rounded-r-lg rounded-l-none shadow-lg hover:shadow-xl transition-shadow"
+          onClick={toggleCollapse}
+        >
+          {isDirectionCollapsed ? (
+            <ChevronRight className="h-5 w-5" />
+          ) : (
+            <ChevronLeft className="h-5 w-5" />
+          )}
+        </Button>
+      </div>
+    </>
   );
 });
 
