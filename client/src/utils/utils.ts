@@ -1,6 +1,5 @@
-
-import { ENV } from '../config/environment';
-
+import { ENV } from "../config/environment";
+import hybridTileJson from "../json/hybrid_tile.json";
 /**
  * {
     "version": 8,
@@ -109,7 +108,9 @@ class MapUtils {
       ],
     };
   };
-
+  getVietMapHybridVectorTileLayer = () => {
+    return hybridTileJson;
+  };
   getVietMapHybridRasterTileLayer = () => {
     const apiKey = this.getApiKey();
     return {
@@ -177,7 +178,7 @@ class MapUtils {
     // console.log('Vector tile URL:', url);
     return url;
   };
-  
+
   getVietMapVectorDarkTile = () => {
     const apiKey = this.getApiKey();
     const url = `https://maps.vietmap.vn/mt/dm/style.json?apikey=${apiKey}`;

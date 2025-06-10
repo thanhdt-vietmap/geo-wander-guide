@@ -180,7 +180,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       case 'raster':
         return mapUtils.getVietMapRasterTileLayer();
       case 'hybrid':
-        return mapUtils.getVietMapHybridRasterTileLayer();
+        return mapUtils.getVietMapHybridVectorTileLayer();
       case 'satellite':
         return mapUtils.getVietMapSatelliteTileLayer();
       case 'vector-light':
