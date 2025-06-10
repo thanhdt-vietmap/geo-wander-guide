@@ -119,10 +119,10 @@ const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
     <button
       onClick={() => handleTabClick(tab)}
       className={cn(
-        "relative flex items-center justify-center px-4 py-2 text-sm font-medium transition-all duration-300 flex-1 z-10 text-center",
+        "relative flex items-center justify-center px-4 py-2 text-sm transition-all duration-300 flex-1 z-10 text-center",
         isActive 
-          ? "text-white" 
-          : "text-gray-600 hover:text-gray-800"
+          ? "text-white font-medium" 
+          : "text-gray-600 hover:text-gray-800 font-normal"
       )}
     >
       <span className="text-center">{label}</span>
