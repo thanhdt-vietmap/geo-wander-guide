@@ -220,7 +220,7 @@ const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
   return (
     <div 
       ref={selectorRef}
-      className="fixed bottom-6 left-6 z-50"
+      className="fixed bottom-6 left-6 z-30"
     >
       {/* Always Visible Active Item */}
       <div 

@@ -32,7 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute top-20 left-6 z-30 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+    <div className="absolute top-20 left-6 z-50 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
       <div className="p-4">
         <div className="space-y-1">
           {mainMenuItems.map((item, index) => (
