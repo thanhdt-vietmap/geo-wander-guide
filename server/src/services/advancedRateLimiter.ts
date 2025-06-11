@@ -604,6 +604,111 @@ class AdvancedRateLimiter {
     this.rateLimitData.set(ip, data);
   }
 
+  // Method to get rate limit info for a specific IP
+  public getIPLimitInfo(ip: string): any {
+    const currentTime = Date.now();
+    const data = this.rateLimitData.get(ip);
+    
+    if (!data) {
+      return {
+        ip,
+        exists: false,
+        isBlacklisted: this.isBlacklisted(ip),
+        limits: {
+          maxRequestsPerWindow: CONFIG.RATE_LIMIT.MAX_REQUESTS,
+          windowSizeMs: CONFIG.RATE_LIMIT.RESET_TIME,
+          dailyRequestLimit: this.DAILY_REQUEST_LIMIT,
+          blacklistThreshold: CONFIG.RATE_LIMIT.BLACKLIST_THRESHOLD
+        },
+        current: {
+          requestCount: 0,
+          dailyCount: 0,
+          violations: 0,
+          botSuspicionScore: 0,
+          isSuspiciousBot: false
+        },
+        status: {
+          canMakeRequest: !this.isBlacklisted(ip),
+          rateLimitExceeded: false,
+          dailyLimitExceeded: false,
+          isQueued: false
+        },
+        timestamps: {
+          lastRequest: null,
+          lastAccess: null,
+          dailyResetTime: null,
+          nextReset: new Date(currentTime + CONFIG.RATE_LIMIT.RESET_TIME).toISOString()
+        }
+      };
+    }
+
+    // Check if current window should be reset
+    const shouldResetWindow = this.shouldReset(data, currentTime);
+    const shouldResetDaily = this.shouldResetDailyCount(data, currentTime);
+    
+    // Calculate effective daily limit based on bot suspicion
+    let effectiveDailyLimit = this.DAILY_REQUEST_LIMIT;
+    if (data.isSuspiciousBot || (data.botSuspicionScore && data.botSuspicionScore >= 40)) {
+      effectiveDailyLimit = Math.floor(this.DAILY_REQUEST_LIMIT * 0.25);
+    } else if (data.botSuspicionScore && data.botSuspicionScore >= 20) {
+      effectiveDailyLimit = Math.floor(this.DAILY_REQUEST_LIMIT * 0.5);
+    }
+
+    // Check rate limits
+    const currentCount = shouldResetWindow ? 0 : data.count;
+    const dailyCount = shouldResetDaily ? 0 : data.dailyCount;
+    const rateLimitExceeded = currentCount >= CONFIG.RATE_LIMIT.MAX_REQUESTS;
+    const dailyLimitExceeded = dailyCount >= effectiveDailyLimit;
+    const isQueued = this.requestQueues.has(ip) && this.requestQueues.get(ip)!.length > 0;
+    const isBlacklisted = this.isBlacklisted(ip);
+
+    return {
+      ip,
+      exists: true,
+      isBlacklisted,
+      limits: {
+        maxRequestsPerWindow: CONFIG.RATE_LIMIT.MAX_REQUESTS,
+        windowSizeMs: CONFIG.RATE_LIMIT.RESET_TIME,
+        dailyRequestLimit: this.DAILY_REQUEST_LIMIT,
+        effectiveDailyLimit,
+        blacklistThreshold: CONFIG.RATE_LIMIT.BLACKLIST_THRESHOLD,
+        maxQueueSize: CONFIG.RATE_LIMIT.MAX_QUEUE_SIZE
+      },
+      current: {
+        requestCount: currentCount,
+        dailyCount,
+        violations: data.violations || 0,
+        botSuspicionScore: data.botSuspicionScore || 0,
+        isSuspiciousBot: data.isSuspiciousBot || false,
+        queueSize: isQueued ? this.requestQueues.get(ip)!.length : 0
+      },
+      status: {
+        canMakeRequest: !isBlacklisted && !rateLimitExceeded && !dailyLimitExceeded,
+        rateLimitExceeded,
+        dailyLimitExceeded,
+        isQueued,
+        isProcessing: this.processingQueues.has(ip)
+      },
+      usage: {
+        windowUsagePercent: Math.round((currentCount / CONFIG.RATE_LIMIT.MAX_REQUESTS) * 100),
+        dailyUsagePercent: Math.round((dailyCount / effectiveDailyLimit) * 100),
+        remainingRequests: Math.max(0, CONFIG.RATE_LIMIT.MAX_REQUESTS - currentCount),
+        remainingDailyRequests: Math.max(0, effectiveDailyLimit - dailyCount)
+      },
+      timestamps: {
+        lastRequest: data.lastRequestTime ? new Date(data.lastRequestTime).toISOString() : null,
+        lastAccess: data.lastAccess ? new Date(data.lastAccess).toISOString() : null,
+        dailyResetTime: data.dailyResetTime ? new Date(data.dailyResetTime).toISOString() : null,
+        nextWindowReset: shouldResetWindow ? 
+          new Date(currentTime + CONFIG.RATE_LIMIT.RESET_TIME).toISOString() : 
+          new Date(data.lastRequestTime + CONFIG.RATE_LIMIT.RESET_TIME).toISOString(),
+        nextDailyReset: shouldResetDaily ? 
+          new Date(currentTime + 24 * 60 * 60 * 1000).toISOString() : 
+          new Date((data.dailyResetTime || currentTime) + 24 * 60 * 60 * 1000).toISOString()
+      }
+    };
+  }
+
   // Public methods for monitoring
   public getStats(): any {
     const totalQueuedRequests = Array.from(this.requestQueues.values())

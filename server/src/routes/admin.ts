@@ -1,8 +1,66 @@
 import express from "express";
 import { advancedRateLimiter } from "../services/advancedRateLimiter";
 import { botDetectionController } from "../controllers/botDetectionController";
+import { getValidClientIP } from "../utils/ipValidation";
 
 const router = express.Router();
+
+// Get rate limit info for current IP
+router.get("/rate-limiter/my-limits", (req, res) => {
+  try {
+    const ip = getValidClientIP(req);
+    
+    if (!ip) {
+      return res.status(400).json({
+        success: false,
+        error: "Unable to determine client IP address"
+      });
+    }
+
+    const limitInfo = advancedRateLimiter.getIPLimitInfo(ip);
+    
+    res.json({
+      success: true,
+      data: limitInfo,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to get rate limit info",
+      message: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Get rate limit info for specific IP (admin only)
+router.get("/rate-limiter/ip/:ip", (req, res) => {
+  try {
+    const { ip } = req.params;
+    
+    // Basic IP validation
+    if (!ip || ip.length < 7 || ip.length > 45) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid IP address format"
+      });
+    }
+
+    const limitInfo = advancedRateLimiter.getIPLimitInfo(ip);
+    
+    res.json({
+      success: true,
+      data: limitInfo,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to get rate limit info for IP",
+      message: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
 
 // Get rate limiter statistics
 router.get("/rate-limiter/stats", (req, res) => {
