@@ -3,10 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { PlaceDetails } from '../types';
-import { X, Navigation, Share } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { AESEncrypt } from '../utils/AESEncrypt';
+import ShareIcon from './icons/ShareIcon';
+import DirectionIcon from './icons/DirectionIcon';
+import CloseIcon from './icons/CloseIcon';
+import mapPreviewImage from '../assets/map-preview.png';
 
 interface LocationInfoCardProps {
   place: PlaceDetails;
@@ -69,51 +73,76 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
   };
 
   return (
-    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-md">
-      <Card className={`shadow-lg border-t-4 border-t-primary ${
+    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-2xl">
+      <Card className={`shadow-lg border-0 ${
         animating ? 'animate-in fade-in slide-in-from-bottom duration-100' : ''
-      }`}>
+      }`} style={{
+        boxShadow: '0px 4px 6px -2px rgba(16, 24, 40, 0.03), 0px 8px 12px -2px rgba(16, 24, 40, 0.08)'
+      }}>
         <CardContent className="p-4 relative">
+          {/* Close Button */}
           <button 
             onClick={onClose}
-            className="absolute top-2 right-2 rounded-full p-1 hover:bg-gray-100 transition-colors"
+            className="absolute z-10 rounded-full p-1 hover:bg-gray-100 transition-colors"
+            style={{ top: '0px', right: '0px' }}
           >
-            <X className="h-4 w-4" />
+            <CloseIcon className="h-6 w-6" />
           </button>
           
-          <div className="mt-1">
-            <h3 className="text-lg font-semibold text-primary">{place.name || place.display.split(' ')[0]}</h3>
-            <p className="text-sm text-muted-foreground mt-1">{place.address}</p>
+          {/* Main Content - Horizontal Layout */}
+          <div className="flex items-start gap-4">
+            {/* Map Preview Section */}
+            <div className="relative flex-shrink-0 w-[118px] h-20 bg-gray-100 rounded-lg overflow-hidden">
+              {/* Map Background */}
+              <div className="absolute inset-0">
+                <img 
+                  src={mapPreviewImage} 
+                  alt="Map preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
             
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              <div className="text-xs">
-                <span className="block text-muted-foreground">{t('common.coordinates')}</span>
-                <span className="font-medium">{place.lat.toFixed(6)}, {place.lng.toFixed(6)}</span>
-              </div>
+            {/* Place Information */}
+            <div className="flex-1 min-w-0 pt-1">
+              <h3 className="text-base font-bold text-gray-900 leading-tight mb-2 truncate">
+                {place.name || place.display.split(' ')[0]}
+              </h3>
               
-              <div className="flex justify-end items-end gap-1">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-1"
-                  onClick={handleShare}
+              <p className="text-base text-gray-600 leading-tight mb-2 line-clamp-2">
+                {place.address}
+              </p>
+              
+              <p className="text-sm font-medium text-blue-600 leading-tight">
+                {place.lat.toFixed(6)}, {place.lng.toFixed(6)}
+              </p>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-end gap-3 flex-shrink-0 h-20">
+              {/* Share Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShare}
+                className="h-10 px-3 border-gray-300 hover:bg-gray-50 rounded-3xl"
+              >
+                <ShareIcon className="h-[18px] w-[18px]" strokeColor="#616368" />
+              </Button>
+              
+              {/* Direction Button */}
+              {onDirectionClick && (
+                <Button
+                  onClick={onDirectionClick}
+                  size="sm"
+                  className="h-10 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-sm"
+                  style={{
+                    boxShadow: '0px 2px 5px 0px rgba(0, 0, 0, 0.1), 0px 33px 13px 0px rgba(0, 0, 0, 0.01)'
+                  }}
                 >
-                  <Share className="h-4 w-4" />
-                  {t('common.share')}
+                  <DirectionIcon className="h-[18px] w-[18px]" fillColor="white" />
                 </Button>
-                
-                {onDirectionClick && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="gap-1"
-                    onClick={onDirectionClick}
-                  >
-                    <Navigation className="h-4 w-4" />
-                    {t('common.directions')}
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </CardContent>
