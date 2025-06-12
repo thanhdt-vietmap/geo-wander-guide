@@ -245,7 +245,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         // Create marker with different colors based on type
         const colors = {
           default: '#FF0000',
-          start: '#00FF00',
+          start: '#FF0000',
           end: '#0000FF',
           waypoint: '#FFA500'
         };
@@ -314,6 +314,23 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
           // Check if boundary_province layer exists before using it as beforeId
           const beforeId = map.current.getLayer("boundary_province") ? "boundary_province" : undefined;
           
+          // Add border layer for route (for selection highlight)
+          map.current.addLayer({
+            id: `${routeId}-border`,
+            type: 'line',
+            source: routeId,
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#FFFFFF',
+              'line-width': 8,
+              'line-opacity': 0 // Initially hidden
+            }
+          }, beforeId);
+
+          // Add main route layer
           map.current.addLayer({
             id: routeId,
             type: 'line',
@@ -356,9 +373,15 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     removeRoutes: () => {
       if (map.current) {
         routes.current.forEach((routeId) => {
+          // Remove main route layer
           if (map?.current?.getLayer(routeId)) {
             map.current.removeLayer(routeId);
           }
+          // Remove border layer
+          if (map?.current?.getLayer(`${routeId}-border`)) {
+            map.current.removeLayer(`${routeId}-border`);
+          }
+          // Remove source
           if (map.current?.getSource(routeId)) {
             map.current.removeSource(routeId);
           }
@@ -399,18 +422,28 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
           route.isHighlighted = route.id === routeId;
         });
 
-        // First set all routes to less opacity
+        // First set all routes to less opacity and hide borders
         routes.current.forEach((id) => {
           if (map.current?.getLayer(id)) {
             map.current.setPaintProperty(id, 'line-opacity', 0.5);
             map.current.setPaintProperty(id, 'line-width', 3);
           }
+          // Hide border for non-selected routes
+          if (map.current?.getLayer(`${id}-border`)) {
+            map.current.setPaintProperty(`${id}-border`, 'line-opacity', 0);
+          }
         });
 
-        // Then highlight the selected route
+        // Then highlight the selected route and show its border
         if (map.current.getLayer(routeId)) {
           map.current.setPaintProperty(routeId, 'line-opacity', 1);
           map.current.setPaintProperty(routeId, 'line-width', 5);
+        }
+        
+        // Show border for selected route
+        if (map.current.getLayer(`${routeId}-border`)) {
+          map.current.setPaintProperty(`${routeId}-border`, 'line-opacity', 1);
+          map.current.setPaintProperty(`${routeId}-border`, 'line-width', 8);
         }
       }
     },
@@ -455,6 +488,23 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
                   // Check if boundary_province layer exists before using it as beforeId
                   const beforeId = map.current.getLayer("boundary_province") ? "boundary_province" : undefined;
 
+                  // Add border layer for route (for selection highlight)
+                  map.current.addLayer({
+                    id: `${routeData.id}-border`,
+                    type: 'line',
+                    source: routeData.id,
+                    layout: {
+                      'line-join': 'round',
+                      'line-cap': 'round'
+                    },
+                    paint: {
+                      'line-color': '#FFFFFF',
+                      'line-width': routeData.isHighlighted ? 8 : 8,
+                      'line-opacity': routeData.isHighlighted ? 1 : 0
+                    }
+                  }, beforeId);
+
+                  // Add main route layer
                   map.current.addLayer({
                     id: routeData.id,
                     type: 'line',
@@ -486,7 +536,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
                 try {
                   const colors = {
                     default: '#FF0000',
-                    start: '#00FF00',
+                    start: '#FF0000',
                     end: '#0000FF',
                     waypoint: '#FFA500'
                   };
