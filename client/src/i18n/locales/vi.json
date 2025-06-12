@@ -35,9 +35,10 @@
   "mapControls": {
     "toggle3D": "Bật/tắt chế độ 3D",
     "rotate": "Xoay bản đồ",
-    "resetNorth": "Về hướng bắc",
+    "resetNorth": "Về hướng bắc", 
     "zoomIn": "Phóng to",
-    "zoomOut": "Thu nhỏ"
+    "zoomOut": "Thu nhỏ",
+    "getLocation": "Lấy vị trí hiện tại"
   },
   "contextMenu": {
     "shareCoordinates": "Chia sẻ tọa độ",

@@ -2,7 +2,9 @@
 import React, { useState } from 'react';
 import { Layers, ZoomIn, ZoomOut, Navigation, RotateCcw, Compass, MapPin, Rotate3d } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { MapViewRef } from './MapView';
 import MapLayerSelector, { MapLayerType } from './MapLayerSelector';
 
@@ -17,6 +19,7 @@ const MapControls: React.FC<MapControlsProps> = ({
   onLayerChange,
   currentLayer = 'vector'
 }) => {
+  const { t } = useTranslation();
   const [isLayerSelectorOpen, setIsLayerSelectorOpen] = useState(false);
   const [is3DMode, setIs3DMode] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -85,7 +88,8 @@ const MapControls: React.FC<MapControlsProps> = ({
   };
 
   return (
-    <div className="absolute bottom-12 right-6 z-10 flex flex-col gap-3">
+    <TooltipProvider>
+      <div className="absolute bottom-12 right-6 z-10 flex flex-col gap-3">
       {/* Layer Selector */}
       <MapLayerSelector 
         isOpen={isLayerSelectorOpen}
@@ -109,17 +113,23 @@ const MapControls: React.FC<MapControlsProps> = ({
         </Button> */}
         
         {/* 3D Toggle Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handle3DToggle}
-          className={`${
-            is3DMode ? 'bg-blue-100' : 'bg-white'
-          } shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200`}
-          title="Toggle 3D view"
-        >
-          <Rotate3d className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handle3DToggle}
+              className={`${
+                is3DMode ? 'bg-blue-100' : 'bg-white'
+              } shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200`}
+            >
+              <Rotate3d className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{t('mapControls.toggle3D')}</p>
+          </TooltipContent>
+        </Tooltip>
         
         {/* Layer Toggle Button */}
         {/* <Button
@@ -133,51 +143,76 @@ const MapControls: React.FC<MapControlsProps> = ({
         </Button> */}
         
         {/* Rotate Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleRotate}
-          className="bg-white shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200"
-          title="Rotate map"
-        >
-          <Compass className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleRotate}
+              className="bg-white shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200"
+            >
+              <Compass className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{t('mapControls.rotate')}</p>
+          </TooltipContent>
+        </Tooltip>
 
         {/* Reset North Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleCompass}
-          className="bg-white shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200"
-          title="Reset bearing to north"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleCompass}
+              className="bg-white shadow-lg hover:bg-gray-50 w-10 h-10 rounded-lg border-gray-200"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{t('mapControls.resetNorth')}</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Zoom Controls */}
       <div className="flex flex-col bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleZoomIn}
-          className="hover:bg-gray-50 w-10 h-10 rounded-none border-b border-gray-200"
-          title="Zoom in"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleZoomIn}
+              className="hover:bg-gray-50 w-10 h-10 rounded-none border-b border-gray-200"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{t('mapControls.zoomIn')}</p>
+          </TooltipContent>
+        </Tooltip>
         
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleZoomOut}
-          className="hover:bg-gray-50 w-10 h-10 rounded-none"
-          title="Zoom out"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleZoomOut}
+              className="hover:bg-gray-50 w-10 h-10 rounded-none"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{t('mapControls.zoomOut')}</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
 

@@ -34,10 +34,11 @@
   },
   "mapControls": {
     "toggle3D": "Toggle 3D mode",
-    "rotate": "Rotate map",
+    "rotate": "Rotate map", 
     "resetNorth": "Reset to north",
     "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out"
+    "zoomOut": "Zoom out",
+    "getLocation": "Get current location"
   },
   "contextMenu": {
     "shareCoordinates": "Share coordinates",
