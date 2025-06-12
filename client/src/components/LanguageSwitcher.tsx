@@ -2,6 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { setLanguage } from '../store/slices/uiSlice';
+import VietnameseFlag from './icons/VietnameseFlag';
+import AmericanFlag from './icons/AmericanFlag';
 
 const LanguageSwitcher: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -38,7 +40,7 @@ const LanguageSwitcher: React.FC = () => {
             width: '52px'
           }}
         >
-          <span className="text-xs">🇻🇳</span>
+          <VietnameseFlag className="text-xs" />
           <span>VI</span>
         </button>
         <button
@@ -53,7 +55,7 @@ const LanguageSwitcher: React.FC = () => {
             width: '52px'
           }}
         >
-          <span className="text-xs">🇺🇸</span>
+          <AmericanFlag className="text-xs" />
           <span>EN</span>
         </button>
       </div>
