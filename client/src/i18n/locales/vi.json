@@ -38,11 +38,11 @@
   "sidebar": {
     "products": "Trang chủ",
     "pricing": "Bảng giá",
-    "blog": "Blog",
+    "blog": "Bài viết - Blog",
     "login": "Đăng nhập",
     "help": "Trợ giúp & phản hồi",
     "docs": "Tài liệu tích hợp",
-    "playground": "API Playground"
+    "playground": "Thử nghiệm API"
   },
   "mapControls": {
     "toggle3D": "Bật/tắt chế độ 3D",

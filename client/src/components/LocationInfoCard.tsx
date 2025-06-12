@@ -87,7 +87,7 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
             
             <div className="grid grid-cols-2 gap-2 mt-3">
               <div className="text-xs">
-                <span className="block text-muted-foreground">Coordinates</span>
+                <span className="block text-muted-foreground">{t('common.coordinates')}</span>
                 <span className="font-medium">{place.lat.toFixed(6)}, {place.lng.toFixed(6)}</span>
               </div>
               
