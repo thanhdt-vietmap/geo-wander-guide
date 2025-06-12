@@ -8,6 +8,7 @@ import { cn } from '../lib/utils';
 
 // Import map preview images
 import tileImage from '../assets/tile.png';
+import lightImage from '../assets/light.png';
 import darkImage from '../assets/dark.png';
 import hybridImage from '../assets/hybrid.png';
 import satelliteImage from '../assets/satellite.png';
@@ -89,14 +90,15 @@ const MapLayerSelector: React.FC<MapLayerSelectorProps> = ({
       case 'dark':
       case 'vector-dark':
         return darkImage;
+      case 'light':
+      case 'vector-light':
+        return lightImage;
       case 'hybrid':
         return hybridImage;
       case 'satellite':
         return satelliteImage;
       case 'vector':
-      case 'vector-light':
       case 'raster':
-      case 'light':
       default:
         return tileImage;
     }
