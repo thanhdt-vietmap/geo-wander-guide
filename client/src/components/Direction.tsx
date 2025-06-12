@@ -370,6 +370,23 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
       window.history.replaceState({}, '', newUrl.toString());
     }
   }, [waypoints, vehicle, isLoadingFromUrl]);
+
+  // Rebuild route when vehicle type changes (if we already have valid waypoints and route data)
+  useEffect(() => {
+    if (isLoadingFromUrl) {
+      return; // Don't rebuild while loading from URL
+    }
+
+    const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
+    
+    // Only rebuild if we have valid waypoints and existing route data (to avoid initial rebuild)
+    if (validWaypoints.length >= 2 && routeData && autoUpdateRoute) {
+      console.log('Vehicle changed to:', vehicle, '- Rebuilding route...');
+      // Use autoFetchNewRoute which already has proper delay handling
+      autoFetchNewRoute();
+    }
+  }, [vehicle]); // Only depend on vehicle changes
+
   // Expose methods to parent component through ref
   useImperativeHandle(ref, () => ({
     setEndPoint: (place: any) => {
