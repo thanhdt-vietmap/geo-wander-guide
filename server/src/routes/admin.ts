@@ -32,7 +32,23 @@ router.get("/rate-limiter/my-limits", (req, res) => {
     });
   }
 });
-
+router.get("/rate-limiter/all-limits", (req, res) => {
+  try {
+    const allLimits = advancedRateLimiter.getAllIPLimitInfo();
+    
+    res.json({
+      success: true,
+      data: allLimits,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to get all rate limits",
+      message: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
 // Get rate limit info for specific IP (admin only)
 router.get("/rate-limiter/ip/:ip", (req, res) => {
   try {

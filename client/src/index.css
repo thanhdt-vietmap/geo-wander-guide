@@ -110,24 +110,4 @@
   html {
     font-family: 'Nunito Sans', system-ui, sans-serif;
   }
-
-  /* Ensure all elements inherit the font */
-  *, *::before, *::after {
-    font-family: inherit;
-  }
-
-  /* Override any potential conflicting font declarations */
-  input, textarea, select, button {
-    font-family: 'Nunito Sans', system-ui, sans-serif;
-  }
-
-  /* Ensure headings use Nunito Sans */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Nunito Sans', system-ui, sans-serif;
-  }
-
-  /* Ensure form elements use Nunito Sans */
-  .form-control, .form-input, .input {
-    font-family: 'Nunito Sans', system-ui, sans-serif;
-  }
 }

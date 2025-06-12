@@ -515,7 +515,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
               }
             });
 
-            console.log('Routes and markers restored after style change');
+            // console.log('Routes and markers restored after style change');
           }, 500); // 500ms delay to ensure style is fully loaded
         };
 
@@ -628,18 +628,30 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       container: mapContainer.current,
       style: initialStyle as any,
       center: [105.8342, 21.0285],
-      zoom: 10
+      zoom: 10,
+      maxZoom: 20
     });
 
     // Set map loaded state when style is loaded
     map.current.on('load', () => {
       setIsMapLoaded(true);
+      // map.current?.addControl(new vietmapgl.GeolocateControl(
+      //   {
+      //     positionOptions: {
+      //       enableHighAccuracy: true
+      //     },
+      //     trackUserLocation: true,
+      //     showAccuracyCircle: false,
+      //     showUserLocation: true
+      //   }
+
+      // ), 'top-right');
     });
 
     // Cleanup function
     return () => {
       if (map.current) {
-        map.current.remove();
+        map?.current?.remove();
         map.current = null;
       }
     };

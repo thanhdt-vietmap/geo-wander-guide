@@ -13,11 +13,11 @@ class RequestCache {
   ): Promise<T> {
     // Check if request is already in progress
     if (this.cache.has(key)) {
-      console.log(`[RequestCache] Using cached request for: ${key}`);
+      // console.log(`[RequestCache] Using cached request for: ${key}`);
       return this.cache.get(key)!;
     }
 
-    console.log(`[RequestCache] Starting new request for: ${key}`);
+    // console.log(`[RequestCache] Starting new request for: ${key}`);
     
     // Start new request
     const promise = fetchFn().catch(error => {
@@ -31,7 +31,7 @@ class RequestCache {
     // Clean up cache after duration
     setTimeout(() => {
       this.cache.delete(key);
-      console.log(`[RequestCache] Cache expired for: ${key}`);
+      // console.log(`[RequestCache] Cache expired for: ${key}`);
     }, this.CACHE_DURATION);
 
     return promise;
@@ -42,7 +42,7 @@ class RequestCache {
    */
   public clearCache(): void {
     this.cache.clear();
-    console.log('[RequestCache] All cache cleared');
+    // console.log('[RequestCache] All cache cleared');
   }
 
   /**
@@ -50,7 +50,7 @@ class RequestCache {
    */
   public clearCacheEntry(key: string): void {
     this.cache.delete(key);
-    console.log(`[RequestCache] Cache cleared for: ${key}`);
+    // console.log(`[RequestCache] Cache cleared for: ${key}`);
   }
 
   /**

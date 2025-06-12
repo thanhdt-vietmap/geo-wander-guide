@@ -143,18 +143,15 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
             lng: number;
             name: string;
           }>(encryptedParam);
-          
-          // Load place details using the decrypted place ID
-          const placeDetails: PlaceDetails = await apiService.get('/place/v3', {
+          const placeDetails: PlaceDetails = await apiService.get('/proxy/place/v3', {
             refid: placeData.placeId
           });
-          
           // Set as location info instead of selected place to avoid conflicts
           dispatch(setLocationInfo(placeDetails));
           dispatch(setSelectedPlace(null));
           dispatch(setPlaceDetailCollapsed(false));
           dispatch(setShowDirections(false));
-          
+          console.log('Flying to place location:', onPlaceSelect);
           // Update search bar if callback provided
           if (onPlaceSelect) {
             onPlaceSelect(placeDetails);
