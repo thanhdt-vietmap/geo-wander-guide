@@ -158,8 +158,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
       // console.error('Search error:', error);
       setSuggestions([]);
       toast({
-        title: "Search error",
-        description: "An error occurred during search",
+        title: t('search.searchError'),
+        description: t('search.searchErrorDesc'),
         variant: "destructive"
       });
     } finally {
@@ -182,8 +182,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
     } catch (error) {
       // console.error('Place error:', error);
       toast({
-        title: "Error loading place",
-        description: "An error occurred while loading place details",
+        title: t('search.placeLoadError'),
+        description: t('search.placeLoadErrorDesc'),
         variant: "destructive"
       });
       return null;

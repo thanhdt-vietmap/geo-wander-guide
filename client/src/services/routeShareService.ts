@@ -1,4 +1,5 @@
 import { AESEncrypt } from '../utils/AESEncrypt';
+import i18n from '../i18n';
 
 interface WayPoint {
   name: string;
@@ -18,7 +19,7 @@ export class RouteShareService {
     const validWaypoints = waypoints.filter(wp => wp.lat !== 0 && wp.lng !== 0);
     
     if (validWaypoints.length < 2) {
-      throw new Error('At least 2 valid waypoints are required to generate a share URL');
+      throw new Error(i18n.t('share.invalidWaypoints'));
     }
 
     // Create cache key
@@ -84,7 +85,7 @@ export class RouteShareService {
       const shareUrl = this.generateShareUrl(waypoints, vehicle);
       await navigator.clipboard.writeText(shareUrl);
     } catch (error) {
-      throw new Error('Failed to copy route to clipboard');
+      throw new Error(i18n.t('share.routeShareFailed'));
     }
   }
 
@@ -97,19 +98,19 @@ export class RouteShareService {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Chia sẻ tuyến đường',
-          text: 'Xem tuyến đường này trên VietMap Live Map',
+          title: i18n.t('share.routeTitle'),
+          text: i18n.t('share.routeTitle'),
           url: shareUrl,
         });
       } catch (error) {
         // User cancelled or sharing failed, fallback to clipboard
         await this.copyRouteToClipboard(waypoints, vehicle);
-        throw new Error('Đã sao chép liên kết vào clipboard');
+        throw new Error(i18n.t('share.routeCopied'));
       }
     } else {
       // Web Share API not available, use clipboard
       await this.copyRouteToClipboard(waypoints, vehicle);
-      throw new Error('Đã sao chép liên kết vào clipboard');
+      throw new Error(i18n.t('share.routeCopied'));
     }
   }
 
@@ -131,13 +132,13 @@ export class RouteShareService {
         const waypoints = routeData.points.map(point => {
           const [lat, lng] = point.map(Number);
           if (isNaN(lat) || isNaN(lng)) {
-            throw new Error('Invalid coordinates');
+            throw new Error(i18n.t('share.invalidCoordinates'));
           }
           return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
         });
 
         if (waypoints.length < 2) {
-          throw new Error('At least 2 waypoints required');
+          throw new Error(i18n.t('share.minimumWaypoints'));
         }
 
         return { waypoints, vehicle: routeData.vehicle || 'car' };
@@ -159,13 +160,13 @@ export class RouteShareService {
       const waypoints = pointsParam.split('|').map(point => {
         const [lat, lng] = point.split(',').map(Number);
         if (isNaN(lat) || isNaN(lng)) {
-          throw new Error('Invalid coordinates');
+          throw new Error(i18n.t('share.invalidCoordinates'));
         }
         return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
       });
 
       if (waypoints.length < 2) {
-        throw new Error('At least 2 waypoints required');
+        throw new Error(i18n.t('share.minimumWaypoints'));
       }
 
       return { waypoints, vehicle: vehicleParam };

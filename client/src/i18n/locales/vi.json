@@ -17,11 +17,23 @@
     "place": "Địa điểm",
     "address": "Địa chỉ"
   },
+  "errors": {
+    "locationDetails": "Không thể lấy thông tin vị trí",
+    "setStartingPoint": "Không thể đặt điểm bắt đầu",
+    "setEndPoint": "Không thể đặt điểm kết thúc",
+    "addWaypoint": "Không thể thêm điểm dừng",
+    "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "noLocationData": "Không tìm thấy dữ liệu vị trí"
+  },
   "search": {
     "placeholder": "Tìm địa điểm/tọa độ (21.0285, 105.8342)",
     "noResults": "Không tìm thấy kết quả",
     "coordError": "Lỗi tìm kiếm tọa độ",
-    "coordErrorDesc": "Không thể tìm thấy thông tin vị trí cho tọa độ này"
+    "coordErrorDesc": "Không thể tìm thấy thông tin vị trí cho tọa độ này",
+    "searchError": "Lỗi tìm kiếm",
+    "searchErrorDesc": "Đã xảy ra lỗi trong quá trình tìm kiếm",
+    "placeLoadError": "Lỗi tải địa điểm",
+    "placeLoadErrorDesc": "Đã xảy ra lỗi khi tải thông tin địa điểm"
   },
   "sidebar": {
     "products": "Trang chủ",
@@ -38,7 +50,9 @@
     "resetNorth": "Về hướng bắc", 
     "zoomIn": "Phóng to",
     "zoomOut": "Thu nhỏ",
-    "getLocation": "Lấy vị trí hiện tại"
+    "getLocation": "Lấy vị trí hiện tại",
+    "locationError": "Không thể lấy vị trí của bạn. Vui lòng kiểm tra quyền trình duyệt.",
+    "locationErrorGeneric": "Lỗi khi lấy vị trí. Vui lòng thử lại."
   },
   "contextMenu": {
     "shareCoordinates": "Chia sẻ tọa độ",
@@ -120,11 +134,21 @@
     "successDesc": "Liên kết địa điểm đã được sao chép vào clipboard",
     "routeSuccessDesc": "Liên kết chia sẻ đã được sao chép vào clipboard",
     "copyErrorTitle": "Lỗi sao chép",
-    "copyErrorDesc": "Không thể sao chép liên kết"
+    "copyErrorDesc": "Không thể sao chép liên kết",
+    "routeTitle": "Xem tuyến đường này trên VietMap Live Map",
+    "routeCopied": "Đã sao chép liên kết vào clipboard",
+    "routeShareFailed": "Không thể sao chép tuyến đường vào clipboard",
+    "invalidWaypoints": "Cần ít nhất 2 điểm dừng hợp lệ để tạo liên kết chia sẻ",
+    "invalidCoordinates": "Tọa độ không hợp lệ",
+    "minimumWaypoints": "Cần ít nhất 2 điểm dừng"
   },
   "load": {
     "placeErrorTitle": "Lỗi tải địa điểm",
-    "placeErrorDesc": "Không thể tải thông tin địa điểm từ liên kết"
+    "placeErrorDesc": "Không thể tải thông tin địa điểm từ liên kết",
+    "routeLoadedTitle": "Đã tải tuyến đường từ URL",
+    "routeLoadedDesc": "Đã tải tuyến đường với {count} điểm dừng",
+    "routeLoadErrorTitle": "Lỗi tải tuyến đường",
+    "routeLoadErrorDesc": "Không thể tải tuyến đường từ liên kết chia sẻ"
   },
   "language": {
     "vietnamese": "Tiếng Việt",

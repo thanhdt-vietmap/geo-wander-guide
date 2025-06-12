@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { getReverseGeocoding } from '../services/mapService';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setContextMenu, closeContextMenu } from '../store/slices/mapSlice';
@@ -8,6 +9,7 @@ import { setLocationInfo, setSelectedPlace } from '../store/slices/locationSlice
 
 export const useMapHandlers = () => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const { contextMenu } = useAppSelector((state) => state.map);
   const { showDirections } = useAppSelector((state) => state.ui);
   const { selectedPlace } = useAppSelector((state) => state.location);
@@ -57,7 +59,7 @@ export const useMapHandlers = () => {
         mapRef.current.addMarker(e.lngLat[0], e.lngLat[1]);
       }
     } catch (error) {
-      toast.error('Failed to get location details');
+      toast.error(t('errors.locationDetails'));
       // console.error(error);
     }
   }, [contextMenu?.isOpen, showDirections, selectedPlace, dispatch]);

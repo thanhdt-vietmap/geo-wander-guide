@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch } from '../store/hooks';
 import { setShowDirections } from '../store/slices/uiSlice';
 import { setStartingPlace, setSelectedPlace, setLocationInfo } from '../store/slices/locationSlice';
@@ -19,6 +20,7 @@ export const useUrlDirectionLoader = (
   directionRef: React.RefObject<DirectionRef>
 ) => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   
   useEffect(() => {
 
@@ -86,15 +88,15 @@ export const useUrlDirectionLoader = (
         RouteShareService.clearRouteFromUrl();
 
         toast({
-          title: "Route loaded from URL",
-          description: `Loaded route with ${waypoints.length} waypoints`,
+          title: t('load.routeLoadedTitle'),
+          description: t('load.routeLoadedDesc', { count: waypoints.length }),
         });
 
       } catch (error) {
         console.error('Error loading route from URL:', error);
         toast({
-          title: "Error loading route",
-          description: "Could not load route from the shared link",
+          title: t('load.routeLoadErrorTitle'),
+          description: t('load.routeLoadErrorDesc'),
           variant: "destructive"
         });
         

@@ -17,11 +17,23 @@
     "place": "Place",
     "address": "Address"
   },
+  "errors": {
+    "locationDetails": "Failed to get location details",
+    "setStartingPoint": "Failed to set starting point",
+    "setEndPoint": "Failed to set end point",
+    "addWaypoint": "Failed to add waypoint",
+    "generic": "An error occurred. Please try again.",
+    "noLocationData": "No location data found"
+  },
   "search": {
     "placeholder": "Search places/coordinates (21.0285, 105.8342)",
     "noResults": "No results found",
     "coordError": "Coordinate search error",
-    "coordErrorDesc": "Could not find location information for these coordinates"
+    "coordErrorDesc": "Could not find location information for these coordinates",
+    "searchError": "Search error",
+    "searchErrorDesc": "An error occurred during search",
+    "placeLoadError": "Error loading place",
+    "placeLoadErrorDesc": "An error occurred while loading place details"
   },
   "sidebar": {
     "products": "Home",
@@ -38,7 +50,9 @@
     "resetNorth": "Reset to north",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
-    "getLocation": "Get current location"
+    "getLocation": "Get current location",
+    "locationError": "Could not get your location. Please check your browser permissions.",
+    "locationErrorGeneric": "Error getting location. Please try again."
   },
   "contextMenu": {
     "shareCoordinates": "Share coordinates",
@@ -120,11 +134,21 @@
     "successDesc": "Place link has been copied to clipboard",
     "routeSuccessDesc": "Share link has been copied to clipboard",
     "copyErrorTitle": "Copy error",
-    "copyErrorDesc": "Cannot copy link"
+    "copyErrorDesc": "Cannot copy link",
+    "routeTitle": "View this route on VietMap Live Map",
+    "routeCopied": "Link copied to clipboard",
+    "routeShareFailed": "Failed to copy route to clipboard",
+    "invalidWaypoints": "At least 2 valid waypoints are required to generate a share URL",
+    "invalidCoordinates": "Invalid coordinates",
+    "minimumWaypoints": "At least 2 waypoints required"
   },
   "load": {
     "placeErrorTitle": "Place load error",
-    "placeErrorDesc": "Cannot load place information from link"
+    "placeErrorDesc": "Cannot load place information from link",
+    "routeLoadedTitle": "Route loaded from URL",
+    "routeLoadedDesc": "Loaded route with {count} waypoints",
+    "routeLoadErrorTitle": "Error loading route",
+    "routeLoadErrorDesc": "Could not load route from the shared link"
   },
   "language": {
     "vietnamese": "Tiếng Việt",

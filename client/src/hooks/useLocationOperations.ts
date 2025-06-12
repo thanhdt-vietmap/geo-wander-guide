@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { getReverseGeocoding } from '../services/mapService';
 import { useAppDispatch } from '../store/hooks';
 import { setLocationInfo, setSelectedPlace, setStartingPlace } from '../store/slices/locationSlice';
@@ -8,6 +9,7 @@ import { setShowDirections } from '../store/slices/uiSlice';
 
 export const useLocationOperations = () => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   const handleGetLocation = useCallback(async (lng: number, lat: number, mapRef: any) => {
     try {
@@ -21,7 +23,7 @@ export const useLocationOperations = () => {
         mapRef.current.addMarker(lng, lat);
       }
     } catch (error) {
-      toast.error('Failed to get location details');
+      toast.error(t('errors.locationDetails'));
       // console.error(error);
     }
   }, [dispatch]);
@@ -38,7 +40,7 @@ export const useLocationOperations = () => {
         mapRef.current.removeRoutes();
       }
     } catch (error) {
-      toast.error('Failed to set starting point');
+      toast.error(t('errors.setStartingPoint'));
       // console.error(error);
     }
   }, [dispatch]);
@@ -70,7 +72,7 @@ export const useLocationOperations = () => {
         }, 100);
       }
     } catch (error) {
-      toast.error('Failed to set end point');
+      toast.error(t('errors.setEndPoint'));
       // console.error(error);
     }
   }, [dispatch]);
@@ -88,7 +90,7 @@ export const useLocationOperations = () => {
         directionRef.current.addWaypoint(placeDetails);
       }
     } catch (error) {
-      toast.error('Failed to add waypoint');
+      toast.error(t('errors.addWaypoint'));
       // console.error(error);
     }
   }, []);

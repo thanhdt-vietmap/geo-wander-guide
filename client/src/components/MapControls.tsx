@@ -76,10 +76,10 @@ const MapControls: React.FC<MapControlsProps> = ({
       try {
         const position = await mapRef.current.getCurrentLocation();
         if (!position) {
-          toast.error('Could not get your location. Please check your browser permissions.');
+          toast.error(t('mapControls.locationError'));
         }
       } catch (error) {
-        toast.error('Error getting location. Please try again.');
+        toast.error(t('mapControls.locationErrorGeneric'));
         // console.error('Location error:', error);
       } finally {
         setIsGettingLocation(false);

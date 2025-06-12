@@ -1,6 +1,7 @@
 
 import { PlaceDetails } from '../types';
 import { apiService } from './apiService';
+import i18n from '../i18n';
 
 export interface ReverseGeocodingResponse {
   lat: number;
@@ -31,7 +32,7 @@ export const getReverseGeocoding = async (
     });
     
     if (!data.length) {
-      throw new Error('No location data found');
+      throw new Error(i18n.t('errors.noLocationData'));
     }
     
     // Convert the API response to our PlaceDetails format
