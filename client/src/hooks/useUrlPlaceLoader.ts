@@ -29,6 +29,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
           
           if (coordData.type === 'coordinates' && !isNaN(coordData.lat) && !isNaN(coordData.lng)) {
             if (mapRef?.current) {
+              mapRef.current.removeMarkers(); // Remove existing markers first
               mapRef.current.flyTo(coordData.lng, coordData.lat);
               mapRef.current.addMarker(coordData.lng, coordData.lat);
               dispatch(setSelectedPlace(null));
@@ -85,6 +86,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
       if (isNaN(lat) || isNaN(lng)) return;
       // console.log('Loading lat/lng from URL parameters:', lat, lng);
       if (mapRef?.current) {
+        mapRef.current.removeMarkers(); // Remove existing markers first
         mapRef.current.flyTo(lng, lat);
         mapRef.current.addMarker(lng, lat);
         dispatch(setSelectedPlace(null));
@@ -159,6 +161,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
           
           // Fly to the location on map
           if (mapRef?.current) {
+            mapRef.current.removeMarkers(); // Remove existing markers first
             mapRef.current.flyTo(placeDetails.lng, placeDetails.lat);
             mapRef.current.addMarker(placeDetails.lng, placeDetails.lat);
           }
@@ -202,6 +205,7 @@ export const useUrlPlaceLoader = (mapRef: any, onPlaceSelect?: (place: PlaceDeta
         
         // Fly to the location on map
         if (mapRef?.current) {
+          mapRef.current.removeMarkers(); // Remove existing markers first
           mapRef.current.flyTo(placeDetails.lng, placeDetails.lat);
           mapRef.current.addMarker(placeDetails.lng, placeDetails.lat);
         }

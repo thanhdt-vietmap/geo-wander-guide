@@ -20,6 +20,7 @@ export const usePlaceOperations = () => {
     dispatch(setLocationInfo(null));
     
     if (mapRef.current) {
+      mapRef.current.removeMarkers(); // Remove all existing markers first
       mapRef.current.flyTo(place.lng, place.lat);
       mapRef.current.addMarker(place.lng, place.lat);
     }

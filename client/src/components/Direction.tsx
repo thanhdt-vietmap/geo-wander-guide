@@ -9,6 +9,7 @@ import { setDirectionCollapsed } from '../store/slices/uiSlice';
 import SearchSuggestions from './SearchSuggestions';
 import RouteDetails from './RouteDetails';
 import DirectionHeader from './direction/DirectionHeader';
+import SwapIcon from './icons/SwapIcon';
 import VehicleSelector from './direction/VehicleSelector';
 import WaypointInput from './direction/WaypointInput';
 import RouteList from './direction/RouteList';
@@ -590,6 +591,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
   // Update map when starting place is provided
   useEffect(() => {
     if (startingPlace && mapRef.current) {
+      mapRef.current.removeMarkers(); // Remove existing markers first
       mapRef.current.flyTo(startingPlace.lng, startingPlace.lat);
       mapRef.current.addMarker(startingPlace.lng, startingPlace.lat, 'start');
     }
@@ -987,38 +989,91 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
             <div className="px-6 py-4 relative" ref={searchContainerRef}>
               {/* Waypoints inputs */}
               <div className="space-y-3 mb-4">
-                {waypoints.map((waypoint, index) => (
-                  <div key={index}>
-                    <WaypointInput
-                      waypoint={waypoint}
-                      index={index}
-                      totalWaypoints={waypoints.length}
-                      draggedIndex={draggedIndex}
-                      activeInputIndex={activeInputIndex}
-                      onInputChange={handleInputChange}
-                      onInputFocus={handleInputFocus}
-                      onMoveWaypoint={handleMoveWaypoint}
-                      onRemoveWaypoint={handleRemoveWaypoint}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      onDragOver={handleDragOver}
-                      onSwapWaypoints={waypoints.length === 2 ? handleSwapWaypoints : undefined}
-                      inputRef={el => inputRefs.current[index] = el}
-                    />
+                {waypoints.length === 2 ? (
+                  // Special layout for exactly 2 waypoints with swap button on the right
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 space-y-3">
+                      {waypoints.map((waypoint, index) => (
+                        <div key={index}>
+                          <WaypointInput
+                            waypoint={waypoint}
+                            index={index}
+                            totalWaypoints={waypoints.length}
+                            draggedIndex={draggedIndex}
+                            activeInputIndex={activeInputIndex}
+                            onInputChange={handleInputChange}
+                            onInputFocus={handleInputFocus}
+                            onMoveWaypoint={handleMoveWaypoint}
+                            onRemoveWaypoint={handleRemoveWaypoint}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={handleDragOver}
+                            onSwapWaypoints={undefined} // Don't render swap button inline
+                            inputRef={el => inputRefs.current[index] = el}
+                          />
 
-                    {/* Render suggestions for the active input directly below it */}
-                    {showSuggestions && activeInputIndex === index && (
-                      <div className="absolute left-0 right-0 top-full mt-1 z-50">
-                        <SearchSuggestions
-                          suggestions={suggestions}
-                          onSelect={handleSuggestionSelect}
-                          isVisible={true}
-                          isLoading={isSearchLoading}
-                        />
-                      </div>
-                    )}
+                          {/* Render suggestions for the active input directly below it */}
+                          {showSuggestions && activeInputIndex === index && (
+                            <div className="absolute left-0 right-0 top-full mt-1 z-50">
+                              <SearchSuggestions
+                                suggestions={suggestions}
+                                onSelect={handleSuggestionSelect}
+                                isVisible={true}
+                                isLoading={isSearchLoading}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Swap button positioned on the right, centered */}
+                    <div className="flex items-center h-[120px]"> {/* Height to match 2 inputs + gap */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 flex-shrink-0 border-0 p-1 m-0 hover:bg-gray-100"
+                        onClick={handleSwapWaypoints}
+                      >
+                        <SwapIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  // Default layout for other cases
+                  waypoints.map((waypoint, index) => (
+                    <div key={index}>
+                      <WaypointInput
+                        waypoint={waypoint}
+                        index={index}
+                        totalWaypoints={waypoints.length}
+                        draggedIndex={draggedIndex}
+                        activeInputIndex={activeInputIndex}
+                        onInputChange={handleInputChange}
+                        onInputFocus={handleInputFocus}
+                        onMoveWaypoint={handleMoveWaypoint}
+                        onRemoveWaypoint={handleRemoveWaypoint}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={handleDragOver}
+                        onSwapWaypoints={undefined}
+                        inputRef={el => inputRefs.current[index] = el}
+                      />
+
+                      {/* Render suggestions for the active input directly below it */}
+                      {showSuggestions && activeInputIndex === index && (
+                        <div className="absolute left-0 right-0 top-full mt-1 z-50">
+                          <SearchSuggestions
+                            suggestions={suggestions}
+                            onSelect={handleSuggestionSelect}
+                            isVisible={true}
+                            isLoading={isSearchLoading}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
 
               {/* Add waypoint button */}

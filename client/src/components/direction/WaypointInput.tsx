@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Search, X, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
+import { Search, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { useTranslation } from 'react-i18next';
+import SwapIcon from '../icons/SwapIcon';
 
 interface WayPoint {
   name: string;
@@ -54,7 +55,6 @@ const WaypointInput = ({
   };
 
   const canRemove = totalWaypoints > 2;
-  const showInlineSwap = totalWaypoints === 2 && index === 0 && onSwapWaypoints;
 
   return (
     <div 
@@ -113,18 +113,6 @@ const WaypointInput = ({
           </Button>
         )}
       </div>
-
-      {/* Swap button in the same row for exactly 2 waypoints */}
-      {showInlineSwap && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-10 w-10 flex-shrink-0"
-          onClick={onSwapWaypoints}
-        >
-          <ArrowUpDown className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 };
