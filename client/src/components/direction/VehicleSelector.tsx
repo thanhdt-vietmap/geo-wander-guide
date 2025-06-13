@@ -2,6 +2,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/button';
+import CarIcon from '../icons/CarIcon';
+import MotorcycleIcon from '../icons/MotorcycleIcon';
+import BikeIcon from '../icons/BikeIcon';
+import WalkIcon from '../icons/WalkIcon';
 
 interface VehicleSelectorProps {
   vehicle: 'car' | 'bike' | 'foot' | 'motorcycle';
@@ -12,10 +16,10 @@ const VehicleSelector = ({ vehicle, onVehicleChange }: VehicleSelectorProps) => 
   const { t } = useTranslation();
   
   const modes = [
-    { id: 'car', icon: <span>🚗</span>, label: t('direction.vehicle.car') },
-    { id: 'motorcycle', icon: <span>🏍️</span>, label: t('direction.vehicle.motorcycle') },
-    { id: 'bike', icon: <span>🚲</span>, label: t('direction.vehicle.bike') },
-    { id: 'foot', icon: <span>🚶</span>, label: t('direction.vehicle.foot') }
+    { id: 'car', icon: <CarIcon className="w-6 h-6 vehicle-icon" />, label: t('direction.vehicle.car') },
+    { id: 'motorcycle', icon: <MotorcycleIcon className="w-6 h-6 vehicle-icon" />, label: t('direction.vehicle.motorcycle') },
+    { id: 'bike', icon: <BikeIcon className="w-6 h-6 vehicle-icon" />, label: t('direction.vehicle.bike') },
+    { id: 'foot', icon: <WalkIcon className="w-6 h-6 vehicle-icon" />, label: t('direction.vehicle.foot') }
   ] as const;
 
   return (
