@@ -23,7 +23,7 @@ const VehicleSelector = ({ vehicle, onVehicleChange }: VehicleSelectorProps) => 
   ] as const;
 
   return (
-    <div className="mb-4">
+    <div className="mb-[10px] mt-[10px]">
       <h3 className="font-medium mb-3 px-4">{t('direction.travelMode')}</h3>
       <div className="flex gap-2 px-[30px]">
         {modes.map(mode => (

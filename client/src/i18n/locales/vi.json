@@ -77,6 +77,8 @@
     "yourActivity": "Hoạt động bản đồ của bạn",
     "atThisPlace": "Tại địa điểm này",
     "noInfo": "Không có thông tin bổ sung",
+    "featureInDevelopment": "Tính năng đang phát triển",
+    "featureInDevelopmentDesc": "Tính năng này đang được phát triển.",
     "actions": {
       "directions": "Chỉ đường",
       "save": "Lưu",

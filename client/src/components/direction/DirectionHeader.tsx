@@ -10,7 +10,7 @@ interface DirectionHeaderProps {
 const DirectionHeader = ({ onClose }: DirectionHeaderProps) => {
   return (
     <div 
-      className="w-full h-[150px] bg-cover bg-center relative flex items-center justify-center" 
+      className="w-full h-[150px] bg-cover bg-center relative flex items-center justify-center mb-[10px]" 
       style={{ backgroundImage: "url('/lovable-uploads/759ebf50-d075-4366-98b3-99771c255fa9.png')" }}
     >
       <Button 

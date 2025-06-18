@@ -77,6 +77,8 @@
     "yourActivity": "Your Maps activity",
     "atThisPlace": "At this place",
     "noInfo": "No additional information available",
+    "featureInDevelopment": "Feature in development",
+    "featureInDevelopmentDesc": "This feature is under development and will be available soon",
     "actions": {
       "directions": "Directions",
       "save": "Save",

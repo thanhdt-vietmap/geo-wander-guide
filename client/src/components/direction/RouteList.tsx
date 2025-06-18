@@ -24,7 +24,7 @@ const RouteList = ({ routeSummaries, selectedRouteId, onSelectRoute, onShowRoute
   if (routeSummaries.length === 0) return null;
 
   return (
-    <div className="flex-1 overflow-auto px-4 py-2">
+    <div className="flex-1 overflow-auto px-4 py-2 mt-[10px]">
       <h3 className="font-medium mb-3">{t('direction.availableRoutes')}</h3>
       <div className="space-y-2">
         {routeSummaries.map((route) => (

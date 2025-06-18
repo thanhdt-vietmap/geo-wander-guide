@@ -60,6 +60,13 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
     dispatch(setPlaceDetailCollapsed(!isPlaceDetailCollapsed));
   };
 
+  const handleFeatureInDevelopment = () => {
+    toast({
+      title: t('placeDetails.featureInDevelopment'),
+      description: t('placeDetails.featureInDevelopmentDesc'),
+    });
+  };
+
   const handleShare = async () => {
     // console.log('Sharing place:', place);
     if (!place.ref_id) {
@@ -163,7 +170,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
 
                 <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
                   <Edit className="h-4 w-4" />
-                  <button className="hover:underline">{t('placeDetails.suggestEdit')} {place.name}</button>
+                  <button className="hover:underline" onClick={handleFeatureInDevelopment}>{t('placeDetails.suggestEdit')} {place.name}</button>
                 </div>
               </div>
 
@@ -184,7 +191,12 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                 </div>
                 
                 <div className="flex flex-col items-center">
-                  <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full h-12 w-12"
+                    onClick={handleFeatureInDevelopment}
+                  >
                     <BookmarkIcon className="h-6 w-6 text-gray-600" />
                   </Button>
                   <span className="text-xs mt-1">{t('placeDetails.actions.save')}</span>
@@ -203,7 +215,12 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                 </div>
 
                 <div className="flex flex-col items-center">
-                  <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full h-12 w-12"
+                    onClick={handleFeatureInDevelopment}
+                  >
                     <Building className="h-6 w-6 text-gray-600" />
                   </Button>
                   <span className="text-xs mt-1">{t('placeDetails.actions.nearby')}</span>
@@ -215,22 +232,22 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
               {/* Additional actions */}
               <div className="flex-1 overflow-auto">
                 <div className="px-6 py-2">
-                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
+                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left" onClick={handleFeatureInDevelopment}>
                     <Tag className="h-5 w-5 text-gray-500" />
                     <span>{t('placeDetails.addMissingPlace')}</span>
                   </Button>
                   
-                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
+                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left" onClick={handleFeatureInDevelopment}>
                     <Building className="h-5 w-5 text-gray-500" />
                     <span>{t('placeDetails.addBusiness')}</span>
                   </Button>
                   
-                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
+                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left" onClick={handleFeatureInDevelopment}>
                     <Tag className="h-5 w-5 text-gray-500" />
                     <span>{t('placeDetails.addLabel')}</span>
                   </Button>
                   
-                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
+                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left" onClick={handleFeatureInDevelopment}>
                     <Clock className="h-5 w-5 text-gray-500" />
                     <span>{t('placeDetails.yourActivity')}</span>
                   </Button>
@@ -306,7 +323,12 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
                 </div>
                 
                 <div className="flex flex-col items-center">
-                  <Button variant="ghost" size="icon" className="rounded-full h-12 w-12">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full h-12 w-12"
+                    onClick={handleFeatureInDevelopment}
+                  >
                     <BookmarkIcon className="h-6 w-6 text-gray-600" />
                   </Button>
                   <span className="text-xs mt-1">{t('placeDetails.actions.save')}</span>
@@ -339,7 +361,7 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
 
                 <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
                   <Edit className="h-4 w-4" />
-                  <button className="hover:underline">{t('placeDetails.suggestEdit')} {place.name}</button>
+                  <button className="hover:underline" onClick={handleFeatureInDevelopment}>{t('placeDetails.suggestEdit')} {place.name}</button>
                 </div>
               </div>
 
@@ -348,22 +370,22 @@ const PlaceDetails: React.FC<PlaceDetailsProps> = ({ place, onClose, onDirection
               {/* Additional actions */}
               <div className="flex-1 overflow-auto">
                 <div className="px-6 py-2">
-                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
+                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left" onClick={handleFeatureInDevelopment}>
                     <Tag className="h-5 w-5 text-gray-500" />
                     <span>{t('placeDetails.addMissingPlace')}</span>
                   </Button>
                   
-                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
+                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left" onClick={handleFeatureInDevelopment}>
                     <Building className="h-5 w-5 text-gray-500" />
                     <span>{t('placeDetails.addBusiness')}</span>
                   </Button>
                   
-                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
+                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left" onClick={handleFeatureInDevelopment}>
                     <Tag className="h-5 w-5 text-gray-500" />
                     <span>{t('placeDetails.addLabel')}</span>
                   </Button>
                   
-                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left">
+                  <Button variant="ghost" className="w-full justify-start gap-4 py-3 text-left" onClick={handleFeatureInDevelopment}>
                     <Clock className="h-5 w-5 text-gray-500" />
                     <span>{t('placeDetails.yourActivity')}</span>
                   </Button>

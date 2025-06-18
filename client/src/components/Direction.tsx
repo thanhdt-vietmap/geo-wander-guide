@@ -986,7 +986,7 @@ const Direction = forwardRef<DirectionRef, DirectionProps>(({ onClose, mapRef, s
 
             <VehicleSelector vehicle={vehicle} onVehicleChange={setVehicle} />
 
-            <div className="px-6 py-4 relative" ref={searchContainerRef}>
+            <div className="px-6 py-4 relative mt-[10px] mb-[10px]" ref={searchContainerRef}>
               {/* Waypoints inputs */}
               <div className="space-y-3 mb-4">
                 {waypoints.length === 2 ? (
