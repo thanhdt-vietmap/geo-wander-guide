@@ -10,11 +10,12 @@ import { usePlaceOperations } from '../hooks/usePlaceOperations';
 import { useUrlPlaceLoader } from '../hooks/useUrlPlaceLoader';
 import { useUrlDirectionLoader } from '../hooks/useUrlDirectionLoader';
 import { useBotDetection } from '../hooks/useBotDetection';
+import { PlaceDetails } from '../types';
 import MapView, { MapViewRef } from '../components/MapView';
-import SearchBar from '../components/SearchBar';
+import SearchBar, { SearchBarRef } from '../components/SearchBar';
 import Sidebar from '../components/Sidebar';
 import MapControls from '../components/MapControls';
-import PlaceDetails from '../components/PlaceDetails';
+import PlaceDetailsComponent from '../components/PlaceDetails';
 import Direction, { DirectionRef } from '../components/Direction';
 import MapContextMenu from '../components/MapContextMenu';
 import LocationInfoCard from '../components/LocationInfoCard';
@@ -51,6 +52,7 @@ const Index = () => {
   
   // Refs
   const mapRef = useRef<MapViewRef>(null);
+  const searchBarRef = useRef<SearchBarRef>(null);
   const directionRef = useRef<DirectionRef>(null);
   const directionActiveInputRef = useRef<number | null>(null);
   
@@ -87,6 +89,16 @@ const Index = () => {
 
   const handleShowDirectionsWrapper = () => {
     handleShowDirections();
+  };
+
+  const handlePlaceDetailsFromLocationInfo = (place: PlaceDetails) => {
+    handlePlaceSelect(place, mapRef);
+    
+    // Fill search bar with place name or address (without triggering search)
+    if (searchBarRef.current) {
+      const displayText = place.name && place.name.trim() ? place.name : place.address;
+      searchBarRef.current.setSearchQuery(displayText);
+    }
   };
 
   const handleCloseDirectionsWrapper = () => {
@@ -150,6 +162,7 @@ const Index = () => {
   {/* SearchBar với z-index cao nhất để nằm trên tất cả */}
   <div className="absolute top-0 left-0 right-0 z-50">
    {!showDirections&&( <SearchBar 
+      ref={searchBarRef}
       mapRef={mapRef}
       onMenuToggle={handleMenuToggle} 
       isMenuOpen={isSidebarOpen}
@@ -166,7 +179,7 @@ const Index = () => {
   {/* PlaceDetails với z-index thấp hơn SearchBar */}
   {selectedPlace && !locationInfo && (
     <div className="absolute top-0 left-0 bottom-0 z-40">
-      <PlaceDetails 
+      <PlaceDetailsComponent 
         place={selectedPlace} 
         onClose={handleClosePlaceDetailsWrapper}
         onDirectionClick={handleShowDirectionsWrapper}
@@ -181,6 +194,7 @@ const Index = () => {
         place={locationInfo}
         onClose={handleCloseLocationInfoWrapper}
         onDirectionClick={handleShowDirectionsWrapper}
+        onPlaceDetailsShow={handlePlaceDetailsFromLocationInfo}
       />
     </div>
   )}

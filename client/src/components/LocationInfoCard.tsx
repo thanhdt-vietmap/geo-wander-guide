@@ -16,9 +16,10 @@ interface LocationInfoCardProps {
   place: PlaceDetails;
   onClose: () => void;
   onDirectionClick?: () => void;
+  onPlaceDetailsShow?: (place: PlaceDetails) => void;
 }
 
-const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onDirectionClick }) => {
+const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onDirectionClick, onPlaceDetailsShow }) => {
   const { t } = useTranslation();
   const [animating, setAnimating] = useState(true);
 
@@ -72,6 +73,13 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
     }
   };
 
+  const handleTextClick = () => {
+    if (onPlaceDetailsShow) {
+      onClose(); // Close LocationInfoCard first
+      onPlaceDetailsShow(place); // Then open PlaceDetails with the same data
+    }
+  };
+
   return (
     <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-2xl">
       <Card className={`shadow-lg border-0 ${
@@ -105,11 +113,17 @@ const LocationInfoCard: React.FC<LocationInfoCardProps> = ({ place, onClose, onD
             
             {/* Place Information */}
             <div className="flex-1 min-w-0 pt-1">
-              <h3 className="text-base font-bold text-gray-900 leading-tight mb-2 truncate">
+              <h3 
+                className="text-base font-bold text-gray-900 leading-tight mb-2 truncate cursor-pointer transition-colors"
+                onClick={handleTextClick}
+              >
                 {place.name || place.display.split(' ')[0]}
               </h3>
               
-              <p className="text-base text-gray-600 leading-tight mb-2 line-clamp-2">
+              <p 
+                className="text-base text-gray-600 leading-tight mb-2 line-clamp-2 cursor-pointer transition-colors"
+                onClick={handleTextClick}
+              >
                 {place.address}
               </p>
               

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { Search, Menu, X } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -54,15 +54,19 @@ interface SearchBarProps {
   mapRef?: React.RefObject<MapViewRef>; // Optional map reference for future use
 }
 
+export interface SearchBarRef {
+  setSearchQuery: (value: string) => void;
+}
+
 const apiClient = SecureApiClient.getInstance();
 
-const SearchBar: React.FC<SearchBarProps> = ({ 
+const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({ 
   onMenuToggle, 
   isMenuOpen, 
   onPlaceSelect,
   onClose,
   mapRef
-}) => {
+}, ref) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
@@ -71,6 +75,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [isPlaceLoading, setIsPlaceLoading] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    setSearchQuery: (value: string) => {
+      setSearchQuery(value);
+      // Clear suggestions when setting value programmatically
+      setShowSuggestions(false);
+      setSuggestions([]);
+    }
+  }), []);
 
   // Handle URL place loading
   const handleUrlPlaceLoad = (place: PlaceDetails) => {
@@ -300,6 +314,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
       </div>
     </div>
   );
-};
+});
+
+SearchBar.displayName = 'SearchBar';
 
 export default SearchBar;
