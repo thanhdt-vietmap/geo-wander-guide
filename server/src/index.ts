@@ -25,32 +25,14 @@ app.use("/proxy", proxyRoutes);
 
 // Add direct API routes (without /proxy prefix) for backward compatibility
 
-// Serve static files from React build
-app.use(express.static(path.join(__dirname, "../../client/dist")));
-
-app.get("*", (req, res) => {
-  // Skip API routes - let them return 404 if not found
-  console.log(req.path);
-  if (req.path.startsWith('/api/') || 
-      req.path.startsWith('/proxy/') || 
-      req.path.startsWith('/admin/') ||
-      req.path.startsWith('/autocomplete/') ||
-      req.path.startsWith('/place/') ||
-      req.path.startsWith('/route') ||
-      req.path.startsWith('/reverse/')) {
-
-  }else{
-  // Serve React app for all other routes
-  const filePath = path.join(__dirname, "../../client/dist/index.html");
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.error('Error serving index.html:', err);
-      res.status(500).send('Internal Server Error');
-    }
-  });
-  }
-
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
 });
+
+// For containerized setup, we don't serve static files
+// The client container handles the frontend
+// All API routes should be properly prefixed and handled above
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

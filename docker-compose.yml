@@ -1,21 +1,32 @@
-
-version: '3.8'
-
 services:
-  app:
+  client:
     build: 
-      context: .
+      context: ./client
       dockerfile: Dockerfile
+    container_name: geo-frontend
+    ports:
+      - "3000:80"
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://server:5005
+    depends_on:
+      - server
+
+  server:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: geo-backend
     ports:
       - "5005:5005"
-      - "8080:8080"
+    networks:
+      - app-network
     environment:
       - NODE_ENV=production
       - PORT=5005
-    networks:
-      - app-network
 
 networks:
   app-network:
     driver: bridge
-    

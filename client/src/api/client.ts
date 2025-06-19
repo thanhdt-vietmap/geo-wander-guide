@@ -1,6 +1,8 @@
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://maps.vietmap.us' 
-  : 'http://localhost:5005';
+// Check if running in Docker (frontend container) or locally
+const isInDocker = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+const API_BASE_URL = isInDocker 
+  ? (import.meta.env.VITE_API_URL || 'http://server:5005') // Direct connection to server in Docker
+  : 'http://localhost:5005'; // Local development
 
 export const apiClient = {
   async get<T>(endpoint: string): Promise<T> {

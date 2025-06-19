@@ -1,3 +1,7 @@
+# DEPRECATED: This Dockerfile is now replaced by separate client/Dockerfile and server/Dockerfile
+# This file is kept for backup purposes only
+# Use docker-compose.yml which builds client and server separately
+
 # Multi-stage build
 FROM node:20.17.0-alpine AS base
 

@@ -1,54 +1,167 @@
-# Welcome to your Lovable project
+# VietMap Geo Wander Guide
 
-## Project info
+A modern, full-stack mapping application built with React, TypeScript, Node.js, and VietMap APIs.
 
-**URL**: https://lovable.dev/projects/2d12d04c-92c8-4ba4-ab38-df6fc695516d
+## 🏗️ Architecture
 
-## How can I edit this code?
+This project uses a **multi-container Docker architecture**:
+- **Client**: React app served by Nginx (port 3000)
+- **Server**: Node.js API server (port 5005)
+- **Production**: Nginx proxy handling routing
 
-There are several ways of editing your application.
+## 🚀 Quick Start
 
-**Use Lovable**
+### Docker (Recommended)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2d12d04c-92c8-4ba4-ab38-df6fc695516d) and start prompting.
+```bash
+# Development
+npm run docker:deploy
 
-Changes made via Lovable will be committed automatically to this repo.
+# Production with proxy
+npm run docker:deploy:prod
 
-**Use your preferred IDE**
+# Debug mode
+npm run docker:deploy:debug
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>fac
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Health check
+npm run docker:health
 ```
 
-**Edit a file directly in GitHub**
+### Local Development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Install dependencies
+npm install
 
-**Use GitHub Codespaces**
+# Start development servers
+npm run dev
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Build for production
+npm run build
+```
+
+## 📋 Available Scripts
+
+### Docker Commands
+| Command | Description |
+|---------|-------------|
+| `npm run docker:deploy` | Deploy development containers |
+| `npm run docker:deploy:prod` | Deploy production with proxy |
+| `npm run docker:deploy:debug` | Deploy debug mode |
+| `npm run docker:health` | Check container health |
+| `npm run docker:up` | Start containers |
+| `npm run docker:down` | Stop containers |
+| `npm run docker:logs` | View logs |
+
+### Local Development
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev servers |
+| `npm run build` | Build both client & server |
+| `npm run start` | Start production build |
+
+## 🐳 Docker Configuration
+
+The application now uses separate containers:
+
+### Client Container
+- **Base**: nginx:alpine
+- **Features**: Obfuscated React build, gzip compression, security headers
+
+### Server Container  
+- **Base**: node:20.17.0-alpine
+- **Features**: Production-optimized Node.js, non-root user
+
+### Network Communication
+- **Development**: `http://localhost:5005`
+- **Production**: `http://server:5005` (internal Docker network)
+
+## 📁 Project Structure
+
+```
+├── client/                 # React frontend
+│   ├── Dockerfile         # Client container
+│   ├── nginx.conf         # Nginx configuration
+│   └── src/               # React source code
+├── server/                # Node.js backend
+│   ├── Dockerfile         # Server container
+│   └── src/               # Server source code
+├── docker-compose.yml     # Development setup
+├── docker-compose.production.yml  # Production setup
+├── nginx-proxy.conf       # Production proxy
+└── docker-deploy.sh       # Deployment script
+```
+
+## 🔧 Configuration Files
+
+- `docker-compose.yml` - Development containers
+- `docker-compose.production.yml` - Production with Nginx proxy
+- `docker-compose.debug.yml` - Debug mode with Node.js inspector
+- `nginx-proxy.conf` - Production routing configuration
+
+## 📖 Documentation
+
+- [Docker Setup Guide](./DOCKER_SETUP.md) - Detailed Docker documentation
+- [Implementation Status](./IMPLEMENTATION_STATUS.md) - Feature implementation status
+- [Multi-language Support](./MULTI_LANGUAGE_IMPLEMENTATION.md) - i18n documentation
+- [Rate Limiting](./RATE_LIMIT_API.md) - API rate limiting documentation
+
+## 🌐 URLs
+
+### Development
+- **Client**: http://localhost:3000
+- **Server**: http://localhost:5005
+
+### Production (with proxy)
+- **Application**: http://localhost (Nginx handles routing)
+
+### Debug Mode
+- **Client**: http://localhost:3000
+- **Server**: http://localhost:5005
+- **Debugger**: localhost:9229
+
+## ⚙️ Environment Variables
+
+The application automatically detects the environment:
+- **Development**: Uses localhost URLs
+- **Production**: Uses Docker internal network (`http://server:5005`)
+
+## 🔍 Health Monitoring
+
+Use the health check script to monitor container status:
+
+```bash
+npm run docker:health
+```
+
+This checks:
+- Container status
+- HTTP endpoints
+- Recent logs for errors
+- Resource usage
+
+## 🛠️ Troubleshooting
+
+### View container logs
+```bash
+docker-compose logs client
+docker-compose logs server
+```
+
+### Access container shell
+```bash
+docker exec -it geo-wander-guide_client_1 sh
+docker exec -it geo-wander-guide_server_1 sh
+```
+
+### Rebuild containers
+```bash
+docker-compose down
+docker-compose build --no-cache
+docker-compose up
+```
+
+## 📝 Development Notes
 
 ## What technologies are used for this project?
 
