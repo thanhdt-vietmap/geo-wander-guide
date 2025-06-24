@@ -2,8 +2,8 @@ services:
   client:
     build: 
       context: ./client
-      dockerfile: Dockerfile
-    container_name: geo-frontend
+      dockerfile: Dockerfile.ubuntu
+    container_name: geo-frontend-ubuntu
     ports:
       - "5665:80"
     networks:
@@ -17,8 +17,8 @@ services:
   server:
     build: 
       context: ./server
-      dockerfile: Dockerfile
-    container_name: geo-backend
+      dockerfile: Dockerfile.ubuntu
+    container_name: geo-backend-ubuntu
     ports:
       - "5005:5005"
     networks:
